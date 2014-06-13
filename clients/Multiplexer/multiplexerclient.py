@@ -1,6 +1,6 @@
-from clients.qtui.multiplexerchannel import QCustomWavemeterChannel
+from common.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
 from twisted.internet.defer import inlineCallbacks, returnValue
-from clients.connection import connection
+from common.clients.connection import connection
 from PyQt4 import QtGui
 from wlm_client_config import multiplexer_config
 
@@ -56,7 +56,6 @@ class wavemeterclient(QtGui.QWidget):
             port = self.chaninfo[chan][0]
             hint = self.chaninfo[chan][1]
             stretched = self.chaninfo[chan][3]
-            print stretched
             
             widget = QCustomWavemeterChannel(chan, hint, stretched)  
             import RGBconverter as RGB  
