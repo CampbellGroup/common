@@ -13,17 +13,15 @@ void loop() {
   if (Serial.available()){
      // wait for serial input:
    input = Serial.read();
-   Serial.println(input,BIN);
    chan = input >> 2;
-   Serial.println(chan,BIN);
-   mode = (input >> 8) & 1;
-   output = 0b1 | input;
-   mode = (0b11 | input) >> 1;
+   mode = (input & 2) >> 1;
+   output = 0b1 & input;
      
    pinMode(chan,mode);
    
    if (mode == 1){
     digitalWrite(chan,output);
+    Serial.flush();
    }
     
    else{

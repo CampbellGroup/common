@@ -39,7 +39,7 @@ class ArduinoCounter( SerialDeviceServer ):
     name = SERVERNAME
     regKey = 'arduinoTTL'
     port = None
-    serNode = 'tony-dell'
+    serNode = 'wsu2campbell'
     timeout = T.Value(TIMEOUT,'s')
     
     
