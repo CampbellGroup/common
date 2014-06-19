@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = ArduinoMegaFreqCounter
+name = ArduinoTTL
 version = 1.0
 description = 
-instancename = ArduinoMegaFreqCounter
+instancename = ArduinoTTL
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -35,11 +35,11 @@ SERVERNAME = 'ArduinoTTL'
 TIMEOUT = 1.0
 BAUDRATE = 57600
 
-class ArduinoCounter( SerialDeviceServer ):
+class ArduinoTTL( SerialDeviceServer ):
     name = SERVERNAME
     regKey = 'arduinoTTL'
     port = None
-    serNode = 'wsu2campbell'
+    serNode = 'qsimexpcontrol'
     timeout = T.Value(TIMEOUT,'s')
     
     
@@ -90,4 +90,4 @@ class ArduinoCounter( SerialDeviceServer ):
     
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( ArduinoCounter() )
+    util.runServer( ArduinoTTL() )
