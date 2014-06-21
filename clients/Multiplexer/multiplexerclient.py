@@ -133,7 +133,7 @@ class wavemeterclient(QtGui.QWidget):
         
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    from common.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     wavemeterWidget = wavemeterclient(reactor)

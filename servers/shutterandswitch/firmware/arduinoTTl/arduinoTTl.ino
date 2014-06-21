@@ -6,7 +6,7 @@ boolean output = false;
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(57600);
 }
 
 void loop() {

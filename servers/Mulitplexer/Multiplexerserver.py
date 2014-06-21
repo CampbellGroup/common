@@ -18,7 +18,7 @@ cmdline = %PYTHON% %FILE%self.wmdll.SetPIDCourseNum
 timeout = 20
 
 [shutdown]
-message = 987654321self.wmdll.SetPIDCourseNum
+message = 987654321
 timeout = 20
 ### END NODE INFO
 """

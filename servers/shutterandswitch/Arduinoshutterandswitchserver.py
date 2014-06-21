@@ -23,7 +23,7 @@ Created on May 17, 2014
 @author: anthonyransford
 '''
 
-from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
+from common.servers.serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
 from labrad.types import Error
 from twisted.internet import reactor
 from labrad.server import Signal
@@ -39,7 +39,7 @@ class ArduinoTTL( SerialDeviceServer ):
     name = SERVERNAME
     regKey = 'arduinoTTL'
     port = None
-    serNode = 'qsimexpcontrol'
+    serNode = 'tony-dell'
     timeout = T.Value(TIMEOUT,'s')
     
     
