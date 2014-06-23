@@ -39,7 +39,7 @@ class ArduinoTTL( SerialDeviceServer ):
     name = SERVERNAME
     regKey = 'arduinoTTL'
     port = None
-    serNode = 'tony-dell'
+    serNode = 'qsimexpcontrol'
     timeout = T.Value(TIMEOUT,'s')
     
     
