@@ -47,7 +47,7 @@ class RigolDG1022( LabradServer ):
     def query (self, c):
         from twisted.internet import reactor
         yield self.device.write("*IDN?")
-        ID = yield task.deferLater(reactor, 0.1, self.rigolRead)
+        ID = yield task.deferLater(reactor, 0.1, self.rigolRead, c)
         self.ID = ID
         returnValue(self.ID)
 
@@ -73,7 +73,8 @@ class RigolDG1022( LabradServer ):
         value = yield self.device.read()
         returnValue(value)
         
-        
+        , line 832, in <lambda>
+
 
 
 if __name__ == '__main__':
