@@ -163,6 +163,7 @@ class MultiplexerServer(LabradServer):
         returnValue(use)
             
     def measureChan(self):
+        #TODO: Improve this with a looping call
         reactor.callLater(0.1, self.measureChan)
         for chan in range(8):
             if self.getSwitcherState(self, chan + 1):
