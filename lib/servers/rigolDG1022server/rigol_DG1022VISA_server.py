@@ -22,7 +22,7 @@ import visa
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad.units import WithUnit
 from labrad import types as T
-import time
+from twisted.internet.interfaces.IReactorTime import callLater
 
 
 
@@ -46,7 +46,7 @@ class RigolDG1022( LabradServer ):
     @setting( 0, "Query Device", returns = 's')
     def query (self, c):
         yield self.device.write("*IDN?")
-        ID = yield self.device.read()
+        ID = yield callLater(0.1, self.rigolRead)
         returnValue(ID)
 
     @setting(1, "Set Output", output = 'b')
@@ -58,13 +58,17 @@ class RigolDG1022( LabradServer ):
 
     @setting(2, "Apply Wave form", channel = 'i: channel', form = 's: sine, square, ramp, pulse, noise, DC', frequency = 'v: Hz',
              amplitude = 'v: Vpp', offset = 'v: VDC')
+    
     def applyWaveForm(self, c, channel, form, frequency, amplitude, offset):
         if channel == 1:
             chan = ''
         else: chan = ':CH2'
         output = "APPL:" + self.lookup[form] + chan + ' ' + str(int(frequency)) + ',' + str(amplitude) + ',' + str(offset)
-        print output
         yield self.device.write(output)
+        
+    def rigolRead(self, c):
+        value = yield self.device.read
+        returnValue(value)
         
         
 
