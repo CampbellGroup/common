@@ -22,7 +22,6 @@ import visa
 from twisted.internet.defer import inlineCallbacks, returnValue
 from labrad.units import WithUnit
 from labrad import types as T
-from twisted.internet.interfaces.IReactorTime import callLater
 
 
 
@@ -33,8 +32,8 @@ class RigolDG1022( LabradServer ):
     Server for communication with RigolDG1022
     """
     name = 'Rigol DG1022 Server'
-    address = 'USB0::0x09C4::0x0400::DG1D150900594'
-    serNode = 'coach_k'
+    address = 'USB0::0x0400::0x09C4::DG1F150100011'
+    serNode = 'wsu2campbell'
     timeout = WithUnit(1.0, 's')
 
     lookup = {'sine':'SIN', 'square':'SQU', 'ramp':'RAMP', 'pulse':'PULS', 'noise':'NOIS'}
@@ -46,7 +45,7 @@ class RigolDG1022( LabradServer ):
     @setting( 0, "Query Device", returns = 's')
     def query (self, c):
         yield self.device.write("*IDN?")
-        ID = yield callLater(0.1, self.rigolRead)
+        ID = yield reactor.callLater(0.1, self.rigolRead)
         returnValue(ID)
 
     @setting(1, "Set Output", output = 'b')
