@@ -20,6 +20,7 @@ timeout = 5
 from labrad.server import LabradServer, setting
 import visa
 from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet import task
 from labrad.units import WithUnit
 from labrad import types as T
 
@@ -44,9 +45,12 @@ class RigolDG1022( LabradServer ):
 
     @setting( 0, "Query Device", returns = 's')
     def query (self, c):
+        from twisted.internet import reactor
         yield self.device.write("*IDN?")
-        ID = yield reactor.callLater(0.1, self.rigolRead)
-        returnValue(ID)
+        ID = yield task.deferLater(reactor, 0.1, self.rigolRead, self)
+        self.ID = ID
+        print self.ID
+        returnValue(self.ID)
 
     @setting(1, "Set Output", output = 'b')
     def setOutput(self, c, output):
@@ -57,16 +61,19 @@ class RigolDG1022( LabradServer ):
 
     @setting(2, "Apply Wave form", channel = 'i: channel', form = 's: sine, square, ramp, pulse, noise, DC', frequency = 'v: Hz',
              amplitude = 'v: Vpp', offset = 'v: VDC')
-    
+
+
     def applyWaveForm(self, c, channel, form, frequency, amplitude, offset):
         if channel == 1:
             chan = ''
         else: chan = ':CH2'
+        
         output = "APPL:" + self.lookup[form] + chan + ' ' + str(int(frequency)) + ',' + str(amplitude) + ',' + str(offset)
         yield self.device.write(output)
-        
+
+    @inlineCallbacks    
     def rigolRead(self, c):
-        value = yield self.device.read
+        value = yield self.device.read()
         returnValue(value)
         
         
