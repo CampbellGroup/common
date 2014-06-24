@@ -1,6 +1,6 @@
-from common.clients.qtui.switch import QCustomSwitchChannel
+from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks, returnValue
-from common.clients.connection import connection
+from common.lib.clients.connection import connection
 from PyQt4 import QtGui
 from switch_client_config import switch_config
 

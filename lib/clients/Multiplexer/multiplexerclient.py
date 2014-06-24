@@ -1,6 +1,6 @@
-from common.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
+from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
 from twisted.internet.defer import inlineCallbacks, returnValue
-from common.clients.connection import connection
+from common.lib.clients.connection import connection
 from PyQt4 import QtGui
 from wlm_client_config import multiplexer_config
 
@@ -133,7 +133,7 @@ class wavemeterclient(QtGui.QWidget):
         
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    from common.clients import qt4reactor
+    from common.lib.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     wavemeterWidget = wavemeterclient(reactor)
