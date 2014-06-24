@@ -72,8 +72,6 @@ class RigolDG1022( LabradServer ):
     def rigolRead(self, c):
         value = yield self.device.read()
         returnValue(value)
-        
-        , line 832, in <lambda>
 
 
 
