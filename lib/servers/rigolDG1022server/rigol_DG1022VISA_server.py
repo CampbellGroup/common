@@ -47,9 +47,8 @@ class RigolDG1022( LabradServer ):
     def query (self, c):
         from twisted.internet import reactor
         yield self.device.write("*IDN?")
-        ID = yield task.deferLater(reactor, 0.1, self.rigolRead, self)
+        ID = yield task.deferLater(reactor, 0.1, self.rigolRead)
         self.ID = ID
-        print self.ID
         returnValue(self.ID)
 
     @setting(1, "Set Output", output = 'b')
@@ -61,8 +60,6 @@ class RigolDG1022( LabradServer ):
 
     @setting(2, "Apply Wave form", channel = 'i: channel', form = 's: sine, square, ramp, pulse, noise, DC', frequency = 'v: Hz',
              amplitude = 'v: Vpp', offset = 'v: VDC')
-
-
     def applyWaveForm(self, c, channel, form, frequency, amplitude, offset):
         if channel == 1:
             chan = ''
