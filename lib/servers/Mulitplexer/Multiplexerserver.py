@@ -32,11 +32,11 @@ class MultiplexerServer(LabradServer):
     Multiplexer Server for Wavelength Meter
     """
     name = 'Multiplexerserver'
-    
+
+    #Set up signals to be sent to listeners
     measuredchanged = Signal(CHANSIGNAL, 'signal: selected channels changed', '(ib)')
     freqchanged = Signal(FREQSIGNAL, 'signal: frequency changed', '(iv)')
     updateexp = Signal(UPDATEEXP, 'signal: update exp', '(ii)')
-    #Set up signals to be sent to listeners
     
     def initServer(self):
         
