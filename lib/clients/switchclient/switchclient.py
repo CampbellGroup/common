@@ -1,4 +1,5 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
+from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
 from switch_client_config import switch_config
 
@@ -60,7 +61,7 @@ class switchclient(QtGui.QWidget):
         
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    from common.clients import qt4reactor
+    from common.lib.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     switchWidget = switchclient(reactor)
