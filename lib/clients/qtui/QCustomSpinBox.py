@@ -74,7 +74,7 @@ class QCustomSpinBox(QtGui.QWidget):
         
 if __name__=='__main__':
 	app = QtGui.QApplication(sys.argv)
-	icon = QCustomLevelSpin('Control',(0.0,100.0))
+	icon = QCustomSpinBox('Control',(-10.0,10.0))
 	icon.show()
 	app.exec_()
 
