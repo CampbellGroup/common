@@ -39,13 +39,15 @@ class MultiplexerServer(LabradServer):
     updateexp = Signal(UPDATEEXP, 'signal: update exp', '(ii)')
     
     def initServer(self):
+
+        #load wavemeter dll file for use of API functions self.d and self.l are dummy c_types for unused wavemeter functions
         
         self.d = c_double(0)
         self.l = c_long(0)    
         self.b = c_bool(0)    
         self.wmdll = windll.LoadLibrary("C:\Windows\System32\wlmData.dll")
-        #load wavemeter dll file for use of API functions self.d and self.l are dummy c_types for unused wavemeter functions
- 
+        
+        #allocates c_types for dll functions
         self.wmdll.GetActiveChannel.restype        = c_long 
         self.wmdll.GetAmplitudeNum.restype         = c_long 
         self.wmdll.GetDeviationMode.restype        = c_bool      
@@ -62,12 +64,13 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetPIDCourseNum.restype         = c_long              
         self.wmdll.SetSwitcherSignalStates.restype = c_long        
         self.wmdll.SetSwitcherMode.restype         = c_long
+        self.wmdll.SetDeviationSignal.restype      = c_long
         
         self.measureChan()
         
-        #allocates c_types for dll functions
-        
         self.listeners = set()
+
+        #####Main program functions 
 
     @setting(1, "Check WLM Running")
     def instance(self,c):
@@ -77,11 +80,8 @@ class MultiplexerServer(LabradServer):
         #RFC, reason for call, used to check if wavemeter is running (in wavemeter .h library
         status = yield instance(RFC,self.l,self.l,self.l)
         returnValue(status)
-
-        
-        
-#####Main program functions        spinExp.setValue(initvalue)
-
+       
+#####Set Functions
          
     @setting(10, "Set Exposure Time", chan = 'i', ms = 'i')
     def setExposureTime(self,c,chan,ms):
@@ -114,9 +114,16 @@ class MultiplexerServer(LabradServer):
         chan_c = c_long(chan)
         course_c = c_char_p('=' + str(course))
         yield self.wmdll.SetPIDCourseNum(chan_c, course_c)
+
+    @setting(15, "Set DAC Voltage", chan = 'i', value = 'v')
+    def setDACVoltage(self, c, chan, value):
+        chan_c = c_long(chan)
+        #convert Volts to mV
+        value = value*1000
+        value_c = c_double(value)
+        yield self.wmdll.SetDeviationSignalNum(chan_c, value_c)
         
-        
-#####Set Functions
+###Get Functions      
 
     @setting(20, "Get Amplitude", chan = 'i', returns = 'v')
     def getAmp(self, c, chan): 
@@ -137,21 +144,23 @@ class MultiplexerServer(LabradServer):
         self.freqchanged((chan,freq))
         returnValue(freq)
         
-    @setting(23, "Get Lock State")
-    def getLockState(self):
-        state = self.wmdll.GetDeviationMode(self.b)
+    @setting(23, "Get Lock State", returns = 'b')
+    def getLockState(self, c):
+        state = yield self.wmdll.GetDeviationMode(0)
         returnValue(state)
+
+    @setting(24, "Get Switcher Mode", returns = 'b')
+    def getSwitcherMode(self, c):
+        state = yield self.wmdll.GetSwitcherMode(0)
+        returnValue(bool(state))
         
-    @setting(24,"Get Output Voltage", chan = 'i', returns = 'v')
+    @setting(25,"Get Output Voltage", chan = 'i', returns = 'v')
     def getOutputVoltage(self, c, chan):
         chan_c = c_long(chan)
         volts = yield self.wmdll.GetDeviationSignalNum(chan_c,self.d)
         returnValue(volts)  
         
-    @setting(25, "Get Switcher Mode", returns = 'b')
-    def getSwitcherMode(self, c):
-        state = self.wmdll.GetSwitcherMode(self.l)
-        returnValue(state)
+
     
     @setting(26, "Get Switcher Signal State", chan = 'i', returns = 'b')
     def getSwitcherState(self, c, chan):
@@ -161,6 +170,7 @@ class MultiplexerServer(LabradServer):
         yield self.wmdll.GetSwitcherSignalStates(chan_c, pointer(use_c), pointer(show_c))
         use = bool(use_c)
         returnValue(use)
+
             
     def measureChan(self):
         #TODO: Improve this with a looping call
