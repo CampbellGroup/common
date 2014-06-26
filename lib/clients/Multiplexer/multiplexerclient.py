@@ -3,6 +3,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui
 from wlm_client_config import multiplexer_config
+import socket
 
     
 
@@ -35,7 +36,7 @@ class wavemeterclient(QtGui.QWidget):
         
         """
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('169.232.156.230')
+        self.cxn = yield connectAsync('169.232.156.230', name = 'Wave Meter Client ' + socket.gethostname())
         self.server = yield self.cxn.multiplexerserver
         
         yield self.server.signal__frequency_changed(SIGNALID1)
@@ -82,8 +83,6 @@ class wavemeterclient(QtGui.QWidget):
         self.setLayout(layout)
         yield None
 
-
-    
     @inlineCallbacks
     def expChanged(self, exp, chan):
         #these are switched, dont know why
