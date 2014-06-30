@@ -119,6 +119,7 @@ class wavemeterclient(QtGui.QWidget):
     @inlineCallbacks
     def changeState(self, state, chan):
         yield self.server.set_switcher_signal_state(chan, state)
+        #this does not stay changed when wavemeter is shut off, needs to be fixed
         if state == False:  self.d[chan].currentfrequency.setText('Not Measured') 
      
     @inlineCallbacks   
