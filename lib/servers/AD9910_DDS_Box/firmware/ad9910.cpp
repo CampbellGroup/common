@@ -27,6 +27,7 @@
 #define mTEST		0x01
 #define mCHECK		0x02
 #define mRESET		0x03
+#define mIDN        0x06  // For *IDN?, is there anything special about 0x06?
 #define mWRTREG		0x11
 #define mRDREG		0x12
 #define mFREQ		0x13
@@ -251,6 +252,27 @@ int main(void)
 				USART_Send_ConstString("\n>Done\n");								
 				mState=mIDLE;
 				break;
+			case mIDN:
+				// Returns GPIB compatible device identification, in response to '*IDN?' query.
+				// The end is custom on a per device basis.
+				USART_Send_ConstString("\n");
+
+;				for(cnt=0; cnt<4; cnt++) // Check Register 0x00
+				{
+					ad9910_read(cnt,4);
+					//sprintf(char_buf,"I%d=",cnt+1);
+					//USART_Send_ConstString(char_buf);
+					//sprintf(char_buf,"%d",AD9910_REG_READ[3]);
+					//USART_Send_ConstString(char_buf);
+					if(AD9910_REG_READ[3]>0)
+					{
+						sprintf(char_buf,"I%d ",cnt+1);
+						USART_Send_ConstString(char_buf);
+					}
+				}
+				USART_Send_ConstString("\n>Done\n");								
+				mState=mIDLE;
+				break;
 			case mRESET:
 				USART_Send_ConstString(">Master Reset\n");
 				ad9910_init();
@@ -356,6 +378,12 @@ ISR(USART_RX_vect)
 				uCheckSum=0;
 			}
 			else if(rxByte=='?') // Check Mode (?)
+			{
+				mState=mCHECK;
+				uState=uIDLE;
+				uCheckSum=0;
+			}
+			else if(rxByte=='*IDN?') // GPIB compatible device ID
 			{
 				mState=mCHECK;
 				uState=uIDLE;
