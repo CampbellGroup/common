@@ -56,6 +56,7 @@ class wavemeterclient(QtGui.QWidget):
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
             hint = self.chaninfo[chan][1]
+            position = self.chaninfo[chan][2]
             stretched = self.chaninfo[chan][3]
             
             widget = QCustomWavemeterChannel(chan, hint, stretched)  
@@ -79,7 +80,7 @@ class wavemeterclient(QtGui.QWidget):
             widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), port = port : self.freqChanged(freq, port))
 
             self.d[port] = widget
-            layout.addWidget(self.d[port])
+            layout.addWidget(self.d[port], position[1], position[0])
         self.setLayout(layout)
         yield None
 
