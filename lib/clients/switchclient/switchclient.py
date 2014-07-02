@@ -13,11 +13,11 @@ class switchclient(QtGui.QWidget):
             be stored for iteration. also grabs chan info
             from wlm_client_config file 
         """ 
+            
         super(switchclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor     
-        self.d = {} 
-        self.chaninfo = switch_config.info     
+        self.d = {}     
         self.connect()
         
     @inlineCallbacks
@@ -29,6 +29,14 @@ class switchclient(QtGui.QWidget):
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(name = "switch client")
         self.server = yield self.cxn.arduinottl
+#         try:
+#             path = self.cxn.registry.get('configuration_path')
+#         except:
+#             path = 'common.lib.configuration_files'
+#             
+#         path = path.replace('/','.')
+#         from path + '.' 'switch_client_config' import switch_config
+        self.chaninfo = switch_config.info 
         
         self.initializeGUI()
         
