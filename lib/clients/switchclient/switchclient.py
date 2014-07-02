@@ -35,9 +35,8 @@ class switchclient(QtGui.QWidget):
             path = 'common.lib.configuration_files'
         path = str(path)
         path = path.replace('/','.')
-#       path = path.replace('\\','.')
+        path = path.replace('\\','.')
         switch_config = getattr(__import__(path + '.switch_client_config', fromlist = ['switch_config']), 'switch_config')
-#        from path + '.' + 'switch_client_config' import switch_config
         self.chaninfo = switch_config.info 
         
         self.initializeGUI()
