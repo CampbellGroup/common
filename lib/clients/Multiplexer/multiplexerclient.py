@@ -36,7 +36,7 @@ class wavemeterclient(QtGui.QWidget):
         
         """
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('169.232.156.230', name = socket.gethostname() + ' Wave Meter Client')
+        self.cxn = yield connectAsync('10.97.112.2', name = socket.gethostname() + ' Wave Meter Client')
         self.server = yield self.cxn.multiplexerserver
         
         yield self.server.signal__frequency_changed(SIGNALID1)
