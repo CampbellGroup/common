@@ -2,7 +2,7 @@ from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
 from twisted.internet.defer import inlineCallbacks, returnValue
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui
-from wlm_client_config import multiplexer_config
+#from wlm_client_config import multiplexer_config
 import socket
 
     
@@ -46,6 +46,16 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1) 
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
+        
+        try:
+            path = yield self.cxn.registry.get('configuration_path')
+        except:
+            path = 'common.lib.configuration_files'
+        path = str(path)
+        path = path.replace('/','.')
+        path = path.replace('\\','.')
+        wlm_config = getattr(__import__(path + '.multiplexerclient_config', fromlist = ['multiplexer_config']), 'multiplexer_config')
+        self.chaninfo = wlm_config.info 
         
         self.initializeGUI()
         
