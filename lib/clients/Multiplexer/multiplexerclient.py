@@ -1,6 +1,5 @@
 from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
-from twisted.internet.defer import inlineCallbacks, returnValue
-from common.lib.clients.connection import connection
+from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
 #from wlm_client_config import multiplexer_config
 import socket
@@ -25,8 +24,7 @@ class wavemeterclient(QtGui.QWidget):
         super(wavemeterclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor     
-        self.d = {} 
-        self.chaninfo = multiplexer_config.info     
+        self.d = {}    
         self.connect()
         
     @inlineCallbacks
@@ -37,7 +35,19 @@ class wavemeterclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync('10.97.112.2', name = socket.gethostname() + ' Wave Meter Client')
+        self.cxn2 = yield connectAsync(name = 'Wave Meter Client Registry Check')
         self.server = yield self.cxn.multiplexerserver
+        try:
+            path = yield self.cxn2.registry.get('configuration_path')
+            self.cxn2.disconnect()
+            path = str(path)
+            path = path.replace('/','.')
+            path = path.replace('\\','.')
+            wlm_config = getattr(__import__(path + '.multiplexerclient_config', fromlist = ['multiplexer_config']), 'multiplexer_config')
+        except:
+            from common.lib.configuration_files.multiplexerclient_config import multiplexer_config as wlm_config
+
+        self.chaninfo = wlm_config.info          
         
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__selected_channels_changed(SIGNALID2)
@@ -46,16 +56,6 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1) 
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
-        
-        try:
-            path = yield self.cxn.registry.get('configuration_path')
-        except:
-            path = 'common.lib.configuration_files'
-        path = str(path)
-        path = path.replace('/','.')
-        path = path.replace('\\','.')
-        wlm_config = getattr(__import__(path + '.multiplexerclient_config', fromlist = ['multiplexer_config']), 'multiplexer_config')
-        self.chaninfo = wlm_config.info 
         
         self.initializeGUI()
         

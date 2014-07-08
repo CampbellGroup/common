@@ -31,14 +31,14 @@ class switchclient(QtGui.QWidget):
         self.server = yield self.cxn.arduinottl
         try:
             path = yield self.cxn.registry.get('configuration_path')
+            path = str(path)
+            path = path.replace('/','.')
+            path = path.replace('\\','.')
+            switch_config = getattr(__import__(path + '.switch_client_config', fromlist = ['switch_config']), 'switch_config')
         except:
-            path = 'common.lib.configuration_files'
-        path = str(path)
-        path = path.replace('/','.')
-        path = path.replace('\\','.')
-        switch_config = getattr(__import__(path + '.switch_client_config', fromlist = ['switch_config']), 'switch_config')
-        self.chaninfo = switch_config.info 
-        
+            from common.lib.configuration_files.switch_client_config import switch_config
+           
+        self.chaninfo = switch_config.info       
         self.initializeGUI()
         
     @inlineCallbacks
