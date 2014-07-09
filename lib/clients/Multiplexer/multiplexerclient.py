@@ -121,7 +121,8 @@ class wavemeterclient(QtGui.QWidget):
         if chan in self.d :
             self.d[chan].measSwitch.setChecked(value)
             
-    def updateexp(self,c, signal):
+    def updatee
+    xp(self,c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d :
