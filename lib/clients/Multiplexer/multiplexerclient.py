@@ -35,9 +35,10 @@ class wavemeterclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync('10.97.112.2', name = socket.gethostname() + ' Wave Meter Client')
-        self.cxn2 = yield connectAsync(name = 'Wave Meter Client Registry Check')
+
         self.server = yield self.cxn.multiplexerserver
         try:
+            self.cxn2 = yield connectAsync(name = 'Wave Meter Client Registry Check')
             path = yield self.cxn2.registry.get('configuration_path')
             self.cxn2.disconnect()
             path = str(path)
