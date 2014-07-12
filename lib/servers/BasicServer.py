@@ -85,6 +85,18 @@ class BasicServer(LabradServer):
         returnValue(_n.array([[1., 4.6, 1e-5], [45, -1, 1./45.]]) )   
     
     
+    @setting(6, 'return_npArray3D', returns= '?')
+    def return_npArray3D(self, c):
+        """
+        Returns
+        -------
+        _n.empty( (492, 656, 1) )
+        """
+        
+        yield None
+        returnValue(_n.empty( (492, 656, 1) ) )   
+    
+        
 
 
 

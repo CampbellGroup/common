@@ -171,5 +171,22 @@ class Test_BasicServer(TestCase):
         self.assertTrue(_n.array_equal(val, exp_val) )
 
 
+    def test_return_npArray3DUnflatten(self):
+        """
+        Test unflattening of an array that will look 
+        like camera output
+        """
+        server = self._get_tester()                        
+        
+        # This resturns a LazyList, which we
+        resp = server.return_npArray3D()
+        
+        val = resp._unflattenArray()
+
+        # Arguments given might not make sense, 
+        # but they give the correct type.
+        exp_val = _n.empty( (492, 656, 1) )
+
+        self.assertTrue(_n.array_equal(val, exp_val) )
 
 
