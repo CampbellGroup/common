@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import numpy as _n
 from twisted.trial.unittest import TestCase
 
 import labrad
+from labrad.types import LazyList
 
 class Test_BasicServer(TestCase):
     """
@@ -90,47 +92,83 @@ class Test_BasicServer(TestCase):
         resp = pts.faux_echo('faux_echo string test')
         self.assertEquals(resp, 'faux_echo string test')
 
-#        resp = pts.echo(T.Value(15.0, 's'))
-#        self.assertEquals(float(resp), 15.0)
-#        self.assertEquals(resp.unit.name, 's')
-    
-    
-#    def test_fauxEcho(self):
-#        """
-#        """
-#        return string
+
+    def test_return_float(self):
+        """
+        Check that specific hard-coded value is returned.
+        """
+        server = self._get_tester()                        
+        
+        resp = server.return_float()
+        exp_resp = 137.036
+        self.assertEquals(resp, exp_resp)                
+
+    def test_return_floatyield(self):
+        """
+        Check when looking for a yield output it works.
+        """
+        server = self._get_tester()                        
+        
+        resp = yield server.return_float()
+        exp_resp = 137.036
+        self.assertEquals(resp, exp_resp)  
+        
+
+    def test_return_floatList(self):
+        server = self._get_tester()                        
+        
+        resp = server.return_floatList()
+        exp_resp = [87.04, 0.001, -1.09, 1e-5, 2.]
+        self.assertEquals(resp, exp_resp)          
+
+    def test_return_npArray1D(self):
+        server = self._get_tester()                        
+        
+        resp = server.return_npArray1D()
+        exp_resp = _n.array([1., 2., 1e-5, 237])
+        #self.assertEquals(resp, exp_resp)  
+        self.assertTrue(_n.array_equal(exp_resp, resp))
 
 
+    def test_return_npArray2D(self):
+        server = self._get_tester()                        
+        
+        resp = server.return_npArray2D()
+        exp_resp = _n.array([[1., 4.6, 1e-5], [45, -1, 1./45.]])
+        self.assertTrue(_n.array_equal(exp_resp, resp) )
 
-#
-#class PoetryTestCase(TestCase):
-#
-#    def setUp(self):
-#        factory = PoetryServerFactory(TEST_POEM)
-#        from twisted.internet import reactor
-#        self.port = reactor.listenTCP(0, factory, interface="127.0.0.1")
-#        self.portnum = self.port.getHost().port
-#
-#    def tearDown(self):
-#        port, self.port = self.port, None
-#        return port.stopListening()
-#
-#    def test_client(self):
-#        """The correct poem is returned by get_poetry."""
-#        d = get_poetry('127.0.0.1', self.portnum)
-#
-#        def got_poem(poem):
-#            self.assertEquals(poem, TEST_POEM)
-#
-#        d.addCallback(got_poem)
-#
-#        return d
-#
-#    def test_failure(self):
-#        """The correct failure is returned by get_poetry when
-#        connecting to a port with no server."""
-#        d = get_poetry('127.0.0.1', 0)
-#        return self.assertFailure(d, ConnectError)
+
+    def test_return_npArray2DType(self):
+        """
+        Test output type.
+        """
+        server = self._get_tester()                        
+        
+        resp = server.return_npArray2D()
+
+        # Arguments given might not make sense, 
+        # but they give the correct type.
+        exp_resp = type(LazyList(None, 's', None))
+
+        self.assertEquals(type(resp), exp_resp)
+
+
+    def test_return_npArray2DUnflatten(self):
+        """
+        Test unflattening of array output.
+        """
+        server = self._get_tester()                        
+        
+        # This resturns a LazyList, which we
+        resp = server.return_npArray2D()
+        
+        val = resp._unflattenArray()
+
+        # Arguments given might not make sense, 
+        # but they give the correct type.
+        exp_val = _n.array([[1., 4.6, 1e-5], [45, -1, 1./45.]])
+
+        self.assertTrue(_n.array_equal(val, exp_val) )
 
 
 

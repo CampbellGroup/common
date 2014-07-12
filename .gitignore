@@ -10,3 +10,5 @@ Errors.log
 *~
 .settings
 .metadata*
+tests/lib/servers/_trial_temp/_trial_marker
+*.log
