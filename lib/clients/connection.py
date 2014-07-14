@@ -15,7 +15,7 @@ class connection(object):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name = 'Shared Object')
         yield self.setupListeners()
         returnValue(self)
     
