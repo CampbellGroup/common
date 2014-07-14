@@ -7,15 +7,18 @@ Version 1.0
 
 class connection(object):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._servers = {}
         self._on_connect = {}
         self._on_disconnect = {}
+        
+        if not kwargs.has_key('name') : kwargs['name'] = ''    
+        self.name = kwargs['name']
     
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync()
+        self.cxn = yield connectAsync(name=self.name)
         yield self.setupListeners()
         returnValue(self)
     
