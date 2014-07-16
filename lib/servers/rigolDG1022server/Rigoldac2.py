@@ -3,7 +3,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Rigol DG1022
+name = Rigol DG1022 DAC 2 Server
 version = 1.1
 description = 
 
@@ -30,10 +30,10 @@ from labrad import types as T
 class RigolDG1022( LabradServer ):
 
     """
-    Server for communication with RigolDG1022
+    Server for communication with RigolDG1022 DAC 1
     """
-    name = 'Rigol DG1022 Server'
-    address = 'USB0::0x0400::0x09C4::DG1F150100011'
+    name = 'Rigol DG1022 DAC 2 Server'
+    address = 'USB0::0x0400::0x09C4::DG1F141800334'
     serNode = 'wsu2campbell'
     timeout = WithUnit(1.0, 's')
 
@@ -58,7 +58,7 @@ class RigolDG1022( LabradServer ):
         else:
             yield self.device.write("OUTP OFF")
 
-    @setting(2, "Apply Wave form", channel = 'i: channel', form = 's: sine, square, ramp, pulse, noise, DC', frequency = 'v: Hz',
+    @setting(2, "Apply Wave form", channel = 'i: channel', form = 's: sine, square, ramp, pulse, noise',frequency = 'v: Hz',
              amplitude = 'v: Vpp', offset = 'v: VDC')
     def applyWaveForm(self, c, channel, form, frequency, amplitude, offset):
         if channel == 1:
@@ -66,6 +66,14 @@ class RigolDG1022( LabradServer ):
         else: chan = ':CH2'
         
         output = "APPL:" + self.lookup[form] + chan + ' ' + str(int(frequency)) + ',' + str(amplitude) + ',' + str(offset)
+        yield self.device.write(output)
+
+    @setting(3, "Apply DC", channel = 'i: channel', voltage = 'v: V')
+    def applyDC(self, c, channel, voltage):
+        if channel == 1:
+            chan = ''
+        else: chan = ':CH2'
+        output = "APPL:DC" + chan + " DEF,DEF," + str(voltage)
         yield self.device.write(output)
 
     @inlineCallbacks    
