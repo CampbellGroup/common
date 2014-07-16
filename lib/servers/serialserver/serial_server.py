@@ -120,7 +120,7 @@ class SerialServer(LabradServer):
             except SerialException, e:
                 if e.message.find('cannot find') >= 0:
                     raise Error(code=1, msg=e.message)
-                else:
+                else:rigol
                     raise Error(code=2, msg=e.message)
         return c['PortObject'].portstr
 
@@ -195,7 +195,7 @@ class SerialServer(LabradServer):
             return ser.getParity()
 
 
-    @setting(23, 'Stopbits',
+    @setting(23, 'Stopbits',rigol
                  data=[': List stopbits',
                        'w: Set stopbits (0: query current)'],
                  returns=['*w: Available stopbits',
@@ -213,7 +213,7 @@ class SerialServer(LabradServer):
 
 
     @setting(25, 'Timeout',
-                 data=[': Return immediately',
+                 data=[': Return immediately',rigol
                        'v[s]: Timeout to use (max: 5min)'],
                  returns=['v[s]: Timeout being used (0 for immediate return)'])
     def timeout(self, c, data=T.Value(0,'s')):
