@@ -43,18 +43,19 @@ class RigolWrapper(GPIBDeviceWrapper):
         self.lookup = {'sine':'SIN', 'square':'SQU', 'ramp':'RAMP', 'pulse':'PULS', 'noise':'NOIS', 'DC':'DC'}
     
     @inlineCallbacks
-    def setOutput(self, chan = None, output):
+    def setOutput(self, output, channel = None):
         '''
         Turns on or off the rigol output of specified channel
         '''
-        if chan == 2:
-            chan = ':CH2'
-        else: chan = ''
+        print output, channel
+        if channel == 2:
+            channel = ':CH2'
+        else: channel = ''
         
         if output :
-            yield self.device.write("OUTP" + chan + " ON")
+            yield self.write("OUTP" + channel + " ON")
         else:
-            yield self.device.write("OUTP" + chan + " OFF")
+            yield self.write("OUTP" + channel + " OFF")
             
     @inlineCallbacks
     def applyWaveForm(self, channel, form, frequency, amplitude, offset):
@@ -65,8 +66,9 @@ class RigolWrapper(GPIBDeviceWrapper):
             chan = ':CH2'
         else: chan = ''
         
-        output = "APPL:" + self.lookup[form] + chan + ' ' + str(int(frequency)) + ',' + str(amplitude) + ',' + str(offset)
-        yield self.device.write(output)
+        output = "APPL:" + self.lookup[form] + chan + ' ' + str(int(frequency['Hz'])) + ',' + str(amplitude['V']) + ',' + str(offset['V'])
+        print output
+        yield self.write(output)
 
 class RigolServer(GPIBManagedServer):
     name = 'Rigol DG1022A Server' # Server name
@@ -74,13 +76,13 @@ class RigolServer(GPIBManagedServer):
     deviceWrapper = RigolWrapper
 
     @setting(10, 'Set Output', channel = 'i', output = 'b')
-    def setDeviceOutput(self, c, channel = None, output): # uses passed context "c" to address specific device 
+    def setDeviceOutput(self, c, output, channel = None): # uses passed context "c" to address specific device 
         dev = self.selectedDevice(c)
-        yield dev.setOutput(chan, output)
+        yield dev.setOutput(output, channel)
     
     @setting(69, 'Apply Waveform', channel = 'i', form = 's', frequency = ['v[Hz]'], amplitude = ['v[V]'], offset = ['v[V]']  )
     def applyDeviceWaveform(self, c, channel, form, frequency, amplitude, offset):
-        dev = self.select_device(c)
+        dev = self.selectedDevice(c)
         yield dev.applyWaveForm(channel, form, frequency, amplitude, offset)
 
 
