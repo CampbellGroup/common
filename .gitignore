@@ -12,3 +12,4 @@ Errors.log
 .metadata*
 tests/lib/servers/_trial_temp/_trial_marker
 *.log
+tests/lib/servers/examples/_trial_temp/_trial_marker
