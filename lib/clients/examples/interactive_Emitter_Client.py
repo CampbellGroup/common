@@ -126,6 +126,9 @@ class recieverWidget(QtGui.QWidget):
     def closeEvent(self, x):
         
         self.cxn.disconnect()
+
+        # Need to expire the listener context
+        #self.        
         
         # Stop the reactor when closing the widget
         self.reactor.stop()
