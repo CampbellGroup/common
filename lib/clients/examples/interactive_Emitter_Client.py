@@ -10,8 +10,11 @@ from PyQt4 import QtGui
 
 class recieverWidget(QtGui.QWidget):
 
+    debug = False
+
     # This is an ID for the client to register to the server
-    ID = 654321
+    ID  = 654321
+    ID3 = 572957
 
     def __init__(self, reactor, parent=None):
         super(recieverWidget, self).__init__(parent)
@@ -53,21 +56,26 @@ class recieverWidget(QtGui.QWidget):
         Make an asynchronous connection to LabRAD
         """
         from labrad.wrappers import connectAsync
-        cxn = yield connectAsync(name = 'Interactive Signal Client')
+        self.cxn = yield connectAsync(name = 'Interactive Signal Client')
 
         # Connect to emitter server 
-        self.server = cxn.interactive_emitter_server
+        self.server = self.cxn.interactive_emitter_server
+        
+        
+        ### Signals        
         
         # Connect to signal from server (note the method is named from parsed 
         # text of the in the server emitter name)        
         yield self.server.signal__emitted_signal(self.ID)
-
-
+        yield self.server.signal__efs(self.ID3)
+        
         # This registers the client as a listener to the server and assigns a 
         # slot (function) from the client to the signal emitted from the server
         # In this case self.displaySignal
         yield self.server.addListener(listener = self.displaySignal, 
                 source = None, ID = self.ID) 
+        yield self.server.addListener(listener = self.displayFloat, 
+                source = None, ID = self.ID3) 
 
                 
 
@@ -96,12 +104,32 @@ class recieverWidget(QtGui.QWidget):
         
 
     def displaySignal(self, cntx, signal):
+        
+        if self.debug : print "displaySignal called()"
         self.textedit.append(signal)
 
 
+    @inlineCallbacks
+    def displayFloat(self, cntx, signal):
+        
+        if self.debug : print "displayFloat cntx=", cntx
+        if self.debug : print "displayFloat signal=", signal
+        
+        value = yield self.server.float_data()
+        
+        # Convert the value to a string so the text can be appended
+        value = str(value)
+        self.textedit.append(value)
+
+
+
     def closeEvent(self, x):
-        #stop the reactor when closing the widget
+        
+        self.cxn.disconnect()
+        
+        # Stop the reactor when closing the widget
         self.reactor.stop()
+        
 
 
 
