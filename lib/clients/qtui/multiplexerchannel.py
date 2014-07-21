@@ -48,7 +48,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         title = QtGui.QLabel(title)
         title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         title.setAlignment(QtCore.Qt.AlignCenter)
-        locklabel = QtGui.QLabel('WLM Lock')
         measlabel = QtGui.QLabel('WLM Measure')
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
@@ -63,7 +62,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(self.currentfrequency,1, 0, 1, 3)
         layout.addWidget(frequencylabel,2, 0, 1, 1)
         layout.addWidget(exposurelabel,2, 1, 1, 1)
-        layout.addWidget(locklabel, 2,3)
         layout.addWidget(measlabel, 3,3)
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
@@ -81,8 +79,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(self.spinFreq,     3, 0)
         layout.addWidget(self.spinExp,    3, 1)
         self.measSwitch = TextChangingButton()
-        self.lockSwitch = TextChangingButton()
-        layout.addWidget(self.lockSwitch, 2,2)
         layout.addWidget(self.measSwitch, 3, 2)
             
         self.setLayout(layout)
