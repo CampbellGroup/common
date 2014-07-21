@@ -71,6 +71,18 @@ class MultiplexerServer(LabradServer):
         self.listeners = set()
 
         #####Main program functions 
+        
+    def initContext(self, c):
+        """Initialize a new context object."""
+        self.listeners.add(c.ID)
+    
+    def expireContext(self, c):
+        self.listeners.remove(c.ID)
+    
+    def getOtherListeners(self,c):
+        notified = self.listeners.copy()
+        notified.remove(c.ID)
+        return notified
 
     @setting(1, "Check WLM Running")
     def instance(self,c):
@@ -86,10 +98,11 @@ class MultiplexerServer(LabradServer):
     @setting(10, "Set Exposure Time", chan = 'i', ms = 'i')
     def setExposureTime(self,c,chan,ms):
 
+        notified = self.getOtherListeners(c)
         ms_c = c_long(ms)
         chan_c = c_long(chan)
         yield self.wmdll.SetExposureNum(chan_c, 1,  ms_c)
-        self.updateexp((chan,ms))
+        self.updateexp((chan,ms), notified)
 
         
     @setting(11, "Set Lock State", state = 'b')
@@ -104,10 +117,11 @@ class MultiplexerServer(LabradServer):
         
     @setting(13, "Set Switcher Signal State", chan = 'i', state = 'b')
     def setSwitcherState(self, c, chan, state):
+        notified = self.getOtherListeners(c)
         chan_c = c_long(chan)        
         state_c = c_long(state)
         yield self.wmdll.SetSwitcherSignalStates(chan_c, state_c, c_long(1))       
-        self.measuredchanged((chan,state))
+        self.measuredchanged((chan,state), notified)
 
     @setting(14, "Set PID Course", chan = 'i', course = 'v')
     def setPIDCourse(self, c, chan, course):
