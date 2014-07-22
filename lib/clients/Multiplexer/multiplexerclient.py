@@ -89,7 +89,7 @@ class wavemeterclient(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         
         self.lockSwitch = TextChangingButton()
-        layout.addWidget(self.lockSwitch, 0, 2)
+        layout.addWidget(self.lockSwitch, 0, 3)
         
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
