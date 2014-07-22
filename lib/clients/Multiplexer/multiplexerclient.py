@@ -139,7 +139,7 @@ class wavemeterclient(QtGui.QWidget):
         if chan in self.d : 
             freq = signal[1]
             
-            if self.d[chan].measSwitch.isChecked():
+            if not self.d[chan].measSwitch.isChecked():
                 self.d[chan].currentfrequency.setText('Not Measured')                      
             elif freq == -3.0:
                 self.d[chan].currentfrequency.setText('Under Exposed')
