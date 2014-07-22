@@ -9,35 +9,37 @@ import socket
 SIGNALID1 = 445566
 SIGNALID2 = 143533
 SIGNALID3 = 111221
+SIGNALID4 = 549210
 #this is the signal for the updated frequencys
 
 class TextChangingButton(QtGui.QPushButton):
     """Button that changes its text to ON or OFF and colors when it's pressed""" 
-    def __init__(self, parent = None):
+    def __init__(self, addtext = None, parent = None):
         super(TextChangingButton, self).__init__(parent)
         self.setCheckable(True)
         self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         #connect signal for appearance changing
+        self.addtext = addtext
+        if self.addtext == None: 
+            self.addtext = ''
+        else:
+            self.addtext = self.addtext + '       '
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
     
-    def setAppearance(self, down):
+    def setAppearance(self, down, addtext = None):
         if down:
-            self.setText('I')
+            self.setText(self.addtext + 'On')
             self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
         else:
-            self.setText('O')
+            self.setText(self.addtext + 'Off')
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-    print state
-        yield None
     def sizeHint(self):
         return QtCore.QSize(37, 26)
     
     
 class wavemeterclient(QtGui.QWidget):
-    
-
 
     def __init__(self, reactor, parent = None):
         """initializels the GUI creates the reactor 
@@ -82,7 +84,7 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1) 
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
-        yield self.server.addListener(listener = self.togglelock, source = None, ID = SIGNALID4)
+        yield self.server.addListener(listener = self.toggleLock, source = None, ID = SIGNALID4)
         
         self.initializeGUI()
         
@@ -91,7 +93,7 @@ class wavemeterclient(QtGui.QWidget):
     
         layout = QtGui.QGridLayout()
         
-        self.lockSwitch = TextChangingButton()
+        self.lockSwitch = TextChangingButton('Lock Wave Meter')
         self.lockSwitch.toggled.connect(self.setLock)
         layout.addWidget(self.lockSwitch, 0, 3)
         
@@ -125,9 +127,7 @@ class wavemeterclient(QtGui.QWidget):
             layout.addWidget(self.d[port], position[1], position[0], 1, 3)
         self.setLayout(layout)
 
-
-    @inlineCallbacksprint state
-        yield None
+    @inlineCallbacks
     def expChanged(self, exp, chan):
         #these are switched, dont know why
         exp = int(exp)
@@ -139,7 +139,7 @@ class wavemeterclient(QtGui.QWidget):
         if chan in self.d : 
             freq = signal[1]
             
-            if self.d[chan].measSwitch.isDown():
+            if self.d[chan].measSwitch.isChecked():
                 self.d[chan].currentfrequency.setText('Not Measured')                      
             elif freq == -3.0:
                 self.d[chan].currentfrequency.setText('Under Exposed')
@@ -166,8 +166,6 @@ class wavemeterclient(QtGui.QWidget):
     @inlineCallbacks
     def changeState(self, state, chan):
         yield self.server.set_switcher_signal_state(chan, state)
-        #this does not stay changed when wavemeter is shut off, needs to be fixed
-        if state == False:  self.d[chan].currentfrequency.setText('Not Measured') 
      
     @inlineCallbacks   
     def freqChanged(self,freq, port):
@@ -175,7 +173,7 @@ class wavemeterclient(QtGui.QWidget):
         
     @inlineCallbacks
     def setLock(self, state):
-        yield self.server.set_lock_state(value)
+        yield self.server.set_lock_state(state)
 
     def closeEvent(self, x):
         self.reactor.stop()

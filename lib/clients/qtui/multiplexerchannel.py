@@ -17,23 +17,27 @@ class StretchedLabel(QtGui.QLabel):
 
 class TextChangingButton(QtGui.QPushButton):
     """Button that changes its text to ON or OFF and colors when it's pressed""" 
-    def __init__(self, parent = None):
+    def __init__(self, addtext = None, parent = None):
         super(TextChangingButton, self).__init__(parent)
         self.setCheckable(True)
         self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         #connect signal for appearance changing
+        self.addtext = addtext
+        if self.addtext == None: 
+            self.addtext = ''
+        else:
+            self.addtext = self.addtext + '       '
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
     
-    def setAppearance(self, down):
+    def setAppearance(self, down, addtext = None):
         if down:
-            self.setText('I')
+            self.setText(self.addtext + 'On')
             self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
         else:
-            self.setText('O')
+            self.setText(self.addtext + 'Off')
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-    
     def sizeHint(self):
         return QtCore.QSize(37, 26)
 
@@ -48,7 +52,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         title = QtGui.QLabel(title)
         title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         title.setAlignment(QtCore.Qt.AlignCenter)
-        measlabel = QtGui.QLabel('WLM Measure')
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
@@ -62,7 +65,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(self.currentfrequency,1, 0, 1, 3)
         layout.addWidget(frequencylabel,2, 0, 1, 1)
         layout.addWidget(exposurelabel,2, 1, 1, 1)
-        layout.addWidget(measlabel, 3,3)
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
         self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
@@ -78,7 +80,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setKeyboardTracking(False)
         layout.addWidget(self.spinFreq,     3, 0)
         layout.addWidget(self.spinExp,    3, 1)
-        self.measSwitch = TextChangingButton()
+        self.measSwitch = TextChangingButton('WLM Measure')
         layout.addWidget(self.measSwitch, 3, 2)
         layout.minimumSize()
             
