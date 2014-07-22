@@ -26,6 +26,7 @@ timeout = 20
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
 FREQSIGNAL = 122456
+LOCKSIGNAL = 112456
 
 class MultiplexerServer(LabradServer):
     """
@@ -37,6 +38,7 @@ class MultiplexerServer(LabradServer):
     measuredchanged = Signal(CHANSIGNAL, 'signal: selected channels changed', '(ib)')
     freqchanged = Signal(FREQSIGNAL, 'signal: frequency changed', '(iv)')
     updateexp = Signal(UPDATEEXP, 'signal: update exp', '(ii)')
+    lockchanged = Signal(LOCKSIGNAL, 'signal: lock changed', 'b')
     
     def initServer(self):
 
@@ -107,8 +109,10 @@ class MultiplexerServer(LabradServer):
         
     @setting(11, "Set Lock State", state = 'b')
     def setLockState(self,c,state):
+        notified = self.getOtherListeners(c)
         state_c = c_bool(state)
-        yield self.wmdll.SetDeviationMode(state_c)       
+        yield self.wmdll.SetDeviationMode(state_c) 
+        self.lockchanged(state, notified)      
         
     @setting(12, "Set Switcher Mode", mode = 'b')
     def setSwitcherMode(self, c, mode):

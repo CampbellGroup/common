@@ -29,7 +29,8 @@ class TextChangingButton(QtGui.QPushButton):
         else:
             self.setText('O')
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-    
+    print state
+        yield None
     def sizeHint(self):
         return QtCore.QSize(37, 26)
     
@@ -76,10 +77,12 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__selected_channels_changed(SIGNALID2)
         yield self.server.signal__update_exp(SIGNALID3)
+        yield self.server.signal__lock_changed(SIGNALID4)
         
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1) 
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
+        yield self.server.addListener(listener = self.togglelock, source = None, ID = SIGNALID4)
         
         self.initializeGUI()
         
@@ -89,6 +92,7 @@ class wavemeterclient(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         
         self.lockSwitch = TextChangingButton()
+        self.lockSwitch.toggled.connect(self.setLock)
         layout.addWidget(self.lockSwitch, 0, 3)
         
         for chan in self.chaninfo:
@@ -122,7 +126,8 @@ class wavemeterclient(QtGui.QWidget):
         self.setLayout(layout)
 
 
-    @inlineCallbacks
+    @inlineCallbacksprint state
+        yield None
     def expChanged(self, exp, chan):
         #these are switched, dont know why
         exp = int(exp)
@@ -149,6 +154,9 @@ class wavemeterclient(QtGui.QWidget):
         if chan in self.d :
             self.d[chan].measSwitch.setChecked(value)
             
+    def toggleLock(self, c, signal):
+        self.lockSwitch.setChecked(value)
+            
     def updateexp(self,c, signal):
         chan = signal[0]
         value = signal[1]
@@ -164,6 +172,10 @@ class wavemeterclient(QtGui.QWidget):
     @inlineCallbacks   
     def freqChanged(self,freq, port):
         yield self.server.set_pid_course(port, freq)
+        
+    @inlineCallbacks
+    def setLock(self, state):
+        yield self.server.set_lock_state(value)
 
     def closeEvent(self, x):
         self.reactor.stop()
