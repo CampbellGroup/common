@@ -62,7 +62,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(self.currentfrequency,1, 0, 1, 3)
         layout.addWidget(frequencylabel,2, 0, 1, 1)
         layout.addWidget(exposurelabel,2, 1, 1, 1)
-        layout.addWidget(measlabel, 3,2)
+        layout.addWidget(measlabel, 3,3)
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
         self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
