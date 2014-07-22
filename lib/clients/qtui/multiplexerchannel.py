@@ -27,7 +27,7 @@ class TextChangingButton(QtGui.QPushButton):
         if self.addtext == None: 
             self.addtext = ''
         else:
-            self.addtext = self.addtext + '       '
+            self.addtext = self.addtext + '   '
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
     
