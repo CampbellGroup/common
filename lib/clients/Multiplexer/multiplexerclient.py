@@ -155,7 +155,8 @@ class wavemeterclient(QtGui.QWidget):
             self.d[chan].measSwitch.setChecked(value)
             
     def toggleLock(self, c, signal):
-        self.lockSwitch.setChecked(value)
+        print "notified!"
+        self.lockSwitch.setChecked(signal)
             
     def updateexp(self,c, signal):
         chan = signal[0]
