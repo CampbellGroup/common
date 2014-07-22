@@ -1,6 +1,6 @@
 from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
 from twisted.internet.defer import inlineCallbacks
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 #from wlm_client_config import multiplexer_config
 import socket
 
@@ -10,6 +10,29 @@ SIGNALID1 = 445566
 SIGNALID2 = 143533
 SIGNALID3 = 111221
 #this is the signal for the updated frequencys
+
+class TextChangingButton(QtGui.QPushButton):
+    """Button that changes its text to ON or OFF and colors when it's pressed""" 
+    def __init__(self, parent = None):
+        super(TextChangingButton, self).__init__(parent)
+        self.setCheckable(True)
+        self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        #connect signal for appearance changing
+        self.toggled.connect(self.setAppearance)
+        self.setAppearance(self.isDown())
+    
+    def setAppearance(self, down):
+        if down:
+            self.setText('I')
+            self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
+        else:
+            self.setText('O')
+            self.setPalette(QtGui.QPalette(QtCore.Qt.black))
+    
+    def sizeHint(self):
+        return QtCore.QSize(37, 26)
+    
     
 class wavemeterclient(QtGui.QWidget):
     
@@ -60,10 +83,14 @@ class wavemeterclient(QtGui.QWidget):
         
         self.initializeGUI()
         
-    @inlineCallbacks
+    @inlineCallbacks    
     def initializeGUI(self):  
     
         layout = QtGui.QGridLayout()
+        
+        self.lockSwitch = TextChangingButton()
+        layout.addWidget(self.lockSwitch, 0, 2)
+        
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
             hint = self.chaninfo[chan][1]
@@ -91,9 +118,9 @@ class wavemeterclient(QtGui.QWidget):
             widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), port = port : self.freqChanged(freq, port))
 
             self.d[port] = widget
-            layout.addWidget(self.d[port], position[1], position[0])
+            layout.addWidget(self.d[port], position[1], position[0], 1, 3)
         self.setLayout(layout)
-        yield None
+
 
     @inlineCallbacks
     def expChanged(self, exp, chan):
