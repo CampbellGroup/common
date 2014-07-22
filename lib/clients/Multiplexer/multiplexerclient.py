@@ -147,7 +147,7 @@ class wavemeterclient(QtGui.QWidget):
                 self.d[chan].currentfrequency.setText('Over Exposed')
             else:
                 self.d[chan].currentfrequency.setText(str(freq)[0:10])
-                        print "notified!"
+
     def toggleMeas(self, c, signal):
         chan = signal[0]
         value = signal[1]
