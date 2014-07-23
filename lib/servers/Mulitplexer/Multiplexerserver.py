@@ -1,7 +1,7 @@
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue, inlineCallbacks
 from twisted.internet.threads import deferToThread
-from ctypes import c_long, c_double, c_buffer, c_float, c_int, c_bool, c_char_p, windll, pointer, create_string_buffer
+from ctypes import *
 from labrad.units import WithUnit
 from twisted.internet import reactor
 
@@ -27,6 +27,7 @@ UPDATEEXP = 122387
 CHANSIGNAL = 122485
 FREQSIGNAL = 122456
 LOCKSIGNAL = 112456
+OUTPUTCHANGED = 121212
 
 class MultiplexerServer(LabradServer):
     """
@@ -39,6 +40,7 @@ class MultiplexerServer(LabradServer):
     freqchanged = Signal(FREQSIGNAL, 'signal: frequency changed', '(iv)')
     updateexp = Signal(UPDATEEXP, 'signal: update exp', '(ii)')
     lockchanged = Signal(LOCKSIGNAL, 'signal: lock changed', 'b')
+    outputchanged = Signal(OUTPUTCHANGED, 'signal: output changed', 'b')
     
     def initServer(self):
 
@@ -140,6 +142,17 @@ class MultiplexerServer(LabradServer):
         value = value*1000
         value_c = c_double(value)
         yield self.wmdll.SetDeviationSignalNum(chan_c, value_c)
+
+    @setting(16, "Set WLM Output", output = 'b')
+    def setWLMOutput(self, c, output):
+        '''Start or stops wavemeter
+        '''
+        notified = self.getOtherListeners(c)
+        if output == True:
+            yield self.wmdll.Operation(2)
+        else:
+            yield self.wmdll.Operation(0)
+        self.outputchanged(output)
         
 ###Get Functions      
 
@@ -195,6 +208,15 @@ class MultiplexerServer(LabradServer):
         course_c = create_string_buffer(1024)
         yield self.wmdll.GetPIDCourseNum(chan_c, pointer(course_c))
         value = str(course_c.value)
+        returnValue(value)
+
+    @setting(28, "Get WLM Output", returns = 'b')
+    def getWLMOutput(self, c):
+        value = yield self.wmdll.GetOperationState(c_short(0))
+        if value == 2:
+            value = True
+        else:
+            value = False
         returnValue(value)
 
             

@@ -82,7 +82,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         channel = self.parsechannel(channel)
         if function == None:
             output = "FUNC" + channel + "?"
-        else""
+        else:
             output = "FUNC " + self.lookup[function] + channel
         yield self.write(output)
         
