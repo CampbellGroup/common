@@ -45,8 +45,14 @@ class switchclient(QtGui.QWidget):
     def initializeGUI(self):  
     
         layout = QtGui.QGridLayout()
+        
+        qBox = QtGui.QGroupBox('Switch Client')
+        subLayout = QtGui.QGridLayout()
+        qBox.setLayout(subLayout)
+        layout.addWidget(qBox, 1, 0)
+        
         for chan in self.chaninfo:
-            port = self.chaninfo[chan][0]
+            port     = self.chaninfo[chan][0]
             position = self.chaninfo[chan][1]
             inverted = self.chaninfo[chan][2]
             
@@ -55,7 +61,8 @@ class switchclient(QtGui.QWidget):
             widget.TTLswitch.setChecked(True)
             widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port  : self.changeState(state, port))            
             self.d[port] = widget
-            layout.addWidget(self.d[port])
+            subLayout.addWidget(self.d[port])
+        
         self.setLayout(layout)
         yield None
         
