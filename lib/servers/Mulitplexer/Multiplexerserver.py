@@ -1,7 +1,7 @@
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue, inlineCallbacks
 from twisted.internet.threads import deferToThread
-from ctypes import c_long, c_double, c_buffer, c_float, c_int, c_bool, c_char_p, windll, pointer
+from ctypes import c_long, c_double, c_buffer, c_float, c_int, c_bool, c_char_p, windll, pointer, create_string_buffer
 from labrad.units import WithUnit
 from twisted.internet import reactor
 
@@ -192,9 +192,9 @@ class MultiplexerServer(LabradServer):
     @setting(27, "Get PID Course", chan = 'i', returns = 's')
     def getPIDCourse(self, c, chan):
         chan_c = c_long(chan)
-        course_c = c_char_p * 1024
+        course_c = create_string_buffer(1024)
         yield self.wmdll.GetPIDCourseNum(chan_c, pointer(course_c))
-        value = str(course_c)
+        value = str(course_c.value)
         returnValue(value)
 
             
