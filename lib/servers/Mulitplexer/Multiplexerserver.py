@@ -188,6 +188,14 @@ class MultiplexerServer(LabradServer):
         yield self.wmdll.GetSwitcherSignalStates(chan_c, pointer(use_c), pointer(show_c))
         use = bool(use_c)
         returnValue(use)
+        
+    @setting(27, "Get PID Course", chan = 'i', returns = 's')
+    def getPIDCourse(self, c, chan):
+        chan_c = c_long(chan)
+        course_c = c_char_p * 1024
+        yield self.wmdll.GetPIDCourseNum(chan_c, pointer(course_c))
+        value = str(course_c)
+        returnValue(value)
 
             
     def measureChan(self):
