@@ -93,9 +93,14 @@ class wavemeterclient(QtGui.QWidget):
     
         layout = QtGui.QGridLayout()
         
+        qBox = QtGui.QGroupBox('Wave Length and Lock settings')
+        subLayout = QtGui.QGridLayout()
+        qBox.setLayout(subLayout)
+        layout.addWidget(qBox, 0, 0)
+        
         self.lockSwitch = TextChangingButton('Lock Wave Meter')
         self.lockSwitch.toggled.connect(self.setLock)
-        layout.addWidget(self.lockSwitch, 0, 3)
+        subLayout.addWidget(self.lockSwitch, 0, 3)
         
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
@@ -125,7 +130,8 @@ class wavemeterclient(QtGui.QWidget):
             widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), port = port : self.freqChanged(freq, port))
 
             self.d[port] = widget
-            layout.addWidget(self.d[port], position[1], position[0], 1, 3)
+            subLayout.addWidget(self.d[port], position[1], position[0], 1, 3)
+            
         self.setLayout(layout)
 
     @inlineCallbacks

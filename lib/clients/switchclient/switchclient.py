@@ -46,10 +46,10 @@ class switchclient(QtGui.QWidget):
     
         layout = QtGui.QGridLayout()
         
-        qBox = QtGui.QGroupBox('Switch Client')
+        qBox = QtGui.QGroupBox('Laser Shutters')
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
-        layout.addWidget(qBox, 1, 0)
+        layout.addWidget(qBox, 0, 0)
         
         for chan in self.chaninfo:
             port     = self.chaninfo[chan][0]
