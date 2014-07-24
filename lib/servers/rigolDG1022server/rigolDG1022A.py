@@ -101,23 +101,37 @@ class RigolWrapper(GPIBDeviceWrapper):
         else:
             output = "FREQ " + channel + str(int(frequency['Hz']))
         yield self.write(output)
-        
+
     @inlineCallbacks
-    def Voltage(self, channel, voltage = None):
+    def setDC(self, channel, voltage = None):
         '''
-        sets voltage
+        sets DC output value
         '''
         channel = self.parsechannel(channel)
         if voltage == None:
-            output = "VOLTOFFS" + channel + "?"
-            print output
+            output = "VOLT:OFFS" + channel
+            yield self.write(output)
+            volts = self.read()
+            returnValue(volts)
+        else:
+            output = 'APPL:DC' + channel + ' DEF,DEF,' + str(voltage['V'])
+            yield self.write(output)
+        
+        
+    @inlineCallbacks
+    def Amplitude(self, channel, voltage = None):
+        '''
+        sets amp
+        '''
+        channel = self.parsechannel(channel)
+        if voltage == None:
+            output = "VOLT" + channel + "?"
             yield self.write(output)
             volts = yield self.read()
             returnValue(volts)
         else:
-            output = "VOLTOFFS" + channel + " " + str(voltage['V'])
+            output = "VOLT" + channel + " " + str(voltage['V'])
             yield self.write(output)
-            print "wrote:",output
 
     @inlineCallbacks
     def AMSource(self, source):
@@ -239,10 +253,16 @@ class RigolServer(GPIBManagedServer):
         func = yield dev.WaveFunction(channel, function)
         returnValue(func)
 
-    @setting(131, 'Offset', channel = 'i', value = 'v[V]')
-    def offset(self, c, channel, value = None):
+    @setting(131, 'Amplitude', channel = 'i', value = 'v[V]')
+    def Amplitude(self, c, channel, value = None):
         dev = self.selectedDevice(c)
-        volts = yield dev.Voltage(channel, value)
+        volts = yield dev.Amplitude(channel, value)
+        returnValue(volts)
+
+    @setting(9, 'Apply DC', channel = 'i', value = 'v[V]')
+    def setDC(self, c, channel, value = None):
+        dev = self.selectedDevice(c)
+        volts = yield dev.setDC(channel, value)
         returnValue(volts)
 
 __server__ = RigolServer()
