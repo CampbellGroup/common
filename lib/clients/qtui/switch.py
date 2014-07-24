@@ -14,10 +14,10 @@ class TextChangingButton(QtGui.QPushButton):
     
     def setAppearance(self, down):
         if down:
-            self.setText('I')
+            self.setText('Closed')
             self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
         else:
-            self.setText('O')
+            self.setText('Opened')
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
     
     def sizeHint(self):
