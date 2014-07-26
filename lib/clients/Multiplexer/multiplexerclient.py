@@ -10,6 +10,8 @@ SIGNALID1 = 445566
 SIGNALID2 = 143533
 SIGNALID3 = 111221
 SIGNALID4 = 549210
+SIGNALID5 = 190909
+
 #this is the signal for the updated frequencys
 
 class TextChangingButton(QtGui.QPushButton):
@@ -80,11 +82,13 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__selected_channels_changed(SIGNALID2)
         yield self.server.signal__update_exp(SIGNALID3)
         yield self.server.signal__lock_changed(SIGNALID4)
+        yield self.server.signal__output_changed(SIGNALID5)
         
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1) 
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
         yield self.server.addListener(listener = self.toggleLock, source = None, ID = SIGNALID4)
+        yield self.server.addListener(listener = self.updateWLMOutput, source = None, ID = SIGNALID5)
         
         self.initializeGUI()
         
@@ -93,9 +97,21 @@ class wavemeterclient(QtGui.QWidget):
     
         layout = QtGui.QGridLayout()
         
+        qBox = QtGui.QGroupBox('Wave Length and Lock settings')
+        subLayout = QtGui.QGridLayout()
+        qBox.setLayout(subLayout)
+        layout.addWidget(qBox, 0, 0)
+        
         self.lockSwitch = TextChangingButton('Lock Wave Meter')
+        self.startSwitch = TextChangingButton('Wavemeter')
+        initstartvalue = yield self.server.get_wlm_output()
+        self.startSwitch.setChecked(initstartvalue)
+        
         self.lockSwitch.toggled.connect(self.setLock)
-        layout.addWidget(self.lockSwitch, 0, 3)
+        self.startSwitch.toggled.connect(self.setOutput)
+        
+        subLayout.addWidget(self.lockSwitch, 0, 3)
+        subLayout.addWidget(self.startSwitch, 0, 1)
         
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
@@ -125,7 +141,8 @@ class wavemeterclient(QtGui.QWidget):
             widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), port = port : self.freqChanged(freq, port))
 
             self.d[port] = widget
-            layout.addWidget(self.d[port], position[1], position[0], 1, 3)
+            subLayout.addWidget(self.d[port], position[1], position[0], 1, 3)
+            
         self.setLayout(layout)
 
     @inlineCallbacks
@@ -163,6 +180,9 @@ class wavemeterclient(QtGui.QWidget):
         value = signal[1]
         if chan in self.d :
             self.d[chan].spinExp.setValue(value)
+            
+    def updateWLMOutput(self, c, signal):
+        self.startSwitch.setChecked(signal)
 
     @inlineCallbacks
     def changeState(self, state, chan):
@@ -175,6 +195,10 @@ class wavemeterclient(QtGui.QWidget):
     @inlineCallbacks
     def setLock(self, state):
         yield self.server.set_lock_state(state)
+        
+    @inlineCallbacks
+    def setOutput(self, state):
+        yield self.server.set_wlm_output(state)
         
     @inlineCallbacks
     def getPIDCourse(self, chan, hint):

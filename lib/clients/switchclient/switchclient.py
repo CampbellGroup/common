@@ -30,11 +30,11 @@ class switchclient(QtGui.QWidget):
         self.cxn = yield connectAsync(name = "switch client")
         self.server = yield self.cxn.arduinottl
         try:
-            path = yield self.cxn.registry.get('configuration_path')
+            path = yield self.cxn.registry.get('configuration_path') #gets path from registry    
             path = str(path)
-            path = path.replace('/','.')
+            path = path.replace('/','.') #replaces for python import
             path = path.replace('\\','.')
-            switch_config = getattr(__import__(path + '.switch_client_config', fromlist = ['switch_config']), 'switch_config')
+            switch_config = getattr(__import__(path + '.switch_client_config', fromlist = ['switch_config']), 'switch_config')# programatic import
         except:
             from common.lib.configuration_files.switch_client_config import switch_config
            
@@ -46,10 +46,10 @@ class switchclient(QtGui.QWidget):
     
         layout = QtGui.QGridLayout()
         
-        qBox = QtGui.QGroupBox('Switch Client')
+        qBox = QtGui.QGroupBox('Laser Shutters')
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
-        layout.addWidget(qBox, 1, 0)
+        layout.addWidget(qBox, 0, 0)
         
         for chan in self.chaninfo:
             port     = self.chaninfo[chan][0]

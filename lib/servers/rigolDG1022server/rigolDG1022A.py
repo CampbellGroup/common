@@ -49,19 +49,19 @@ class RigolWrapper(GPIBDeviceWrapper):
         return channel
     
     @inlineCallbacks
-    def Output(self, output = None, channel = None):
+    def Output(self, channel, output = None):
         '''
         Turns on or off the rigol output of specified channel
         '''
         channel = self.parsechannel(channel)
 
-        if output :
+        if output == True:
             yield self.write("OUTP" + channel + " ON")
         elif output == False:
             yield self.write("OUTP" + channel + " OFF")
         else:
             yield self.write("OUTP" + channel + "?")
-            state = self.read()
+            state = yield self.read()
             returnValue(state)
             
             
@@ -75,16 +75,20 @@ class RigolWrapper(GPIBDeviceWrapper):
         yield self.write(output)
      
     @inlineCallbacks    
-    def WaveFunction(self, function = None, channel = None):
+    def WaveFunction(self, channel, function = None):
         '''
         Changes wave form
         '''
         channel = self.parsechannel(channel)
         if function == None:
             output = "FUNC" + channel + "?"
-        else""
-            output = "FUNC " + self.lookup[function] + channel
-        yield self.write(output)
+            yield self.write(output)
+            func = yield self.read()
+            returnValue(func)
+        else:
+            output = "FUNC" + channel + " " + self.lookup[function]
+            yield self.write(output)
+
         
     @inlineCallbacks
     def Frequency(self, frequency = None, channel = None):
@@ -97,18 +101,37 @@ class RigolWrapper(GPIBDeviceWrapper):
         else:
             output = "FREQ " + channel + str(int(frequency['Hz']))
         yield self.write(output)
+
+    @inlineCallbacks
+    def setDC(self, channel, voltage = None):
+        '''
+        sets DC output value
+        '''
+        channel = self.parsechannel(channel)
+        if voltage == None:
+            output = "VOLT:OFFS" + channel
+            yield self.write(output)
+            volts = self.read()
+            returnValue(volts)
+        else:
+            output = 'APPL:DC' + channel + ' DEF,DEF,' + str(voltage['V'])
+            yield self.write(output)
+        
         
     @inlineCallbacks
-    def Voltage(self, voltage = None, channel = None):
+    def Amplitude(self, channel, voltage = None):
         '''
-        sets voltage
+        sets amp
         '''
         channel = self.parsechannel(channel)
         if voltage == None:
             output = "VOLT" + channel + "?"
+            yield self.write(output)
+            volts = yield self.read()
+            returnValue(volts)
         else:
             output = "VOLT" + channel + " " + str(voltage['V'])
-        yield self.write(output)
+            yield self.write(output)
 
     @inlineCallbacks
     def AMSource(self, source):
@@ -215,20 +238,32 @@ class RigolServer(GPIBManagedServer):
     deviceWrapper = RigolWrapper
 
     @setting(10, 'Output', channel = 'i', output = 'b')
-    def deviceOutput(self, c, output = None, channel = None): # uses passed context "c" to address specific device 
+    def deviceOutput(self, c, channel, output = None): # uses passed context "c" to address specific device 
         dev = self.selectedDevice(c)
-        yield dev.Output(output, channel)
+        yield dev.Output(channel, output)
     
     @setting(69, 'Apply Waveform', channel = 'i', function = 's', frequency = ['v[Hz]'], amplitude = ['v[V]'], offset = ['v[V]']  )
     def applyDeviceWaveform(self, c, function, frequency, amplitude, offset, channel = None):
         dev = self.selectedDevice(c)
         yield dev.applyWaveForm(channel, function, frequency, amplitude, offset)
         
-    @setting(707, 'Wave Function', channel = 'i', form = 's')
-    def deviceFunction(self, c, function = None, channel = None):
+    @setting(707, 'Wave Function', channel = 'i', function = 's')
+    def deviceFunction(self, c, channel, function = None):
         dev = self.selectedDevice(c)
-        yield dev.setWaveFunction(function, channel)
+        func = yield dev.WaveFunction(channel, function)
+        returnValue(func)
 
+    @setting(131, 'Amplitude', channel = 'i', value = 'v[V]')
+    def Amplitude(self, c, channel, value = None):
+        dev = self.selectedDevice(c)
+        volts = yield dev.Amplitude(channel, value)
+        returnValue(volts)
+
+    @setting(9, 'Apply DC', channel = 'i', value = 'v[V]')
+    def setDC(self, c, channel, value = None):
+        dev = self.selectedDevice(c)
+        volts = yield dev.setDC(channel, value)
+        returnValue(volts)
 
 __server__ = RigolServer()
 
