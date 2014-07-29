@@ -48,39 +48,36 @@ class TemperatureMonitor(QtGui.QWidget):
     def onehour(self):
         currenttime = time.time()
         starttime = currenttime - 3600
-        self.getData(starttime)
+        self.sendData(starttime)
         
     def twohour(self):
         currenttime = time.time()
         starttime = currenttime - 2*3600
-        self.getData(starttime)
+        self.sendData(starttime)
         
     def lastday(self):
         currenttime = time.time()
         starttime = currenttime - 24*3600
-        self.getData(starttime)
+        self.sendData(starttime)
         
     def lasttwoday(self):
         currenttime = time.time()
         starttime = currenttime - 2*24*3600
-        self.getData(starttime)
+        self.sendData(starttime)
 
     def lastmonth(self):
         currenttime = time.time()
         starttime = currenttime - 30*24*3600
-        self.getData(starttime)
+        self.sendData(starttime)
         
     def alltime(self):
         currenttime = time.time()
         starttime = currenttime - 12*30*24*3600
-        self.getData(starttime)
+        self.sendData(starttime)
         
-    def getData(self, starttime):
-        startmonth = time.strftime("%B",time.localtime(starttime))
-        startyear =  time.strftime("%Y",time.localtime(starttime))
-        for dirpath, dirnames, filenames in os.walk("."):
-            for filename in [f for f in filenames if (f.endswith(".dat") and (self.getepochtime(f[0:-9]) + 24*3600 >= starttime))]:
-                print os.path.join(dirpath, filename)
+    def sendData(self, starttime):
+        print "send data"
+
                 
     def getepochtime(self, date):
         '''
