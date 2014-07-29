@@ -11,6 +11,8 @@ class TemperatureMonitor(QtGui.QWidget):
         self.initializeGUI()
     
     def initializeGUI(self):
+        '''Initializes GUI
+        '''
         self.setGeometry(400, 150, 350, 550)
         self.setWindowTitle('Temperature Monitor')
         layout = QtGui.QGridLayout()
@@ -35,7 +37,6 @@ class TemperatureMonitor(QtGui.QWidget):
         layout.addWidget(lasttwodaybutton,3,0)
         layout.addWidget(lastmonthbutton  ,4,0)
         layout.addWidget(alldatabutton    ,5,0)
-        
         
         self.setLayout(layout)
         
@@ -76,12 +77,18 @@ class TemperatureMonitor(QtGui.QWidget):
         
     def getData(self, starttime):
         startmonth = time.strftime("%B",time.localtime(starttime))
-        print startmonth
         startyear =  time.strftime("%Y",time.localtime(starttime))
-        print startyear
         for dirpath, dirnames, filenames in os.walk("."):
-            for filename in [f for f in filenames if (f.endswith(".dat") and f.startswith(startyear + '-' + startmonth))]:
+            for filename in [f for f in filenames if (f.endswith(".dat") and (self.getepochtime(f[0:-9]) + 24*3600 >= starttime))]:
                 print os.path.join(dirpath, filename)
+                
+    def getepochtime(self, date):
+        '''
+        takes date format YYYY-MM-DD
+        '''
+        eptime = time.mktime(time.strptime(date, "%Y-%m-%d"))
+        return eptime
+        
     
     
     
