@@ -5,6 +5,7 @@ import os
 import time
 import urllib2
 from matplotlib import pyplot as plt
+from matplotlib import dates, ticker
 import numpy as np
 
 class TemperatureMonitor(QtGui.QWidget):
@@ -101,6 +102,7 @@ class TemperatureMonitor(QtGui.QWidget):
         for kk in xrange(len(data2)):
             if data2[kk, 4] >= starttime:
                 data3.append(data2[kk])
+#        plt.ion()
         fig, ax = plt.subplots()
         data3 = np.array(data3)
         linewidth = 3
@@ -108,11 +110,19 @@ class TemperatureMonitor(QtGui.QWidget):
         ax.plot(data3[:,4], data3[:,1], lw = linewidth,label = "Ion Table")
         ax.plot(data3[:,4], data3[:,2], lw = linewidth,label = "AC Inlet")
         ax.plot(data3[:,4], data3[:,3], lw = linewidth,label = "Molecule Table")
+        a = ax.get_xticks().tolist()
+        for i, tick in enumerate(a):
+            a[i] = time.strftime("%a, %d %b %Y %H:%M", time.localtime(a[i]))
+        ax.set_xticklabels(a)
+        ticker.FixedLocator(5)
+        plt.xticks(rotation=30)
         ax.legend()
         plt.show()
     
 if __name__ == "__main__":
-    a = QtGui.QApplication(sys.argv)
+    a = QtGui.QApplication([])
     tempWidget = TemperatureMonitor()
     tempWidget.show()
     sys.exit(a.exec_())
+    
+    
