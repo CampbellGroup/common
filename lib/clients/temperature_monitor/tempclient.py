@@ -102,7 +102,7 @@ class TemperatureMonitor(QtGui.QWidget):
         for kk in xrange(len(data2)):
             if data2[kk, 4] >= starttime:
                 data3.append(data2[kk])
-#        plt.ion()
+        plt.ion()
         fig, ax = plt.subplots()
         data3 = np.array(data3)
         linewidth = 3
@@ -114,10 +114,12 @@ class TemperatureMonitor(QtGui.QWidget):
         for i, tick in enumerate(a):
             a[i] = time.strftime("%a, %d %b %Y %H:%M", time.localtime(a[i]))
         ax.set_xticklabels(a)
+        ax.set_ylabel("Temperature (F)")
+        ax.set_title("Campbell Lab Temperature")
         ticker.FixedLocator(5)
         plt.xticks(rotation=30)
         ax.legend()
-        plt.show()
+#        plt.show()
     
 if __name__ == "__main__":
     a = QtGui.QApplication([])
