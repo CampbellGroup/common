@@ -152,7 +152,7 @@ class MultiplexerServer(LabradServer):
             yield self.wmdll.Operation(2)
         else:
             yield self.wmdll.Operation(0)
-        self.outputchanged(output)
+        self.outputchanged(output, notified)
         
 ###Get Functions      
 
