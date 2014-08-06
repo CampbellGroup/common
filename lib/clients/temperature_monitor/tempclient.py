@@ -114,7 +114,7 @@ class TemperatureMonitor(QtGui.QWidget):
         for i, tick in enumerate(a):
             a[i] = time.strftime("%a, %d %b %Y %H:%M", time.localtime(a[i]))
         ax.set_xticklabels(a)
-        ax.set_ylabel("Temperature (F)")
+        ax.set_ylabel(r"Temperature ( $^\circ F$ )")
         ax.set_title("Campbell Lab Temperature")
         ticker.FixedLocator(5)
         plt.xticks(rotation=30)
