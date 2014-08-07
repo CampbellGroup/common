@@ -19,7 +19,10 @@ from labrad.server import LabradServer, setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
 from signals import Signals
-from configuration import config
+try:
+    from config.scriptscanner_config import config
+except:
+    from common.lib.config.scriptscanner_config import config
 import scan_methods
 from scheduler import scheduler
 import sys
@@ -38,9 +41,26 @@ class ScriptScanner(LabradServer, Signals):
     name = 'ScriptScanner'
     
     def initServer(self):
+        
+        
         self.script_parameters = {}
-        self.scheduler = scheduler(Signals)
+        self.scheduler = scheduler(Signals)    
         self.load_scripts()
+
+#        try:
+#            print "in try!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+#            self.cxn = yield connectAsync(name = 'Script Scanner Registry Check')
+#            path = yield self.cxn.registry.get('configuration_path')
+#            self.cxn.disconnect()
+#            path = str(path)
+#            path = path.replace('/','.')
+#            path = path.replace('\\','.')
+#            config = getattr(__import__(path + '.scriptscanner_config', fromlist = ['scriptscanner_config']), 'scriptscanner_config')
+#            print config
+#        except:
+#           from common.lib.configuration_files.scriptscanner_config import scriptscanner_config as config
+#        else:
+#            print "else"
     
     def load_scripts(self):
         '''

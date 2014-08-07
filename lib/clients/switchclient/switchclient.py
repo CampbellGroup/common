@@ -2,6 +2,10 @@ from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
 #from common.lib.configuration_files.switch_client_config import switch_config
+try:
+    from config.switch_client_config import switch_config
+except:
+    from common.lib.config.switch_client_config import switch_config
 
 class switchclient(QtGui.QWidget):
     
@@ -28,16 +32,7 @@ class switchclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(name = "switch client")
-        self.server = yield self.cxn.arduinottl
-        try:
-            path = yield self.cxn.registry.get('configuration_path') #gets path from registry    
-            path = str(path)
-            path = path.replace('/','.') #replaces for python import
-            path = path.replace('\\','.')
-            switch_config = getattr(__import__(path + '.switch_client_config', fromlist = ['switch_config']), 'switch_config')# programatic import
-        except:
-            from common.lib.configuration_files.switch_client_config import switch_config
-           
+        self.server = yield self.cxn.arduinottl     
         self.chaninfo = switch_config.info       
         self.initializeGUI()
         
