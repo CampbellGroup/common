@@ -32,7 +32,15 @@ class switchclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(name = "switch client")
-        self.server = yield self.cxn.arduinottl     
+        self.server = yield self.cxn.arduinottl   
+        self.reg = yield self.cxn.registry
+        try:
+            yield self.reg.cd('settings')
+            self.settings = yield self.reg.dir()
+            self.settings = self.settings[1]
+        except:
+            self.settings = []
+  
         self.chaninfo = switch_config.info       
         self.initializeGUI()
         
@@ -52,9 +60,13 @@ class switchclient(QtGui.QWidget):
             inverted = self.chaninfo[chan][2]
             
             widget = QCustomSwitchChannel(chan)  
-
-            widget.TTLswitch.setChecked(True)
-            widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port  : self.changeState(state, port))            
+            if chan + 'shutter' in self.settings:
+                value = yield self.reg.get(chan + 'shutter')
+                widget.TTLswitch.setChecked(value)
+            else:
+                widget.TTLswitch.setChecked(False)
+                
+            widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port, chan = chan  : self.changeState(state, port, chan))            
             self.d[port] = widget
             subLayout.addWidget(self.d[port])
         
@@ -62,8 +74,10 @@ class switchclient(QtGui.QWidget):
         yield None
         
     @inlineCallbacks
-    def changeState(self, state, chan):
-        yield self.server.ttl_output(chan, state)
+    def changeState(self, state, port, chan):
+        yield self.server.ttl_output(port, state)
+        if chan + 'shutter' in self.settings:
+            yield self.reg.set(chan + 'shutter', state)
 
     def closeEvent(self, x):
         self.reactor.stop()
