@@ -98,6 +98,8 @@ class wavemeterclient(QtGui.QWidget):
         self.lockSwitch = TextChangingButton('Lock Wave Meter')
         self.startSwitch = TextChangingButton('Wavemeter')
         initstartvalue = yield self.server.get_wlm_output()
+        initlockvalue = yield self.server.get_lock_state()
+        self.lockSwitch.setChecked(initlockvalue)
         self.startSwitch.setChecked(initstartvalue)
         
         self.lockSwitch.toggled.connect(self.setLock)
