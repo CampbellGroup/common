@@ -24,17 +24,18 @@ class plotwikidata(QtGui.QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
+        print "about to connect()"
         self.cxn = yield connectAsync(name='Plot Wiki Data Client')
         self.dv = yield self.cxn.data_vault
-        self.ws = yield self.cxn.wikiserver
+        self.ws = yield self.cxn.wiki_server
         yield self.cxn.registry.cd(['','Servers', 'wikiserver'])
         self.maindir = yield self.cxn.registry.get('wikipath')
 #        self.maindir = self.maindir[0] + '/'
-        print self.maindir
         yield os.chdir(self.maindir)
         self.setupWidget()
         
     def setupWidget(self):
+        print "in setupwidget"
         self.setGeometry(300, 300, 500, 150)
         self.grid = QtGui.QGridLayout()
         self.grid.setSpacing(5)
@@ -99,7 +100,6 @@ class plotwikidata(QtGui.QWidget):
             plt.xlim(self.xlims)
         if self.ylims != None:
             plt.ylim(self.ylims)
-        print os.getcwd()
         plt.savefig(self.timetag)
         plt.show()
         yield self.ws.add_line_to_file( self.comments)

@@ -59,7 +59,7 @@ class switchclient(QtGui.QWidget):
             position = self.chaninfo[chan][1]
             inverted = self.chaninfo[chan][2]
             
-            widget = QCustomSwitchChannel(chan)  
+            widget = QCustomSwitchChannel(chan,('Closed','Open'))  
             if chan + 'shutter' in self.settings:
                 value = yield self.reg.get(chan + 'shutter')
                 widget.TTLswitch.setChecked(value)
