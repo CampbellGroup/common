@@ -66,7 +66,8 @@ class switchclient(QtGui.QWidget):
             else:
                 widget.TTLswitch.setChecked(False)
                 
-            widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port, chan = chan  : self.changeState(state, port, chan))            
+            widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port, chan = chan, inverted = inverted
+                                               : self.changeState(state, port, chan, inverted))            
             self.d[port] = widget
             subLayout.addWidget(self.d[port])
         
@@ -74,7 +75,9 @@ class switchclient(QtGui.QWidget):
         yield None
         
     @inlineCallbacks
-    def changeState(self, state, port, chan):
+    def changeState(self, state, port, chan, inverted):
+        if inverted:
+            state = not state
         yield self.server.ttl_output(port, state)
         if chan + 'shutter' in self.settings:
             yield self.reg.set(chan + 'shutter', state)
