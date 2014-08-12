@@ -3,8 +3,6 @@ from PyQt4 import QtGui
 
 class client_shell(QtGui.QWidget):
     
-
-
     def __init__(self, reactor, parent = None):
         """Creates the loop (reactor) for twisted and any other initialization that only
             needs to be run once
