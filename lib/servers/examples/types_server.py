@@ -94,6 +94,7 @@ class TypesServer(LabradServer):
         yield None
         returnValue([87.04, 0.001, -1.09, 1e-5, 2.])
 
+
     @setting(21, 'return_npArray1D', returns= '?')
     def return_npArray1D(self, c):
         """
