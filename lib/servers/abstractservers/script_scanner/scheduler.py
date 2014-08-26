@@ -1,6 +1,11 @@
 from twisted.internet.threads import deferToThread
 from twisted.internet.defer import Deferred, DeferredList
-from configuration import config 
+
+try:
+    from config.scriptscanner_config import config
+except:
+    from common.lib.config.scriptscanner_config import config
+
 from twisted.internet.task import LoopingCall
 from script_status import script_semaphore
 
