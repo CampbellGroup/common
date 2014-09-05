@@ -24,7 +24,10 @@ class Test_DDS_BOX_Server(TestCase):
 
         self._check_serial_server()
         # Setup default values for the camera
-        server = self._get_tester()
+        self.server = self._get_tester()
+
+        # TODO: Check that we need this
+        self.server.select_device('COM4')
 
 
     def tearDown(self):
@@ -32,8 +35,9 @@ class Test_DDS_BOX_Server(TestCase):
         Disconnect from labrad
         """
         # Reset server values back to their default values
-        server = self._get_tester()
 
+
+        self.server = None
 
         self.cxn.disconnect()
 
@@ -64,8 +68,8 @@ class Test_DDS_BOX_Server(TestCase):
         Test that server has basic function echo
         """
 
-        server = self._get_tester()
-        self.assert_(hasattr(server, 'echo'))
+        #server = self._get_tester()
+        self.assert_(hasattr(self.server, 'echo'))
 
 
 
@@ -73,11 +77,11 @@ class Test_DDS_BOX_Server(TestCase):
         """
         Test server name
         """
-        server = self._get_tester()
+        #server = self._get_tester()
 
-        resp = server.name
-        expected_resp = 'DDS Box Server'
-        self.assertEquals(resp, expected_resp)
+        out = self.server.name
+        exp = 'DDS Box Server'
+        self.assertEquals(exp, out)
 
 
     def test_frequency_set(self):
@@ -85,11 +89,18 @@ class Test_DDS_BOX_Server(TestCase):
         Test setting the frequency of channel 4
         """
 
-        server = self._get_tester()
+        server = self.server
+
+        f = _u.WithUnit(100., 'MHz')
+
+        server.frequency(4, f)
+
+        out = server.frequency(4)
+
+        exp = _u.WithUnit(100., 'MHz')
 
 
-
-
+        self.assertEquals(exp, out)
 
 
 
