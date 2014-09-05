@@ -77,7 +77,7 @@ class DDS_Box_Server(SerialDeviceServer):
     debug = True
 
     name = 'DDS Box Server'
-    serNode = 'magic'  # This should be the correct value
+    serNode = 'coach_k'  # This should be the correct value
 
     # TODO: make this a list of valid values, or have the key-value pair
     # contain a list of valid values.
@@ -636,10 +636,12 @@ class DDS_Box_Server(SerialDeviceServer):
     @setting(10, 'Frequency', channel='i', f='v[MHz]', returns='?')
     def frequency(self, c, channel = 1, f = None):
         """
-        Get or set the frequency of a channel.
+        Get or set channels' frequency.
 
-        f - frequency to set, value in MHz
-        channel - channel of frequency to set (1-4)
+        Parameters
+        ----------
+        f: WithUnits frequency, frequency to set
+        channel: int, (1-4), default(1)
         returns the current frequency of channel if f is None
         """
         #channel = 1
