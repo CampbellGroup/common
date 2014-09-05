@@ -176,10 +176,10 @@ class DDS_Box_Server(SerialDeviceServer):
 
 
     # Dictionary to handle information that can't wait around for Deferred's
-    # Is there a better wayt to do this?
+    # TODO: Is there a better way to do this?
     def createDict(self):
         d = {}
-        d['state'] = None #state is a
+        d['state'] = None # state is a
 
 
         for kk in xrange(self.numChannels):
@@ -233,11 +233,15 @@ class DDS_Box_Server(SerialDeviceServer):
 
             if self.debug : print "populateDict chStr =", chStr
 
+
+            # TODO: c=self.context doesn't make any sense here.
             self.DDSDict[chStr].frequency = yield self.getFreq(c=self.context, channel=number)
             # TODO: fix the below to NOT set each value automatically to its max value
             self.DDSDict[chStr].ampHEX    = 'ffff'
 
 
+            # 0 dBm is close to the max output of the device
+            self.DDSDict[chStr].amp_dBm   = _u.WithUnit(0., 'dBm')
 
 #
 #        channel = 1
@@ -346,25 +350,6 @@ class DDS_Box_Server(SerialDeviceServer):
 
 
 
-    @setting(11, "Identify", returns='s')
-    def identify(self, c):
-        '''Ask instrument to identify itself'''
-        command = self.IdenStr()
-        yield self.ser.write(command)
-        #self.ForceRead() #expect a reply from instrument
-        line1 = yield self.ser.readline()
-        if line1 == '>Read Mode\n' :
-            print "line1 hit Read Mode value"
-        line2 = yield self.ser.readline()
-
-        line3 = yield self.ser.readline()
-
-        #returnValue(answer[:-1])
-
-        answer = line1 + '\n' + line2 + '\n' + line3
-        returnValue(answer)
-
-
 
     @inlineCallbacks
     def writeToSerial(self, message):
@@ -460,6 +445,8 @@ class DDS_Box_Server(SerialDeviceServer):
         string = 'I' + str(channel)
 
         return string
+
+    ### @setting's functions
 
 
     @setting(2, "get Frequency", channel = 'i', returns = 'v')
@@ -699,8 +686,8 @@ class DDS_Box_Server(SerialDeviceServer):
         Hack fucntion to turn a channel on or off.  Sets the amplitude to the
         max value or to zero.
 
-        channel - channel (1-4) to set amplitude to max or zero
-        amp     - binary value for amplitude, ON or OFF
+        channel: int channel (1-4) to set amplitude to max or zero
+        amp    : b, value for amplitude, ON or OFF, default(None)
 
         returns the current state of channel, on or off
         """
@@ -715,13 +702,108 @@ class DDS_Box_Server(SerialDeviceServer):
 
             yield self.ser.write(command)
 
-            # TODO: need to purge the buffer here
+            # TODO: need to purge the buffer here ????
 
 
             #if self.debug : print "dictString =", dictString
             self.DDSDict[chStr].amp =  amp
 
         returnValue( self.DDSDict[chStr].amp )
+
+
+
+    @setting(11, "Identify", returns='s')
+    def identify(self, c):
+        '''Ask instrument to identify itself'''
+        command = self.IdenStr()
+        yield self.ser.write(command)
+        #self.ForceRead() #expect a reply from instrument
+        line1 = yield self.ser.readline()
+        if line1 == '>Read Mode\n' :
+            print "line1 hit Read Mode value"
+        line2 = yield self.ser.readline()
+
+        line3 = yield self.ser.readline()
+
+        #returnValue(answer[:-1])
+
+        answer = line1 + '\n' + line2 + '\n' + line3
+        returnValue(answer)
+
+
+
+
+    # TODO: This should replace the amplitude function eventually
+    @setting(12, channel=['i'], amplitude='v[dBm]', returns='v[dBm]')
+    def amplitude_dbm(self, c, channel=1, amplitude=None):
+        """
+        Set channel's output in dBm.
+
+        TODO: This needs to be accurately calibrated.
+        TODO: Account for frequency dependence in calibration
+
+        Parameters
+        ----------
+        channel: int, 1-4 default(1)
+        amplitude: WithUnits dBm type, default(None)
+
+        Returns
+        -------
+        labrad.units.dBm
+        """
+        chStr = 'ch' + str(channel)
+
+        if amplitude is not None :
+
+            command = self.AmpSetStr(amplitude, channel)
+
+            yield self.ser.write(command)
+
+            self.DDSDict[chStr].amp = amplitude
+
+
+        returnValue(self.DDSDict[chStr].amp)
+
+
+
+
+    # TODO: This is a utility function to understand how to work with the
+    # device.  Useful for testing purposes.
+    @setting(13, channel=['i'], amplitude=['s'], returns=['s'])
+    def amplitude_hex(self, c, channel=1, amplitude=None):
+        """
+        Set channel's output using a hex string.
+
+        amplitude needs to be a four character string.
+
+        Parameters
+
+        ----------
+
+        channel: int, 1-4 default(1)
+        amplitude: str, HEX value from '0000' to 'ffff'
+
+        Returns
+
+        -------
+
+        str, HEX value
+        """
+        chStr = 'ch' + str(channel)
+
+        if amplitude is not None :
+
+            command = self.AmpSetStr_HEX(channel, amplitude)
+
+            if self.debug : print "amplitude_hex command=", command
+
+            yield self.ser.write(command)
+
+            self.DDSDict[chStr].ampHEX = amplitude
+
+
+        returnValue(self.DDSDict[chStr].ampHEX)
+
 
 
 #    # TODO: make sure this function works
@@ -734,13 +816,21 @@ class DDS_Box_Server(SerialDeviceServer):
 #
 #        return ['COM3', 'COM5']
 
+    ### Server Utility Functions
+
 
     def AmpSetStr(self, amp, channel):
         """
-        String command to set a channel's amplitude
+        Returns string command to set channel's amplitude
 
-        amp - currently in binary mode
-        channel - channel of DDS to set (1-4)
+        Parmaeters
+        ----------
+        amp: bool, currently in binary mode
+        channel: int, DDS channel to set (1-4)
+
+        Returns
+        -------
+        str
         """
         chStr = self.channelString(channel=channel)
 
@@ -749,7 +839,63 @@ class DDS_Box_Server(SerialDeviceServer):
         else :
             HEX = '0000'   # Min amplitude/OFF
 
-        return chStr + 'A' + HEX
+        return chStr + 'A' + HEX + '\n'
+
+
+    def AmpSetStr_dBm(self, channel, amp):
+        """
+        Returns string command to set channel's amplitude
+
+        Parmaeters
+        ----------
+        channel: int, DDS channel to set (1-4)
+        amp: labrad.units.dBm
+
+        Returns
+        -------
+        str
+        """
+
+        chStr = self.channelString(channel=channel)
+
+        # Make sure amp is in units of dBm
+        # We are going to work with the dBm value
+        # as a float for conversion purposes
+        amp = amp.inUnitsOf('dBm')
+
+        # Convert amp to a float
+        amp = amp.value
+
+        HEX = DDS_dBm_to_HEX(amp)
+
+        if amp is True:
+            HEX = 'ffff'   # Max amplitude
+        else :
+            HEX = '0000'   # Min amplitude/OFF
+
+        return chStr + 'A' + HEX + '\n'
+
+
+    def AmpSetStr_HEX(self, channel, amp):
+        """
+        Returns string command to set channel's amplitude
+
+        Parmaeters
+        ----------
+        channel: int, DDS channel to set (1-4)
+        amp: Hex string from '0000' to 'ffff'
+
+        Returns
+        -------
+        str
+        """
+
+        chStr = self.channelString(channel=channel)
+
+        HEX = amp
+
+        return chStr + 'A' + HEX + '\n'
+
 
 
     def FreqCheck(self, freq):
@@ -817,15 +963,16 @@ class DDS_Box_Server(SerialDeviceServer):
 #        return '++auto '+ str(wait) + '\n'
 
 
+    ### Utility Functions
+
 
 def DDS_freq_to_HEX(freq=160e6):
     """
     Get Hexadecimal code for a frequency "freq" in Hz
     that you want to output from the DDS board
 
-    freq - frequency in Hz
+    freq: float, frequency in Hz, default(160e6)
 
-    2013-03-26 - Andrew Jayich
     """
 
     dec = freq * 4294967295 * 1e-9
@@ -842,11 +989,10 @@ def DDS_HEX_to_freq(HEX='0x4fc3a5'):
     """
     Get frequency in Hz from hexadecmial string HEX.
 
-    HEX - string representation of hexadecimal number
+    HEX: str, representation of hexadecimal number, default('0x4fc3a5')
     MUST begin iwth '0x'.  Maybe do something smart here... whatever.
     TODO: check above line
 
-    2013-09-19 - Andrew Jayich
     """
 
     #SOooo nice:
@@ -859,7 +1005,23 @@ def DDS_HEX_to_freq(HEX='0x4fc3a5'):
     return freq
 
 
+def DDS_dBm_to_HEX(amp):
+    """
+    Get Hexadecimal value that is approximately equalt to the amplitude we
+    want to write to the DDS in dBm.
 
+    Parameters
+    ----------
+    amp: labrad.units.dBm type, default(None)
+
+    Returns
+    -------
+    str, HEX value
+    """
+
+
+
+    return None
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ from twisted.trial.unittest import TestCase
 import labrad
 import labrad.units as _u
 
+
+
 class Test_DDS_BOX_Server(TestCase):
 
     debug = False
@@ -28,6 +30,7 @@ class Test_DDS_BOX_Server(TestCase):
 
         # TODO: Check that we need this
         self.server.select_device('COM4')
+
 
 
     def tearDown(self):
@@ -98,20 +101,77 @@ class Test_DDS_BOX_Server(TestCase):
         out = server.frequency(4)
 
         exp = _u.WithUnit(100., 'MHz')
+        self.assertEquals(exp, out)
 
 
+    def test_channel_state_setFalse(self):
+        """
+        Set channel_state of channel 4
+        """
+
+        self.server.channel_state(4, False)
+
+        out = self.server.channel_state(4)
+
+        exp = False
+        self.assertEquals(exp, out)
+
+
+    def test_channel_state_setTrue(self):
+        """
+        Set channel_state of channel 4
+        """
+
+        self.server.channel_state(4, True)
+
+        out = self.server.channel_state(4)
+
+        exp = True
         self.assertEquals(exp, out)
 
 
 
+    def test_amplitude_setFalse(self):
+        """
+        Set the amplitude of channel 4
+        """
+
+        self.server.amplitude(4, False)
+        out = self.server.amplitude(4)
+
+        exp = False
+        self.assertEquals(exp, out)
 
 
+    def test_amplitude_dbm_get(self):
+        """
+        Test amplitude of channel 4
+        """
+
+        out = self.server.amplitude_dbm(4)
+
+        exp = False
+        self.assertEquals(exp, out)
 
 
+    def test_amplitude_hex_get(self):
+        """
+        Test amplitude_hex of channel 4
+        """
+
+        val = 'afd1'
+
+        self.server.amplitude_hex(4, val)
+        out = self.server.amplitude_hex(4)
+
+        exp = val
+        self.assertEquals(exp, out)
 
 
-
-
+    def test_AmpSetStr_HEX(self):
+        """
+        Test command output
+        """
 
 
 
