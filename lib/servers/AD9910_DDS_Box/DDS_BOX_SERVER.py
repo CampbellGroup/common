@@ -878,12 +878,15 @@ class DDS_Box_Server(SerialDeviceServer):
 
     def AmpSetStr_HEX(self, channel, amp):
         """
-        Returns string command to set channel's amplitude
+        Returns string command to set channel's amplitude.
+
+        The amplitude is set with 14 bits of precision.  This corresponds
+        to hex values from 0x0000 to 0x3fff.
 
         Parmaeters
         ----------
         channel: int, DDS channel to set (1-4)
-        amp: Hex string from '0000' to 'ffff'
+        amp: Hex string from '0000' to '3fff'
 
         Returns
         -------
