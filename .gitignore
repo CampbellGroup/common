@@ -15,3 +15,5 @@ tests/lib/servers/_trial_temp/_trial_marker
 tests/lib/servers/examples/_trial_temp/_trial_marker
 tests/lib/servers/examples/_trial_temp-1/_trial_marker
 tests/lib/servers/examples/_trial_temp-2/_trial_marker
+.pydevproject.bak
+tests/hardware_dependent/lib/servers/AD9910_DDS_Box/_trial_temp/_trial_marker
