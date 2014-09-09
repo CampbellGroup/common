@@ -21,6 +21,7 @@ timeout = 20
 Created on May 17, 2014
 
 @author: anthonyransford
+
 '''
 
 from common.lib.servers.serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
@@ -30,6 +31,8 @@ from labrad.server import Signal
 from labrad import types as T
 from twisted.internet.task import LoopingCall
 from twisted.internet.defer import returnValue
+from labrad.support import getNodeName
+import time
 
 SERVERNAME = 'ArduinoTTL'
 TIMEOUT = 1.0
@@ -39,7 +42,7 @@ class ArduinoTTL( SerialDeviceServer ):
     name = SERVERNAME
     regKey = 'arduinoTTL'
     port = None
-    serNode = 'qsimexpcontrol'
+    serNode = getNodeName()
     timeout = T.Value(TIMEOUT,'s')
     
     
