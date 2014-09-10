@@ -842,6 +842,7 @@ class DDS_Box_Server(SerialDeviceServer):
         return chStr + 'A' + HEX + '\n'
 
 
+
     def AmpSetStr_dBm(self, channel, amp):
         """
         Returns string command to set channel's amplitude
@@ -874,6 +875,8 @@ class DDS_Box_Server(SerialDeviceServer):
             HEX = '0000'   # Min amplitude/OFF
 
         return chStr + 'A' + HEX + '\n'
+
+
 
 
     def AmpSetStr_HEX(self, channel, amp):
