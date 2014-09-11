@@ -16,7 +16,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Rigol DG1022A Server
+name = Rigol DG1022 Server
 version = 1.3
 description = 
 
@@ -102,7 +102,7 @@ class RigolWrapper(GPIBDeviceWrapper):
             freq = yield  self.read()
             returnValue(freq)
         else:
-            output = "FREQ " + channel + str(int(frequency['Hz']))
+            output = "FREQ " + channel + str(frequency['Hz'])
             yield self.write(output)
 
     @inlineCallbacks
@@ -236,8 +236,8 @@ class RigolWrapper(GPIBDeviceWrapper):
         
 
 class RigolServer(GPIBManagedServer):
-    name = 'Rigol DG1022A Server' # Server name
-    deviceName = 'RIGOL TECHNOLOGIES DG1022A' # Model string returned from *IDN?
+    name = 'Rigol DG1022 Server' # Server name
+    deviceName = 'RIGOL TECHNOLOGIES DG1022' # Model string returned from *IDN?
     deviceWrapper = RigolWrapper
 
     @setting(10, 'Output', channel = 'i', output = 'b')
