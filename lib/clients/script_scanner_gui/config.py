@@ -9,7 +9,8 @@ class config(object):
 #               ]
 
 
-    scripts = [('molecules.lib.exp_control.scripts.scope_periodic', 'ScopeMeasure')]
+    scripts = [('molecules.lib.exp_control.scripts.scope_periodic', 'ScopeMeasure'),
+               ('molecules.lib.exp_control.scripts.scope_VPP_VAVerage', 'ScopeMeasure2')]
 
     allowed_concurrent = {
     }

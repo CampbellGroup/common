@@ -42,13 +42,17 @@ class ArduinoDDSDevice(DeviceWrapper):
         self.server = server
         self.ctx = server.context()
         self.port = port
+        print self.port
         self.settings = {'Amplitude': W(-3, 'dbm'), 'Frequency': W(161, 'MHz')}
-#        p = self.packet()
-        yield self.server.open(port)
-        yield self.server.baudrate(9600)
-#        p.read() # clear out the read buffer
-        yield self.server.timeout(TIMEOUT)
-#        yield p.send()
+        p = self.packet()
+        p.open(port)
+        p.baudrate(9600)
+#        yield self.server.open(port)
+#        yield self.server.baudrate(9600)
+        p.read() # clear out the read buffer
+#        yield self.server.timeout(TIMEOUT)
+        p.timeout(TIMEOUT)
+        yield p.send()
         print 'done.'
         
     def packet(self):
@@ -62,8 +66,8 @@ class ArduinoDDSDevice(DeviceWrapper):
     @inlineCallbacks
     def write(self, code):
         """Write a data value to arduino."""
-        yield self.server.write(code)
-#        yield self.packet().write_line(code).send()
+#        yield self.server.write(code)
+        yield self.packet().write_line(code).send()
         
     @inlineCallbacks
     def read(self):

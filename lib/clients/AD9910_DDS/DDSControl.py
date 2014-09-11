@@ -44,7 +44,8 @@ class DDSclient(QtGui.QWidget):
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
             position = self.chaninfo[chan][1]
-            channel = self.chaninfo[chan][2]    
+            channel = self.chaninfo[chan][2]
+            initfreq = self.chaninfo[chan][3]
             widget = QCustomFreqPower(chan) 
             MinPower =  self.U(-63, 'dbm')
             MaxPower =  self.U(-1.17, 'dbm')
@@ -54,14 +55,15 @@ class DDSclient(QtGui.QWidget):
             widget.setFreqRange((MinFreq, MaxFreq))
             initpower = self.U(-63, 'dbm')
             initstate = False
-            initfreq = self.U(161, 'MHz')
+            initfreq = self.U(initfreq, 'MHz')
             widget.setStateNoSignal(initstate)
             widget.setPowerNoSignal(initpower)
             widget.setFreqNoSignal(initfreq)
             widget.spinPower.valueChanged.connect(lambda value =  widget.spinPower.value(), port = port, channel = channel: self.powerChanged(value, port, channel))
             widget.spinFreq.valueChanged.connect(lambda value = widget.spinFreq.value(), port = port, channel = channel : self.freqChanged(value, port, channel)) 
             widget.buttonSwitch.toggled.connect(lambda state = widget.buttonSwitch.isDown(), port = port, channel = channel : self.switchChanged(state, port, channel))
-            
+            self.freqChanged(initfreq['MHz'], port, channel)
+            self.powerChanged(initpower['dbm'], port, channel)
             self.d[port] = widget
             subLayout.addWidget(self.d[port], position[0], position[1])
         
