@@ -119,6 +119,18 @@ class RigolWrapper(GPIBDeviceWrapper):
         else:
             output = 'APPL:DC' + channel + ' DEF,DEF,' + str(voltage['V'])
             yield self.write(output)
+            
+    @inlineCallbacks
+    def Offset(self, channel, offset = None):
+        channel = self.parsechannel(channel)
+        if offset == None:
+            output = "VOLT:OFFS" + channel
+            yield self.write(output)
+            offset = self.read()
+            returnValue(offset)
+        else:
+            output = "VOLT:OFFS" + channel + " " + str(offset['V'])
+            yield self.write(output) 
         
         
     @inlineCallbacks
@@ -273,7 +285,13 @@ class RigolServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         volts = yield dev.setDC(channel, value)
         returnValue(volts)
-
+        
+    @setting(99, 'Offset', channel = 'i', value = 'v[V]')
+    def Offset(self, c, channel, value = None):
+        dev = self.selectedDevice(c)
+        offset = yield dev.Offset(channel, value)
+        returnValue(offset)
+        
 __server__ = RigolServer()
 
 if __name__ == '__main__':
