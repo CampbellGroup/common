@@ -301,7 +301,7 @@ class Test_TypesServer(TestCase):
         """
         server = self._get_tester()                        
         
-        # This resturns a LazyList, which we
+        # This returns a LazyList, which we
         resp = server.return_npArray2D()
         
         val = resp._unflattenArray()
