@@ -28,9 +28,12 @@ class DDSclient(QtGui.QWidget):
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(name = "DDS client")
         self.server = yield self.cxn.dds_device_server
-        self.reg = self.cxn.registry
-        yield self.reg.cd('settings')
-        self.settings = yield self.reg.dir()
+        try:
+            self.reg = self.cxn.registry
+            yield self.reg.cd('settings')
+            self.settings = yield self.reg.dir()
+        except:
+            self.settings = []
         self.settings = self.settings[1]
         self.chaninfo = DDS_config.info
         self.initializeGUI()
