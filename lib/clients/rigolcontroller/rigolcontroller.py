@@ -1,4 +1,3 @@
-from common.lib.clients.qtui.QCustomFreqVoltage import QCustomFreqVoltage
 from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui, QtCore
@@ -54,7 +53,7 @@ class rigolclient(QtGui.QWidget):
         self.devicelist = yield self.server.list_devices()
         if self.devicelist:
             yield self.server.select_device(0)    
-            self.initializeGUI()
+        self.initializeGUI()
         
     def initializeGUI(self):  
     
