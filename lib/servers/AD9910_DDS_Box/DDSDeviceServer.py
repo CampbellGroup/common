@@ -1,4 +1,4 @@
-# Copyright (C) 2010  Michael Lenander & Julian Kelly
+# Copyright (C) 2014 Anthony Ransford
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
 [info]
 name = DDS Device Server
 version = 1.0.0
-description = DDSDeviceServer
+description = DDS Device Server
+instancename = DDS Device Server
+
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
@@ -32,6 +34,8 @@ timeout = 5
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, inlineCallbacks, returnValue
 from labrad.units import WithUnit as W
+import time
+import numpy as np
 
 class ArduinoDDSDevice(DeviceWrapper):
     
@@ -47,10 +51,7 @@ class ArduinoDDSDevice(DeviceWrapper):
         p = self.packet()
         p.open(port)
         p.baudrate(9600)
-#        yield self.server.open(port)
-#        yield self.server.baudrate(9600)
-        p.read() # clear out the read buffer
-#        yield self.server.timeout(TIMEOUT)
+#        p.read() # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
         print 'done.'
@@ -66,14 +67,15 @@ class ArduinoDDSDevice(DeviceWrapper):
     @inlineCallbacks
     def write(self, code):
         """Write a data value to arduino."""
-#        yield self.server.write(code)
         yield self.packet().write_line(code).send()
         
     @inlineCallbacks
     def read(self):
         """Read data from the arduino"""
-        ans = yield self.server.read(context = self.ctx)
-        returnValue(ans)
+        p = self.packet()
+        p.read()
+        ans = yield p.send()
+        returnValue(ans.read)
         
     @inlineCallbacks
     def flushinput(self):
@@ -84,6 +86,7 @@ class ArduinoDDSDevice(DeviceWrapper):
         voltage = 10**((amplitude['dbm'] -10.0)/20)
         hexamp =  str(hex(int((voltage - 0.00022387211) * 16383/0.276376)))[2:]
         hexamp =  hexamp.rjust(4, '0')
+        print hexamp
         output = '/I' + str(chan) + 'A' + hexamp
         if set:
             self.settings['Amplitude'] = amplitude
@@ -104,9 +107,62 @@ class ArduinoDDSDevice(DeviceWrapper):
         else:
             self.setAmplitude(chan, W(-63, 'dbm'), set = False)
             
+    @inlineCallbacks
+    def getFrequency(self, chan):
+
+        output = '/I' + str(chan) + 'R0e'
+        yield self.write(output)
+        data = yield self.read()
+        try :
+            data = data.split(',')
+            data = data[2][14:-6]
+            data = data.replace(' ','')
+            data = int(data, 16)
+            returnValue(W(data, 'MHz'))
+        except:
+            time.sleep(0.1)
+            output = '/I' + str(chan) + 'R0e'
+            yield self.write(output)
+            data = yield self.read()
+            data = data.split(',')
+            data = data[2][14:-6]
+            data = data.replace(' ','')
+            print int(data, 16) 
+            data = (int(data, 16) * 500)/2147483647.0
+            returnValue(W(data, 'MHz'))
+
+    @inlineCallbacks
+    def getAmplitude(self, chan):
+        print "getAmplitude chan=", chan
+        output = '/I' + str(chan) + 'R0e'
+        yield self.write(output)
+        data = yield self.read()
+        try :
+            print "in try"
+            data = data.split(',')
+            data = data[2][8:14]
+            data = data.replace(' ','')
+            data = int(data, 16)*0.276376
+            returnValue(W(data, 'MHz'))
+        except:
+            print "in except"
+            time.sleep(0.1)
+            output = '/I' + str(chan) + 'R0e'
+            yield self.write(output)
+            data = yield self.read()
+            data = data.split(',')
+            data = data[2][8:14]
+            data = data.replace(' ','')
+            volts = ((int(data,16) * 0.276376)/16383) + 0.00022387211
+            if volts == 0:
+                returnValue(W(-63,'dbm'))
+            else:
+                amp = 20*np.log10(volts) + 10
+                returnValue(W(amp, 'dbm'))
+
 
 class DDSDeviceServer(DeviceServer):
-    name = 'DDSDeviceServer'
+    name = 'DDS Device Server'
     deviceWrapper = ArduinoDDSDevice
 
     @inlineCallbacks
@@ -155,7 +211,19 @@ class DDSDeviceServer(DeviceServer):
     def output(self, c, chan, state):
         dev = self.selectedDevice(c)
         dev.ddsOutput(chan, state)
-        
+
+    @setting(22, chan = 'i', returns = 'v[MHz]')
+    def getFreq(self, c, chan):
+        dev = self.selectedDevice(c)
+        freq = dev.getFrequency(chan)
+        return freq
+
+    @setting(23, chan = 'i', returns = 'v[dbm]')
+    def getAmp(self, c, chan):
+        dev = self.selectedDevice(c)
+        amp = dev.getAmplitude(chan)
+        return amp
+    
 TIMEOUT = W(1, 's') # serial read timeout
 
 #####
