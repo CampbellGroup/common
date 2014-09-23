@@ -86,7 +86,6 @@ class ArduinoDDSDevice(DeviceWrapper):
         voltage = 10**((amplitude['dbm'] -10.0)/20)
         hexamp =  str(hex(int((voltage - 0.00022387211) * 16383/0.276376)))[2:]
         hexamp =  hexamp.rjust(4, '0')
-        print hexamp
         output = '/I' + str(chan) + 'A' + hexamp
         if set:
             self.settings['Amplitude'] = amplitude
@@ -127,7 +126,6 @@ class ArduinoDDSDevice(DeviceWrapper):
             data = data.split(',')
             data = data[2][14:-6]
             data = data.replace(' ','')
-            print int(data, 16) 
             data = (int(data, 16) * 500)/2147483647.0
             returnValue(W(data, 'MHz'))
 

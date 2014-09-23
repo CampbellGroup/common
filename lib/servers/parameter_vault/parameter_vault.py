@@ -126,7 +126,7 @@ class ParameterVault(LabradServer):
         """Set Parameter"""
         key = (collection, parameter_name)
         if key not in self.parameters.keys():
-            raise Exception ("Parameter Not Found")
+            raise Exception (str(key) + " Parameter Not Found")
         if full_info:
             self.parameters[key] = value
         else:
@@ -139,7 +139,7 @@ class ParameterVault(LabradServer):
         """Get Parameter Value"""
         key = (collection, parameter_name)
         if key not in self.parameters.keys():
-            raise Exception ("Parameter Not Found")
+            raise Exception (str(key) + "  Parameter Not Found")
         result = self.parameters[key]
         if checked:
             result = self.check_parameter(key, result)

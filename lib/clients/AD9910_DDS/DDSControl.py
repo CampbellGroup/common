@@ -5,7 +5,8 @@ try:
     from config.DDS_client_config import DDS_config
 except:
     from common.lib.config.DDS_client_config import DDS_config
-    
+
+
 class DDSclient(QtGui.QWidget):
 
     def __init__(self, reactor, parent = None):
@@ -18,6 +19,7 @@ class DDSclient(QtGui.QWidget):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.d = {}
+        self.contexts = {}
         self.connect()
 
     @inlineCallbacks    
@@ -27,7 +29,7 @@ class DDSclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(name = "DDS client")
-        self.server = yield self.cxn.dds_device_server
+        self.server = self.cxn.dds_device_server
         try:
             self.reg = self.cxn.registry
             yield self.reg.cd('settings')
@@ -37,7 +39,7 @@ class DDSclient(QtGui.QWidget):
         self.settings = self.settings[1]
         self.chaninfo = DDS_config.info
         self.initializeGUI()
-        
+
     @inlineCallbacks
     def initializeGUI(self):      
         layout = QtGui.QGridLayout()
@@ -49,6 +51,10 @@ class DDSclient(QtGui.QWidget):
         layout.addWidget(qBox, 0, 0)
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
+            try: self.contexts[port]
+            except:
+                self.contexts[port] = self.server.context()
+                self.server.select_device(port, context = self.contexts[port])
             position = self.chaninfo[chan][1]
             channel = self.chaninfo[chan][2]
             initfreq = self.chaninfo[chan][3]
@@ -71,11 +77,12 @@ class DDSclient(QtGui.QWidget):
             widget.setStateNoSignal(initstate)
             widget.setPowerNoSignal(initpower)
             widget.setFreqNoSignal(initfreq)
+            yield self.powerChanged(initpower['dbm'], port, (chan, channel))
+            yield self.freqChanged(initfreq['MHz'], port, (chan, channel))
+            yield self.switchChanged(initstate, port, (chan, channel))
             widget.spinPower.valueChanged.connect(lambda value =  widget.spinPower.value(), port = port, channel = (chan, channel): self.powerChanged(value, port, channel))
             widget.spinFreq.valueChanged.connect(lambda value = widget.spinFreq.value(), port = port, channel = (chan, channel) : self.freqChanged(value, port, channel)) 
             widget.buttonSwitch.toggled.connect(lambda state = widget.buttonSwitch.isDown(), port = port, channel = (chan, channel) : self.switchChanged(state, port, channel))
-            yield self.freqChanged(initfreq['MHz'], port, (chan, channel))
-            yield self.powerChanged(initpower['dbm'], port, (chan, channel))
             self.d[port] = widget
             subLayout.addWidget(self.d[port], position[0], position[1])
         
@@ -86,10 +93,8 @@ class DDSclient(QtGui.QWidget):
         value = self.U(value, 'dbm')
         name = channel[0]
         chan = channel[1]
-        yield self.server.select_device(port)
-        yield self.server.amplitude(chan, value)
-        yield self.server.deselect_device()
-        self.updateSettings(name, value, pos = 1)
+        yield self.server.amplitude(chan, value, context = self.contexts[port])
+        yield self.updateSettings(name, value, pos = 1)
         
     
     @inlineCallbacks
@@ -97,19 +102,15 @@ class DDSclient(QtGui.QWidget):
         value = self.U(value, 'MHz')
         name = channel[0]
         chan = channel[1]
-        yield self.server.select_device(port)
-        yield self.server.frequency(channel[1], value)
-        yield self.server.deselect_device()
-        self.updateSettings(name, value, pos = 2)
+        yield self.server.frequency(channel[1], value, context = self.contexts[port])
+        yield self.updateSettings(name, value, pos = 2)
         
     @inlineCallbacks
     def switchChanged(self, state, port, channel):
         name = channel[0]
         chan = channel[1]
-        yield self.server.select_device(port)
-        yield self.server.output(channel[1], state)
-        yield self.server.deselect_device()
-        self.updateSettings(name, state, pos = 0)
+        yield self.server.output(channel[1], state, context = self.contexts[port])
+        yield self.updateSettings(name, state, pos = 0)
 
     @inlineCallbacks
     def updateSettings(self, name, value, pos):

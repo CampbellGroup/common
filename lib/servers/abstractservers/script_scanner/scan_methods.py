@@ -23,7 +23,7 @@ class experiment(experiment_info):
     
     def __init__(self, name = None, required_parameters = None, cxn = None, min_progress = 0.0, max_progress = 100.0,):
         required_parameters = self.all_required_parameters()
-        super(experiment, self).__init__(name, required_parameters)
+        super(experiment, self).__init__(name, self.required_parameters)
         self.cxn = cxn
         self.pv = None
         self.sc = None
@@ -92,6 +92,7 @@ class experiment(experiment_info):
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
+                print d.items()
         return d
     
     def set_parameters(self, parameter_dict):
