@@ -3,7 +3,7 @@ from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui, QtCore
 
 class TextChangingButton(QtGui.QPushButton):
-    """Button that changes its text to ON or OFF and colors when it's pressed""" 
+    """Button that changes its text to ON or OFF and colors when it's pressed"""
     def __init__(self, labels = None, parent = None):
         super(TextChangingButton, self).__init__(parent)
         self.labels = labels
@@ -13,7 +13,7 @@ class TextChangingButton(QtGui.QPushButton):
         #connect signal for appearance changing
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
-    
+
     def setAppearance(self, down):
         if down:
             if self.labels == None:
@@ -27,23 +27,23 @@ class TextChangingButton(QtGui.QPushButton):
             else:
                 self.setText(self.labels[1])
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-    
+
     def sizeHint(self):
         return QtCore.QSize(37, 26)
 
 class rigolclient(QtGui.QWidget):
 
     def __init__(self, reactor, parent = None):
-        """initializels the GUI creates the reactor  
-        """   
+        """initializels the GUI creates the reactor
+        """
         super(rigolclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.reactor = reactor          
+        self.reactor = reactor
         self.connect()
-        
+
     @inlineCallbacks
     def connect(self):
-        """Creates an Asynchronous connection 
+        """Creates an Asynchronous connection
         """
         from labrad.wrappers import connectAsync
         from labrad.units import WithUnit as U
@@ -52,13 +52,15 @@ class rigolclient(QtGui.QWidget):
         self.server = self.cxn.rigol_dg1022_server
         self.devicelist = yield self.server.list_devices()
         if self.devicelist:
-            yield self.server.select_device(0)    
+            yield self.server.select_device(0)
         self.initializeGUI()
-        
-    def initializeGUI(self):  
-    
+
+    def initializeGUI(self):
+
         layout = QtGui.QGridLayout()
-        
+
+        self.setWindowTitle('Rigol DG1022 Control')
+
         qBox = QtGui.QGroupBox('Rigol DG1022')
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
@@ -66,10 +68,10 @@ class rigolclient(QtGui.QWidget):
 
         self.deviceselect = QtGui.QComboBox(self)
         self.updatedevices()
-            
-        
+
+
         self.offsetwidget1 = QCustomSpinBox('Offset', (-5, 5))
-        self.offsetwidget2 = QCustomSpinBox('Offset', (-5, 5))                 
+        self.offsetwidget2 = QCustomSpinBox('Offset', (-5, 5))
         self.volt1widget = QCustomSpinBox('Amplitude (Vpp)', (-10, 10))
         self.freq1widget = QCustomSpinBox('Frequency (Hz)', (0, 40e6))
         self.volt2widget = QCustomSpinBox('Amplitude (Vpp)', (-10, 10))
@@ -77,8 +79,8 @@ class rigolclient(QtGui.QWidget):
         self.waveselect1 = QtGui.QComboBox(self)
         self.waveselect2 = QtGui.QComboBox(self)
         self.output1 = TextChangingButton(('On','Off'))
-        self.output2 = TextChangingButton(('On','Off'))        
-        
+        self.output2 = TextChangingButton(('On','Off'))
+
         self.waveselect1.addItem("sine")
         self.waveselect1.addItem("square")
         self.waveselect1.addItem("ramp")
@@ -94,7 +96,7 @@ class rigolclient(QtGui.QWidget):
         self.waveselect2.addItem("noise")
         self.waveselect2.addItem("DC")
         self.waveselect2.addItem("USER")
-        
+
         self.output1.toggled.connect(lambda state = self.output1.isDown(), chan = 1, : self.setoutput(chan, state))
         self.output2.toggled.connect(lambda state = self.output1.isDown(), chan = 2, : self.setoutput(chan, state))
         self.volt1widget.spinLevel.valueChanged.connect(lambda value = self.volt1widget.spinLevel.value(), chan = 1 : self.voltchanged(chan, value))
@@ -111,13 +113,13 @@ class rigolclient(QtGui.QWidget):
         subLayout.addWidget(self.freq2widget, 1,2)
         subLayout.addWidget(self.volt2widget, 1,3)
         subLayout.addWidget(self.waveselect1, 2,0, 1,2)
-        subLayout.addWidget(self.waveselect2, 2,2, 1,2)        
+        subLayout.addWidget(self.waveselect2, 2,2, 1,2)
         subLayout.addWidget(self.offsetwidget1, 3,0)
         subLayout.addWidget(self.offsetwidget2, 3,2)
         subLayout.addWidget(self.output1,      3,1)
         subLayout.addWidget(self.output2,      3,3)
         subLayout.addWidget(self.deviceselect, 0,3)
-        
+
         self.setLayout(layout)
 
     @inlineCallbacks
@@ -125,7 +127,7 @@ class rigolclient(QtGui.QWidget):
         value = self.U(value, 'V')
         yield self.server.amplitude(chan, value)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def freqchanged(self, chan, value):
         value = self.U(value, 'Hz')
         yield self.server.frequency(chan, value)
@@ -137,9 +139,9 @@ class rigolclient(QtGui.QWidget):
 
     @inlineCallbacks
     def setoutput(self, chan, state):
-        yield self.server.output(chan, state) 
+        yield self.server.output(chan, state)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def waveselect(self, chan, wave):
         if wave == 'DC':
             if chan == 1:
@@ -159,7 +161,7 @@ class rigolclient(QtGui.QWidget):
         else:
             self.server.release_device()
             self.server.select_device(int(deviceid[1]))
-            
+
 
     @inlineCallbacks
     def updatedevices(self):
@@ -168,11 +170,11 @@ class rigolclient(QtGui.QWidget):
         for device in self.devicelist:
             self.deviceselect.addItem(str(device))
         self.deviceselect.addItem('Refresh List')
-            
-    
+
+
     def closeEvent(self, x):
         self.reactor.stop()
-        
+
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
     from common.lib.clients import qt4reactor
