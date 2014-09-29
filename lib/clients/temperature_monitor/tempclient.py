@@ -83,9 +83,11 @@ class TemperatureMonitor(QtGui.QWidget):
         #for some reason webpage gives 500 error but still calls python script
         try:
             urllib2.urlopen("http://10.97.112.13/temp/temperaturewebsite.py/?startTime=" + str(starttime))
+            print "got data"
             self.plot()
         except:
             self.plot(starttime)
+            print "except"
                 
     def plot(self, starttime):
         data = urllib2.urlopen("http://10.97.112.13/tempdata/")

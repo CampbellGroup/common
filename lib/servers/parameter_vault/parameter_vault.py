@@ -117,6 +117,11 @@ class ParameterVault(LabradServer):
         elif t == 'line_selection':
             assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(name)
             return item[0]
+        elif t == 'event':
+            minim,maxim = item[4]
+            assert item[1] in item[3], "Inorrect selection made in {}".format(name)
+            assert minim <= item[2] <= maxim, "Parameter {} Out of Bound".format(name)
+            return (item[0], item[1], item[2])
         else:#parameter type not known
             return value
         
