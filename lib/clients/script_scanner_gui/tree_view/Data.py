@@ -170,6 +170,45 @@ class BoolNode(Node):
         if column == 3:
             self._value = value
 
+class EventNode(Node):
+    
+    columns = 3
+    
+    def __init__(self, name, info, parent=None):
+        super(EventNode, self).__init__(name, parent)
+        self._collection = parent.name()
+        self.set_full_info(info)
+        
+    def set_full_info(self, info):
+        self._value = info
+    
+    def filter_text(self):
+        return self.parent().name() + self.name()
+    
+    def string_format(self):
+        return '{0}'.format(self._value)
+    
+    def path(self):
+        return (self._collection, self.name())
+    
+    def full_parameter(self):
+        return ('event', (self._value))
+    
+    def data(self, column):
+        if column < 1:
+            return super(BoolNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._value
+    
+    def setData(self, column, value):
+        value = value.toPyObject()
+        if column == 3:
+            self._value = value
+
 class StringNode(Node):
     
     columns = 3

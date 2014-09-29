@@ -109,6 +109,15 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         index = self.index(row_count, 0, parent_index)
         return index
 
+    def insert_event(self, parameter_name, info, parent_index):
+        collectionNode = self.getNode(parent_index)
+        row_count =  self.rowCount(parent_index)
+        self.beginInsertRows(parent_index, row_count, row_count)
+        childNode = EventNode(parameter_name, info, collectionNode)
+        self.endInsertRows()
+        index = self.index(row_count, 0, parent_index)
+        return index
+
     def insert_scan(self, parameter_name, info, parent_index):
         collectionNode = self.getNode(parent_index)
         row_count =  self.rowCount(parent_index)
