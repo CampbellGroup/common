@@ -180,34 +180,47 @@ class EventNode(Node):
         self.set_full_info(info)
         
     def set_full_info(self, info):
-        self._value = info
-    
+        print info
+        a, b, c, d = info
+        print a,b,c,d
+##        limit_info, scan_info = info
+##        self._units = limit_info[0].units
+##        self._min = limit_info[0][self._units]
+##        self._max = limit_info[1][self._units]
+##        self._scan_start = scan_info[0][self._units]
+##        self._scan_stop = scan_info[1][self._units]
+##        self._scan_points = scan_info[2]
+##    
     def filter_text(self):
         return self.parent().name() + self.name()
     
     def string_format(self):
-        return '{0}'.format(self._value)
+#        return '{0}'.format(self._value)
+        pass
     
     def path(self):
         return (self._collection, self.name())
     
     def full_parameter(self):
-        return ('event', (self._value))
+#        return ('event', (self._value))
+        pass
     
     def data(self, column):
-        if column < 1:
-            return super(BoolNode, self).data(column)
-        elif column == 1:
-            return self.string_format()
-        elif column == 2:
-            return self._collection
-        elif column == 3:
-            return self._value
+##        if column < 1:
+##            return super(BoolNode, self).data(column)
+##        elif column == 1:
+##            return self.string_format()
+##        elif column == 2:
+##            return self._collection
+##        elif column == 3:
+##            return self._value
+        pass
     
     def setData(self, column, value):
-        value = value.toPyObject()
-        if column == 3:
-            self._value = value
+##        value = value.toPyObject()
+##        if column == 3:
+##            self._value = value
+        pass
 
 class StringNode(Node):
     

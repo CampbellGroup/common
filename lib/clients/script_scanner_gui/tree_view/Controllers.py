@@ -74,7 +74,7 @@ class ParametersEditor(base, form):
             collection_node = self._collection[collection_name]
             node = self._model.insert_spectrum_sensitivity(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
-        elif value_type == 'event'
+        elif value_type == 'event':
             collection_node = self._collection[collection_name]
             node = self._model.insert_event(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name]= node
