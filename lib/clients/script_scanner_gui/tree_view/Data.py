@@ -181,8 +181,9 @@ class EventNode(Node):
         
     def set_full_info(self, info):
         print info
-        a, b, c, d = info
-        print a,b,c,d
+        a,b,c,d,e = info
+        print a, b, c, d, e
+
 ##        limit_info, scan_info = info
 ##        self._units = limit_info[0].units
 ##        self._min = limit_info[0][self._units]
