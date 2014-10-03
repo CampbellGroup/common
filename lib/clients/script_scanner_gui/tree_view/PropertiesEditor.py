@@ -1,5 +1,5 @@
 from PyQt4 import  uic
-from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode
+from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, EventNode
 from Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
 from editors.parameter_editor import ParameterEditor
 from editors.scan_editor import ScanEditor
@@ -10,6 +10,7 @@ from editors.line_selection_editor import line_selection_editor
 from editors.sideband_selection_editor import sideband_selection_editor
 from editors.duration_bandwidth_editor import DurationBandwidthEditor
 from editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
+from editors.event_editor import EventEditor
 
 import os
 basepath =  os.path.dirname(__file__)
@@ -32,10 +33,12 @@ class PropertiesEditor(propBase, propForm):
         self._sideband_selection_editor = sideband_selection_editor(self)
         self._DurationBandwidthEditor = DurationBandwidthEditor(self)
         self._spectrum_sensitivity_editor = spectrum_sensitivity_editor(self)
+        self._eventEditor = EventEditor(self)
         self._editors = [self._parametersEditor, self._scanEditor, self._stringEditor, 
                          self._boolEditor, self._selectionSimpleEditor, self._lineSelectionEdtior,
-                         self._sideband_selection_editor, self._DurationBandwidthEditor, self._spectrum_sensitivity_editor
-                         ]
+                         self._sideband_selection_editor, self._DurationBandwidthEditor, self._spectrum_sensitivity_editor,
+                         self._eventEditor]
+                         
         #add editors to layout
         self.layoutSpecs.addWidget(self._parametersEditor)
         #hide the edtiors
@@ -63,6 +66,8 @@ class PropertiesEditor(propBase, propForm):
             self.show_only_editor(self._DurationBandwidthEditor, current)
         elif isinstance(node, SpectrumSensitivityNode):
             self.show_only_editor(self._spectrum_sensitivity_editor, current)
+        elif isinstance(node, EventNode):
+            self.show_only_editor(self._eventEditor, current)
         else:
             for edit in self._editors:
                 edit.setVisible(False)

@@ -172,7 +172,7 @@ class BoolNode(Node):
 
 class EventNode(Node):
     
-    columns = 3
+    columns = 7
     
     def __init__(self, name, info, parent=None):
         super(EventNode, self).__init__(name, parent)
@@ -180,48 +180,61 @@ class EventNode(Node):
         self.set_full_info(info)
         
     def set_full_info(self, info):
-        print info
-        a,b,c,d,e = info
-        print a, b, c, d, e
-
-##        limit_info, scan_info = info
-##        self._units = limit_info[0].units
-##        self._min = limit_info[0][self._units]
-##        self._max = limit_info[1][self._units]
-##        self._scan_start = scan_info[0][self._units]
-##        self._scan_stop = scan_info[1][self._units]
-##        self._scan_points = scan_info[2]
-##    
+        state, chan, time, chan_info, limit_info = info
+        self._units = limit_info[0].units
+        self._min = limit_info[0][self._units]
+        self._max = limit_info[1][self._units]
+        self._time = time
+        self._bool = state
+        self._chan = chan
+        self._options = chan_info
+        
     def filter_text(self):
         return self.parent().name() + self.name()
     
     def string_format(self):
-#        return '{0}'.format(self._value)
-        pass
+        return 'Channel {2} is {1} at {0} '.format(self._time, self._bool, self._chan)
     
     def path(self):
         return (self._collection, self.name())
-    
+
     def full_parameter(self):
-#        return ('event', (self._value))
-        pass
+        WithUnit = self.WithUnit
+        return ('event', (self._bool, self._chan, self._time, self._options,
+                          [WithUnit(self._min, self._units), WithUnit(self._max, self._units)]
+                         ))
     
     def data(self, column):
-##        if column < 1:
-##            return super(BoolNode, self).data(column)
-##        elif column == 1:
-##            return self.string_format()
-##        elif column == 2:
-##            return self._collection
-##        elif column == 3:
-##            return self._value
-        pass
+        if column < 1:
+            return super(EventNode, self).data(column)
+        elif column == 1:
+            return self.string_format()
+        elif column == 2:
+            return self._collection
+        elif column == 3:
+            return self._bool
+        elif  column == 4:
+            return self._chan
+        elif column == 5:
+            return self._time
+        elif column == 6:
+            return self._options
+        elif column == 7:
+            return self._min
+        elif column ==8:
+            return self._max
+        elif column == 9:
+            return self._units
+
     
     def setData(self, column, value):
-##        value = value.toPyObject()
-##        if column == 3:
-##            self._value = value
-        pass
+        value = value.toPyObject()
+        if column == 3:
+            self._bool = value
+        elif column == 4:
+            self._chan = value
+        elif column == 5:
+            self._time = value
 
 class StringNode(Node):
     
