@@ -119,8 +119,14 @@ class ParameterVault(LabradServer):
             return item[0]
         elif t == 'event':
             minim,maxim = item[4]
+#            print "minim=", minim
+#            print "item[2]=", item[2]
+#            print "maxim=", maxim
             assert item[1] in item[3], "Inorrect selection made in {}".format(name)
+#            print "item[1]=", item[1]
+#            print "item[3]=", item[3]
             assert minim <= item[2] <= maxim, "Parameter {} Out of Bound".format(name)
+#            print "item[0]=", item[0]
             return (item[0], item[1], item[2])
         else:#parameter type not known
             return value
