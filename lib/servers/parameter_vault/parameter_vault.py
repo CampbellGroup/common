@@ -99,7 +99,7 @@ class ParameterVault(LabradServer):
     def check_parameter(self, name, value):
         t,item = value
         
-        print name, t, t  == 'bool'
+#        print name, t, t  == 'bool'
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]

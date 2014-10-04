@@ -92,7 +92,7 @@ class experiment(experiment_info):
                 raise Exception ("In {}: Parameter {} not found among Parameter Vault parameters".format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
-                print d.items()
+                #print d.items()
         return d
     
     def set_parameters(self, parameter_dict):
