@@ -349,11 +349,11 @@ class Session( object ):
         num = self.counter
         self.counter += 1
         self.modified = datetime.now()
-        self.matrixrows = size[0]
-        self.matrixcolums = size[1]
         name = '%05d - %s' % ( num, title )
         print name, dtype, title
         dataset = Dataset( self, name, dtype, title, create = True )
+        dataset.matrixrows = size[0]
+        dataset.matrixcolumns = size[1]
         self.datasets[name] = dataset
         self.access()
         
@@ -803,10 +803,10 @@ class NumpyDataset( Dataset ):
     def addData( self, data ):
         if self.independents:
             varcount = len( self.independents ) + len( self.dependents )
-#        if self.matrixrows:
-#            varcount = self.matrixrows
+        print "self.matrixrows", self.matrixrows
+        if self.matrixrows:
+            varcount = self.matrixrows
         data = data.asarray
-
         # reshape single row
         if len( data.shape ) == 1:
             data.shape = ( 1, data.size )
@@ -1063,9 +1063,6 @@ class DataVault( LabradServer ):
         if len( dtype ) != 1 or dtype not in 'fs': raise TypeError( "dtype keyword only accepts 'f' or 's'" )
         session = self.getSession( c )
         dataset = session.newMatrixDataset( name or 'untitled', size, dtype )
-        print dataset
-        print session.path
-        print dataset.name
         self.onNewDatasetDir((dataset.name, session.path), self.root.listeners) ####MR
         c['dataset'] = dataset.name # not the same as name; has number prefixed
         c['filepos'] = 0 # start at the beginning
@@ -1122,7 +1119,6 @@ class DataVault( LabradServer ):
         dataset = self.getDataset( c )
         if not c['writing']:
             raise ReadOnlyError()
-        print data
         dataset.addData( data )
 
     @setting( 21, limit = 'w', startOver = 'b', returns = ['*2v', '*2s', '*s'] )
