@@ -804,8 +804,8 @@ class NumpyDataset( Dataset ):
         if self.independents:
             varcount = len( self.independents ) + len( self.dependents )
         print "self.matrixrows", self.matrixrows
-        if self.matrixrows:
-            varcount = self.matrixrows
+        if self.matrixcolumns:
+            varcount = self.matrixcolumns
         data = data.asarray
         # reshape single row
         if len( data.shape ) == 1:
