@@ -344,6 +344,21 @@ class Session( object ):
         self.parent.onNewDataset( name, self.listeners )
         ####self.parent.onNewDatasetDir((name, self.path), self.listeners) ####MR
         return dataset
+    
+    def newMatrixDataset(self, title, size, dtype):
+        num = self.counter
+        self.counter += 1
+        self.modified = datetime.now()
+        self.matrixrows = size[0]
+        self.matrixcolums = size[1]
+        name = '%05d - %s' % ( num, title )
+        print name, dtype, title
+        dataset = Dataset( self, name, dtype, title, create = True )
+        self.datasets[name] = dataset
+        self.access()
+        
+        self.parent.onNewDataset( name, self.listeners )
+        return dataset
 
     def openDataset( self, name ):
         # first lookup by number if necessary
@@ -443,6 +458,8 @@ class Dataset:
             self.dependents = []
             self.parameters = []
             self.comments = []
+            self.matrixrows = []
+            self.matrixcolumns = []
             self.save()
         else:
             self.load()
@@ -784,7 +801,10 @@ class NumpyDataset( Dataset ):
         del self._dataTimeoutCall
 
     def addData( self, data ):
-        varcount = len( self.independents ) + len( self.dependents )
+        if self.independents:
+            varcount = len( self.independents ) + len( self.dependents )
+#        if self.matrixrows:
+#            varcount = self.matrixrows
         data = data.asarray
 
         # reshape single row
@@ -1033,6 +1053,25 @@ class DataVault( LabradServer ):
         c['commentpos'] = 0
         c['writing'] = True
         return c['path'], c['dataset']
+    
+    @setting( 73, name = 's', dtype = 's', size = '*i', returns = '(*s{path}, s{name})' )
+    def newMatrix(self, c, name, size, dtype):
+        """Create a new Matrix dataset
+        
+        the size specifies dimensions [row, column]
+        """
+        if len( dtype ) != 1 or dtype not in 'fs': raise TypeError( "dtype keyword only accepts 'f' or 's'" )
+        session = self.getSession( c )
+        dataset = session.newMatrixDataset( name or 'untitled', size, dtype )
+        print dataset
+        print session.path
+        print dataset.name
+        self.onNewDatasetDir((dataset.name, session.path), self.root.listeners) ####MR
+        c['dataset'] = dataset.name # not the same as name; has number prefixed
+        c['filepos'] = 0 # start at the beginning
+        c['commentpos'] = 0
+        c['writing'] = True
+        return c['path'], c['dataset'] 
 
     @setting( 10, name = ['s', 'w'], returns = '(*s{path}, s{name})' )
     def open( self, c, name ):
@@ -1083,6 +1122,7 @@ class DataVault( LabradServer ):
         dataset = self.getDataset( c )
         if not c['writing']:
             raise ReadOnlyError()
+        print data
         dataset.addData( data )
 
     @setting( 21, limit = 'w', startOver = 'b', returns = ['*2v', '*2s', '*s'] )
