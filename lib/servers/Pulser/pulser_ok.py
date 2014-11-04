@@ -6,7 +6,7 @@
 name = Pulser
 version = 1.2
 description =
-instancename = Pulser
+instancename = %LABRADNODE% Pulser
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -30,10 +30,10 @@ from linetrigger import LineTrigger
 import numpy
 
 class Pulser(LabradServer, DDS, LineTrigger):
-    
-    name = 'Pulser'
+
+    name = '%LABRADNODE% Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
-    
+
     @inlineCallbacks
     def initServer(self):
         self.api  = api()
@@ -63,7 +63,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         connected = self.api.connectOKBoard()
         if not connected:
             raise Exception ("Pulser Not Found")
-            
+
     def initializeSettings(self):
         for channel in self.channelDict.itervalues():
             channelnumber = channel.channelnumber
@@ -72,7 +72,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
                 self.api.setManual(channelnumber, state)
             else:
                 self.api.setAuto(channelnumber, channel.autoinv)
-    
+
     @inlineCallbacks
     def initializeRemote(self):
         self.remoteConnections = {}
@@ -92,7 +92,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         Create New Pulse Sequence
         """
         c['sequence'] = Sequence(self)
-    
+
     @setting(1, "Program Sequence", returns = '')
     def programSequence(self, c, sequence):
         """
@@ -106,7 +106,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         if dds is not None: yield self._programDDSSequence(dds)
         self.inCommunication.release()
         self.isProgrammed = True
-    
+
     @setting(2, "Start Infinite", returns = '')
     def startInfinite(self,c):
         if not self.isProgrammed: raise Exception ("No Programmed Sequence")
@@ -116,14 +116,14 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield deferToThread(self.api.startLooped)
         self.sequenceType = 'Infinite'
         self.inCommunication.release()
-    
+
     @setting(3, "Complete Infinite Iteration", returns = '')
     def completeInfinite(self,c):
         if self.sequenceType != 'Infinite': raise Exception( "Not Running Infinite Sequence")
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.startSingle)
         self.inCommunication.release()
-    
+
     @setting(4, "Start Single", returns = '')
     def start(self, c):
         if not self.isProgrammed: raise Exception ("No Programmed Sequence")
@@ -132,7 +132,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield deferToThread(self.api.startSingle)
         self.sequenceType = 'One'
         self.inCommunication.release()
-    
+
     @setting(5, 'Add TTL Pulse', channel = 's', start = 'v[s]', duration = 'v[s]')
     def addTTLPulse(self, c, channel, start, duration):
         """
@@ -148,7 +148,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         if not duration >= self.timeResolution: raise Exception ("Incorrect duration")
         if not sequence: raise Exception ("Please create new sequence first")
         sequence.addPulse(hardwareAddr, start, duration)
-    
+
     @setting(6, 'Add TTL Pulses', pulses = '*(sv[s]v[s])')
     def addTTLPulses(self, c, pulses):
         """
@@ -159,7 +159,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
             start = pulse[1]
             duration = pulse[2]
             yield self.addTTLPulse(c, channel, start, duration)
-    
+
     @setting(7, "Extend Sequence Length", timeLength = 'v[s]')
     def extendSequenceLength(self, c, timeLength):
         """
@@ -169,7 +169,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         if not (self.sequenceTimeRange[0] <= timeLength['s'] <= self.sequenceTimeRange[1]): raise Exception ("Time boundaries are out of range")
         if not sequence: raise Exception ("Please create new sequence first")
         sequence.extendSequenceLength(timeLength['s'])
-        
+
     @setting(8, "Stop Sequence")
     def stopSequence(self, c):
         """Stops any currently running sequence"""
@@ -184,7 +184,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         self.inCommunication.release()
         self.sequenceType = None
         self.ddsLock = False
-    
+
     @setting(9, "Start Number", repeatitions = 'w')
     def startNumber(self, c, repeatitions):
         """
@@ -209,7 +209,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         if not sequence: raise Exception ("Please create new sequence first")
         ttl,dds = sequence.humanRepresentation()
         return ttl.tolist()
-    
+
     @setting(11, "Human Readable DDS", returns = '*(svv)')
     def humanReadableDDS(self, c):
         """
@@ -219,7 +219,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         if not sequence: raise Exception ("Please create new sequence first")
         ttl,dds = sequence.humanRepresentation()
         return dds
-    
+
     @setting(12, 'Get Channels', returns = '*(sw)')
     def getChannels(self, c):
         """
@@ -229,7 +229,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         keys = d.keys()
         numbers = [d[key].channelnumber for key in keys]
         return zip(keys,numbers)
-    
+
     @setting(13, 'Switch Manual', channelName = 's', state= 'b')
     def switchManual(self, c, channelName, state = None):
         """
@@ -251,7 +251,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
             self.notifyOtherListeners(c,(channelName,'ManualOn'), self.onSwitch)
         else:
             self.notifyOtherListeners(c,(channelName,'ManualOff'), self.onSwitch)
-    
+
     @setting(14, 'Switch Auto', channelName = 's', invert= 'b')
     def switchAuto(self, c, channelName, invert = None):
         """
@@ -279,7 +279,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         channel = self.channelDict[channelName]
         answer = (channel.ismanual,channel.manualstate,channel.manualinv,channel.autoinv)
         return answer
-    
+
     @setting(16, 'Wait Sequence Done', timeout = 'v', returns = 'b')
     def waitSequenceDone(self, c, timeout = None):
         """
@@ -294,7 +294,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
             if done: returnValue(True)
             yield self.wait(0.050)
         returnValue(False)
-    
+
     @setting(17, 'Repeatitions Completed', returns = 'w')
     def repeatitionsCompleted(self, c):
         """Check how many repeatitions have been completed in for the infinite or number modes"""
@@ -303,7 +303,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         self.inCommunication.release()
         returnValue(completed)
 
-    
+
     @setting(21, 'Set Mode', mode = 's', returns = '')
     def setMode(self, c, mode):
         """
@@ -324,7 +324,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
             yield deferToThread(self.api.setModeDifferential)
         self.clear_next_pmt_counts = 3 #assign to clear next two counts
         self.inCommunication.release()
-    
+
     @setting(22, 'Set Collection Time', new_time = 'v', mode = 's', returns = '')
     def setCollectTime(self, c, new_time, mode):
         """
@@ -342,11 +342,11 @@ class Pulser(LabradServer, DDS, LineTrigger):
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
             self.clear_next_pmt_counts = 3 #assign to clear next two counts
-        
+
     @setting(23, 'Get Collection Time', returns = '(vv)')
     def getCollectTime(self, c):
         return self.collectionTimeRange
-    
+
     @setting(24, 'Reset FIFO Normal', returns = '')
     def resetFIFONormal(self,c):
         """
@@ -355,7 +355,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetFIFONormal)
         self.inCommunication.release()
-    
+
     @setting(25, 'Get PMT Counts', returns = '*(vsv)')
     def getALLCounts(self, c):
         """
@@ -369,14 +369,14 @@ class Pulser(LabradServer, DDS, LineTrigger):
         countlist = yield deferToThread(self.doGetAllCounts)
         self.inCommunication.release()
         returnValue(countlist)
-    
+
     @setting(26, 'Get Readout Counts', returns = '*v')
     def getReadoutCounts(self, c):
         yield self.inCommunication.acquire()
         countlist = yield deferToThread(self.doGetReadoutCounts)
         self.inCommunication.release()
         returnValue(countlist)
-        
+
     @setting(27, 'Reset Readout Counts')
     def resetReadoutCounts(self, c):
         yield self.inCommunication.acquire()
@@ -389,13 +389,13 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetAllDDS)
         self.inCommunication.release()
-        
+
     @setting(91, 'Internal Advance DDS', returns = '')
     def internal_advance_dds(self, c):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.advanceAllDDS)
         self.inCommunication.release()
-    
+
     @setting(92, "Reinitialize DDS", returns = '')
     def reinitializeDDS(self, c):
         """
@@ -404,7 +404,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.initializeDDS)
         self.inCommunication.release()
-        
+
     def doGetAllCounts(self):
         inFIFO = self.api.getNormalTotal()
         reading = self.api.getNormalCounts(inFIFO)
@@ -424,14 +424,14 @@ class Pulser(LabradServer, DDS, LineTrigger):
             return l
         except IndexError:
             return []
-    
+
     def doGetReadoutCounts(self):
         inFIFO = self.api.getReadoutTotal()
         reading = self.api.getReadoutCounts(inFIFO)
         split = self.split_len(reading, 4)
         countlist = map(self.infoFromBuf_readout, split)
         return countlist
-    
+
     @staticmethod
     def infoFromBuf(buf):
         #converts the received buffer into useful information
@@ -443,18 +443,18 @@ class Pulser(LabradServer, DDS, LineTrigger):
         else:
             status = 'ON'
         return [count, status]
-    
+
     #should make nicer by combining with above.
     @staticmethod
     def infoFromBuf_readout(buf):
         count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
         return count
-    
+
     def convertKCperSec(self, inp):
         [rawCount,typ] = inp
         countKCperSec = float(rawCount) / self.collectionTime[self.collectionMode] / 1000.
         return [countKCperSec, typ]
-        
+
     def appendTimes(self, l, timeLast):
         #in the case that we received multiple PMT counts, uses the current time
         #and the collectionTime to guess the arrival time of the previous readings
@@ -465,22 +465,22 @@ class Pulser(LabradServer, DDS, LineTrigger):
             l[-i - 1].append(timeLast - i * collectionTime)
             l[-i - 1] = tuple(l[-i - 1])
         return l
-    
+
     def split_len(self,seq, length):
         '''useful for splitting a string in length-long pieces'''
         return [seq[i:i+length] for i in range(0, len(seq), length)]
-    
+
     @setting(28, 'Get Collection Mode', returns = 's')
     def getMode(self, c):
         return self.collectionMode
-    
+
     @setting(31, "Reset Timetags")
     def resetTimetags(self, c):
         """Reset the time resolved FIFO to clear any residual timetags"""
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetFIFOResolved)
         self.inCommunication.release()
-    
+
     @setting(32, "Get Timetags", returns = '*v')
     def getTimetags(self, c):
         """Get the time resolved timetags"""
@@ -493,11 +493,11 @@ class Pulser(LabradServer, DDS, LineTrigger):
         arr = arr.reshape(-1,2)
         timetags =( 65536 * arr[:,0] + arr[:,1]) * self.timeResolvedResolution
         returnValue(timetags)
-    
+
     @setting(33, "Get TimeTag Resolution", returns = 'v')
     def getTimeTagResolution(self, c):
         return self.timeResolvedResolution
-    
+
     #Methods relating to using the optional second PMT
     @setting(35, "Get PMT ID List", returns='*i')
     def getPMTIDList(self, c):
@@ -511,7 +511,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         countlist = yield deferToThread(self.doGetAllSecondaryCounts)
         self.inCommunication.release()
         returnValue(countlist)
-            
+
     def doGetAllSecondaryCounts(self):
         if not self.haveSecondPMT: raise Exception ("No Second PMT")
         inFIFO = self.api.getSecondaryNormalTotal()
@@ -520,7 +520,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         countlist = map(self.infoFromBuf, split)
         countlist = map(self.convertKCperSec, countlist)
         countlist = self.appendTimes(countlist, time.time())
-        return countlist        
+        return countlist
 
 
     def wait(self, seconds, result=None):
@@ -528,12 +528,12 @@ class Pulser(LabradServer, DDS, LineTrigger):
         d = Deferred()
         reactor.callLater(seconds, d.callback, result)
         return d
-    
+
     def cnot(self, control, inp):
         if control:
             inp = not inp
         return inp
-    
+
     def notifyOtherListeners(self, context, message, f):
         """
         Notifies all listeners except the one in the given context, executing function f
@@ -541,14 +541,14 @@ class Pulser(LabradServer, DDS, LineTrigger):
         notified = self.listeners.copy()
         notified.remove(context.ID)
         f(message,notified)
-    
+
     def initContext(self, c):
         """Initialize a new context object."""
         self.listeners.add(c.ID)
-    
+
     def expireContext(self, c):
         self.listeners.remove(c.ID)
-     
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer( Pulser() )
