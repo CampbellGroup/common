@@ -22,12 +22,17 @@ from twisted.internet import reactor
 from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, Deferred
 from twisted.internet.threads import deferToThread
 import time
-from hardwareConfiguration import hardwareConfiguration
 from sequence import Sequence
 from dds import DDS
 from api import api
 from linetrigger import LineTrigger
 import numpy
+
+try:
+    from config.pulser.hardwareConfiguration import hardwareConfiguration
+except:
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
+
 
 class Pulser(LabradServer, DDS, LineTrigger):
 
