@@ -1,7 +1,7 @@
 import ok
 
 try:
-    from config.pulser.hardwareConfiguration import hardwareConfiguration
+    from config.hardwareConfiguration import hardwareConfiguration
 except:
     from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
 
