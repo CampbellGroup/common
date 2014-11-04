@@ -29,7 +29,7 @@ from linetrigger import LineTrigger
 import numpy
 
 try:
-    from config.hardwareConfiguration import hardwareConfiguration
+    from config.pulser.hardwareConfiguration import hardwareConfiguration
 except:
     print "didn't import from local config."
     from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration

@@ -4,7 +4,7 @@ from twisted.internet.threads import deferToThread
 from labrad.units import WithUnit
 
 try:
-    from config.hardwareConfiguration import hardwareConfiguration
+    from config.pulser.hardwareConfiguration import hardwareConfiguration
 except:
     from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
 

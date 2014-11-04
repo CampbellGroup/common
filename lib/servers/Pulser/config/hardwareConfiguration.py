@@ -16,7 +16,7 @@ class hardwareConfiguration(object):
     sequenceType = None #none for not programmed, can be 'one' or 'infinite'
     collectionMode = 'Normal' #default PMT mode
     collectionTime = {'Normal':0.100,'Differential':0.100} #default counting rates
-    okDeviceID = 'Pulser'
+    okDeviceID = 'Pulser 2'
     okDeviceFile = 'pulser_2013_06_05.bit'
     lineTriggerLimits = (0, 15000)#values in microseconds
     secondPMT = False
