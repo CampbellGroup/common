@@ -6,7 +6,7 @@ from labrad.units import WithUnit
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
 except:
-    from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
 class LineTrigger(LabradServer):
 

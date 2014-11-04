@@ -5,7 +5,7 @@ from decimal import Decimal
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
 except:
-    from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
 class Sequence():
     """Sequence for programming pulses"""

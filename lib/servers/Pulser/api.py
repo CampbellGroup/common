@@ -3,7 +3,7 @@ import ok
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
 except:
-    from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
 class api(object):
     '''class containing all commands for interfacing with the fpga'''
