@@ -30,8 +30,12 @@ import numpy
 
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
+    print "imported from local hardwareConfiguration."
 except:
-    from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
+    print "didn't import from local config."
+    pass
+
+#    from common.lib.servers.Pulser.config.hardwareConfiguration import hardwareConfiguration
 
 
 class Pulser(LabradServer, DDS, LineTrigger):

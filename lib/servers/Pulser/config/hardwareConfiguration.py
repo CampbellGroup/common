@@ -1,40 +1,9 @@
-class channelConfiguration(object):
-    """
-    Stores complete configuration for each of the channels
-    """
-    def __init__(self, channelNumber, ismanual, manualstate,  manualinversion, autoinversion):
-        self.channelnumber = channelNumber
-        self.ismanual = ismanual
-        self.manualstate = manualstate
-        self.manualinv = manualinversion
-        self.autoinv = autoinversion
-        
-class ddsConfiguration(object):
-    """
-    Stores complete configuration of each DDS board
-    """
-    def __init__(self, address, allowedfreqrange, allowedamplrange, frequency, amplitude, **args):
-        self.channelnumber = address
-        self.allowedfreqrange = allowedfreqrange
-        self.allowedamplrange = allowedamplrange
-        self.frequency = frequency
-        self.amplitude = amplitude
-        self.state = True
-        self.boardfreqrange = args.get('boardfreqrange', (0.0, 800.0))
-        self.boardamplrange = args.get('boardamplrange', (-63.0, -3.0))
-        self.boardphaserange = args.get('boardphaserange', (0.0, 360.0))
-        self.off_parameters = args.get('off_parameters', (0.0, -63.0))
-        self.phase_coherent_model = args.get('phase_coherent_model', True)        
-        self.remote = args.get('remote', False)
-        self.name = None #will get assigned automatically
+from channelConfiguration import channelConfiguration
+from ddsConfiguration import ddsConfiguration
+# TODO: Does this really need to be imported, looks unused
+# Double checked this by searching for remoteChannel in the project
+from remoteChannel import remoteChannel
 
-class remoteChannel(object):
-    def __init__(self, ip, server, **args):
-        self.ip = ip
-        self.server = server
-        self.reset = args.get('reset', 'reset_dds')
-        self.program = args.get('program', 'program_dds')
-        
 class hardwareConfiguration(object):
     channelTotal = 32
     timeResolution = '40.0e-9' #seconds
@@ -42,17 +11,17 @@ class hardwareConfiguration(object):
     maxSwitches = 1022
     resetstepDuration = 2 #duration of advanceDDS and resetDDS TTL pulses in units of timesteps
     collectionTimeRange = (0.010, 5.0) #range for normal pmt counting
-    sequenceTimeRange = (0.0, 85.0) #range for duration of pulse sequence    
+    sequenceTimeRange = (0.0, 85.0) #range for duration of pulse sequence
     isProgrammed = False
     sequenceType = None #none for not programmed, can be 'one' or 'infinite'
     collectionMode = 'Normal' #default PMT mode
     collectionTime = {'Normal':0.100,'Differential':0.100} #default counting rates
     okDeviceID = 'Pulser'
     okDeviceFile = 'pulser_2013_06_05.bit'
-    lineTriggerLimits = (0, 15000)#values in microseconds 
+    lineTriggerLimits = (0, 15000)#values in microseconds
     secondPMT = False
     DAC = False
-    
+
     #name: (channelNumber, ismanual, manualstate,  manualinversion, autoinversion)
     channelDict = {
                    '866DP':channelConfiguration(12, False, True, False, True),
