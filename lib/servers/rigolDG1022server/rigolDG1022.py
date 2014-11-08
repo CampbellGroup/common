@@ -18,7 +18,7 @@
 [info]
 name = Rigol DG1022 Server
 version = 1.3
-description = 
+description =
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -35,19 +35,21 @@ from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 class RigolWrapper(GPIBDeviceWrapper):
-    
+
     def initialize(self):
         '''
         Provides a lookup table for waveform to GPIB lingo
         '''
         self.lookup = {'sine':'SIN', 'square':'SQU', 'ramp':'RAMP', 'pulse':'PULS', 'noise':'NOIS', 'DC' : 'DC', 'USER':'USER'}
-        
+
     def parsechannel(self, channel = None):
         if channel == 2:
             channel = ':CH2'
+#        if channel == 1:
+#            channel = ':CH1'
         else: channel = ''
         return channel
-    
+
     @inlineCallbacks
     def Output(self, channel, output = None):
         '''
@@ -63,8 +65,8 @@ class RigolWrapper(GPIBDeviceWrapper):
             yield self.write("OUTP" + channel + "?")
             state = yield self.read()
             returnValue(state)
-            
-            
+
+
     @inlineCallbacks
     def applyWaveForm(self, function, frequency, amplitude, offset, channel = None):
         '''
@@ -73,8 +75,8 @@ class RigolWrapper(GPIBDeviceWrapper):
         channel = self.parsechannel(channel)
         output = "APPL:" + self.lookup[function] + channel + ' ' + str(int(frequency['Hz'])) + ',' + str(amplitude['V']) + ',' + str(offset['V'])
         yield self.write(output)
-     
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def WaveFunction(self, channel, function = None):
         '''
         Changes wave form
@@ -89,7 +91,7 @@ class RigolWrapper(GPIBDeviceWrapper):
             output = "FUNC" + channel + " " + self.lookup[function]
             yield self.write(output)
 
-        
+
     @inlineCallbacks
     def Frequency(self, channel, frequency = None):
         '''
@@ -112,14 +114,19 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         channel = self.parsechannel(channel)
         if voltage == None:
-            output = "VOLT:OFFS" + channel
+#            output = "VOLT:OFFS" + channel
+            output = "APPL" + channel + "?"
             yield self.write(output)
-            volts = self.read()
+            volts = yield self.read()
+            volts = volts.split(',')
+            volts = volts[3]
+            volts = volts.strip('"')
+            volts = float(volts)
             returnValue(volts)
         else:
             output = 'APPL:DC' + channel + ' DEF,DEF,' + str(voltage['V'])
             yield self.write(output)
-            
+
     @inlineCallbacks
     def Offset(self, channel, offset = None):
         channel = self.parsechannel(channel)
@@ -130,9 +137,9 @@ class RigolWrapper(GPIBDeviceWrapper):
             returnValue(offset)
         else:
             output = "VOLT:OFFS" + channel + " " + str(offset['V'])
-            yield self.write(output) 
-        
-        
+            yield self.write(output)
+
+
     @inlineCallbacks
     def Amplitude(self, channel, voltage = None):
         '''
@@ -155,7 +162,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "AM:SOUR " + source
         yield self.write(output)
-        
+
     @inlineCallbacks
     def AMFunction(self, function):
         '''
@@ -166,7 +173,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "AM:INT:FUNC " + self.lookup[function]
         yield self.write(output)
-        
+
     @inlineCallbacks
     def AMFrequency(self, frequency):
         '''
@@ -175,7 +182,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "AM:INT:FREQ " + str(frequency['Hz'])
         yield self.write(output)
-        
+
     @inlineCallbacks
     def AMDepth(self, depth):
         '''
@@ -184,7 +191,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "AM:DEPT " + str(depth)
         yield self.write(output)
-        
+
     @inlineCallbacks
     def AMState(self, state):
         '''
@@ -194,7 +201,7 @@ class RigolWrapper(GPIBDeviceWrapper):
             state = 'ON'
         else:
             state = 'OFF'
-            
+
         output = "AM:STAT " + state
         yield self.write(output)
 
@@ -205,7 +212,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "FM:SOUR " + source
         yield self.write(output)
-        
+
     @inlineCallbacks
     def FMFunction(self, function):
         '''
@@ -215,7 +222,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "FM:INT:FUNC " + self.lookup[function]
         yield self.write(output)
-        
+
     @inlineCallbacks
     def FMFrequency(self, frequency):
         '''
@@ -224,7 +231,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "FM:INT:FREQ " + str(frequency['Hz'])
         yield self.write(output)
-        
+
     @inlineCallbacks
     def FMDeviation(self, deviation):
         '''
@@ -232,7 +239,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         '''
         output = "FM:DEV " + str(deviation)
         yield self.write(output)
-        
+
     @inlineCallbacks
     def FMState(self, state):
         '''
@@ -242,10 +249,10 @@ class RigolWrapper(GPIBDeviceWrapper):
             state = 'ON'
         else:
             state = 'OFF'
-            
+
         output = "FM:STAT " + state
         yield self.write(output)
-        
+
 
 class RigolServer(GPIBManagedServer):
     name = 'Rigol DG1022 Server' # Server name
@@ -253,15 +260,15 @@ class RigolServer(GPIBManagedServer):
     deviceWrapper = RigolWrapper
 
     @setting(10, 'Output', channel = 'i', output = 'b')
-    def deviceOutput(self, c, channel, output = None): # uses passed context "c" to address specific device 
+    def deviceOutput(self, c, channel, output = None): # uses passed context "c" to address specific device
         dev = self.selectedDevice(c)
         yield dev.Output(channel, output)
-    
+
     @setting(69, 'Apply Waveform', channel = 'i', function = 's', frequency = ['v[Hz]'], amplitude = ['v[V]'], offset = ['v[V]']  )
     def applyDeviceWaveform(self, c, function, frequency, amplitude, offset, channel = None):
         dev = self.selectedDevice(c)
         yield dev.applyWaveForm(function, frequency, amplitude, offset, channel)
-        
+
     @setting(707, 'Wave Function', channel = 'i', function = 's')
     def deviceFunction(self, c, channel, function = None):
         dev = self.selectedDevice(c)
@@ -285,13 +292,14 @@ class RigolServer(GPIBManagedServer):
         dev = self.selectedDevice(c)
         volts = yield dev.setDC(channel, value)
         returnValue(volts)
-        
+
     @setting(99, 'Offset', channel = 'i', value = 'v[V]')
     def Offset(self, c, channel, value = None):
         dev = self.selectedDevice(c)
         offset = yield dev.Offset(channel, value)
         returnValue(offset)
-        
+
+
 __server__ = RigolServer()
 
 if __name__ == '__main__':
