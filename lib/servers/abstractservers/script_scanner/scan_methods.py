@@ -6,6 +6,7 @@ You should avoid importing from scan_methods.py when writing new code, and
 fix old code by not importing from scan_methods.py.
 """
 
+from experiment_info import experiment_info
 from experiment import experiment
 from single import single
 from repeat_reload import repeat_reload
