@@ -280,8 +280,8 @@ class Dual_PMTFlow(LabradServer):
         otherListeners = self.getOtherListeners(c)      
         self.onNewSetting(('timelength', str(timelength['s'])), otherListeners)
     
-    @setting(9, 'Get Next Counts', kind = 's', number = 'w', average = 'b', returns = ['*v', 'v'])
-    def getNextCounts(self, c, kind, number, average = False):
+    @setting(9, kind = 's', number = 'w', average = 'b', returns = ['*v', 'v'])
+    def get_next_counts(self, c, kind, number, average = False):
         """
         Acquires next number of counts, where type can be 'ON' or 'OFF' or 'DIFF'
         Average is optionally True if the counts should be averaged
@@ -314,9 +314,17 @@ class Dual_PMTFlow(LabradServer):
         else:
             raise Exception("Not available because Pulser Server is not available")
 
+
     @setting(12, 'Set PMT State', pmt_id = 'i', state = 'b', returns = '')
     def enablePMT(self, c, pmt_id, state):
+        """
+        Parameters
+        ----------
+        pmt_id: int, which PMT to turn on or off
+        state: bool, PMT state
+        """
         self.pmt_list[pmt_id - 1].enabled = state
+    
     
     @inlineCallbacks
     def _programPulserDiff(self):
@@ -381,8 +389,10 @@ class Dual_PMTFlow(LabradServer):
     
     @inlineCallbacks
     def getPMTCounts(self, pmt_id):
-        if pmt_id == 2: self.rawdata = yield self.pulser.get_secondary_pmt_counts()
-        else: self.rawdata = yield self.pulser.get_pmt_counts()
+        if pmt_id == 2: 
+            self.rawdata = yield self.pulser.get_secondary_pmt_counts()
+        else: 
+            self.rawdata = yield self.pulser.get_pmt_counts()
     
     def processSignals(self, data, pmt_id):
         lastPt = data[-1]
