@@ -6,7 +6,7 @@
 name = Pulser
 version = 1.2
 description =
-instancename = %LABRADNODE% Pulser
+instancename = Pulser
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -36,7 +36,7 @@ except:
 
 class Pulser(LabradServer, DDS, LineTrigger):
 
-    name = '%LABRADNODE% Pulser'
+    name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
 
     @inlineCallbacks
