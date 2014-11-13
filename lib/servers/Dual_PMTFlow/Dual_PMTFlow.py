@@ -41,9 +41,9 @@ class PMT(object):
         self.enabled = False
 
 
-class NormalPMTFlow(LabradServer):
+class Dual_PMTFlow(LabradServer):
     
-    name = 'NormalPMTFlow Dual'
+    name = 'Dual PMTFlow'
     onNewCount = Signal(SIGNALID, 'signal: new count', 'v')
     onNewCount2 = Signal(SIGNALID+10, 'signal: new count 2', 'v')
     onNewSetting = Signal(SIGNALID+1, 'signal: new setting', '(ss)')
@@ -401,4 +401,4 @@ class NormalPMTFlow(LabradServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( NormalPMTFlow() )
+    util.runServer( Dual_PMTFlow() )

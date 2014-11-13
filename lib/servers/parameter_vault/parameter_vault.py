@@ -103,31 +103,41 @@ class ParameterVault(LabradServer):
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]
+            
         elif t == 'string' or t == 'bool' or t == 'sideband_selection' or t == 'spectrum_sensitivity':
             return item
+            
         elif t == 'scan':
             minim,maxim = item[0]
             start,stop,steps = item[1]
             assert minim <= start <= maxim, "Parameter {} Out of Bound".format(name)
             assert minim <= stop <= maxim, "Parameter {} Out of Bound".format(name)
             return (start, stop, steps)
+            
         elif t == 'selection_simple':
             assert item[0] in item[1], "Inorrect selection made in {}".format(name)
             return item[0]
+            
         elif t == 'line_selection':
             assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(name)
             return item[0]
+            
         elif t == 'event':
-            minim,maxim = item[4]
-#            print "minim=", minim
-#            print "item[2]=", item[2]
-#            print "maxim=", maxim
-            assert item[1] in item[3], "Inorrect selection made in {}".format(name)
-#            print "item[1]=", item[1]
-#            print "item[3]=", item[3]
-            assert minim <= item[2] <= maxim, "Parameter {} Out of Bound".format(name)
-#            print "item[0]=", item[0]
-            return (item[0], item[1], item[2])
+            e_value   = item[0]
+            e_channel = item[1]
+            e_time    = item[2]            
+            e_minim, e_maxim = item[4]
+            
+            print "minim=", e_minim
+            print "item[2]=", item[2]
+            print "maxim=", e_maxim
+            assert e_channel in item[3], "Inorrect selection made in {}".format(name)
+            print "item[1]=", item[1]
+            print "item[3]=", item[3]
+            assert e_minim <= e_time <= e_maxim, "Parameter {} Out of Bound".format(name)
+            print "item[0]=", item[0]
+            return (e_value, e_channel, e_time)
+            
         else:#parameter type not known
             return value
         
