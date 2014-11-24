@@ -342,7 +342,7 @@ class Dual_PMTFlow(LabradServer):
 
 
     @setting(13, pmt = 'i', value = 'b', returns = '?')
-    def pmt_state(self, c, pmt_id, value=None):
+    def pmt_state(self, c, pmt, value=None):
         """
         Set the state of pmt with value.  If value=None returns
         the state of pmt.        
