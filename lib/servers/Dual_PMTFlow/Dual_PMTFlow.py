@@ -332,8 +332,8 @@ class Dual_PMTFlow(LabradServer):
             raise Exception("Not available because Pulser Server is not available")
 
 
-    @setting(12, 'Set PMT State', pmt_id = 'i', state = 'b', returns = '')
-    def enablePMT(self, c, pmt_id, state):
+    @setting(12, pmt_id = 'i', state = 'b', returns = '')
+    def set_pmt_state(self, c, pmt_id, state):
         """
         Parameters
         ----------
