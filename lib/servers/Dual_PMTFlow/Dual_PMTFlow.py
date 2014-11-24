@@ -341,20 +341,19 @@ class Dual_PMTFlow(LabradServer):
         self.pmt_list[pmt_id - 1].enabled = state
 
 
-    @setting(13, pmt_id = 'i', value = 'b', returns = '?')
+    @setting(13, pmt = 'i', value = 'b', returns = '?')
     def pmt_state(self, c, pmt_id, value=None):
         """
-        Set the state of pmt_id with value.  If value=None returns
-        the state of pmt_id.        
+        Set the state of pmt with value.  If value=None returns
+        the state of pmt.        
         
         pmt_id: int, which PMT to turn on or off
-        
         value: bool, PMT state
         """
         if value is not None:
-            self.pmt_list[pmt_id - 1].enabled = value
+            self.pmt_list[pmt - 1].enabled = value
         else:
-            out_val = yield self.pmt_list[pmt_id - 1].enabled
+            out_val = yield self.pmt_list[pmt - 1].enabled
             returnValue(out_val)
     
     
