@@ -173,14 +173,14 @@ class Dual_PMTFlow(LabradServer):
             yield self.dv.add_parameter('startTime',start, context = pmt.context)
     
     
-    @setting(0, 'Set Save Folder', folder = '*s', returns = '')
-    def setSaveFolder(self,c , folder):
+    @setting(0, folder = '*s', returns = '')
+    def set_save_folder(self, c, folder):
         yield self.dv.cd(folder, True)
         self.saveFolder = folder
     
     
-    @setting(1, 'Start New Dataset', setName = 's', returns = 's')
-    def setNewDataSet(self, c, setName = None):
+    @setting(1, setName = 's', returns = 's')
+    def start_new_dataset(self, c, setName = None):
         """Starts new dataset, if name not provided, it will be the same"""
         if setName is not None: self.dataSetName = setName
         self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
@@ -189,8 +189,8 @@ class Dual_PMTFlow(LabradServer):
         returnValue(self.openDataSet)
     
     
-    @setting( 2, "Set Mode", mode = 's', returns = '' )
-    def setMode(self,c, mode):
+    @setting(2, mode = 's', returns = '' )
+    def set_mode(self,c, mode):
         """
         Start recording Time Resolved Counts into Data Vault
         """
@@ -206,8 +206,8 @@ class Dual_PMTFlow(LabradServer):
         self.onNewSetting(('mode', mode), otherListeners)
 
 
-    @setting(3, 'getCurrentMode', returns = 's')
-    def getCurrentMode(self, c):
+    @setting(3,, returns = 's')
+    def getcurrentmode(self, c):
         """
         Returns the currently running mode
         """
@@ -277,8 +277,8 @@ class Dual_PMTFlow(LabradServer):
         return self.openDataSet
     
     
-    @setting(8, 'Set Time Length', timelength = 'v[s]')
-    def setTimeLength(self, c, timelength):
+    @setting(8, timelength = 'v[s]')
+    def set_time_length(self, c, timelength):
         """Sets the time length for the current mode"""
         mode = self.currentMode
         if not self.collectTimeRange[0] <= timelength['s'] <= self.collectTimeRange[1]: raise Exception ('Incorrect Recording Time')
@@ -322,15 +322,15 @@ class Dual_PMTFlow(LabradServer):
         returnValue(data)
     
     
-    @setting(10, 'Get Time Length', returns = 'v')
-    def getMode(self, c):
+    @setting(10, returns = 'v')
+    def get_time_length(self, c):
         """
         Returns the current timelength of in the current mode
         """
         return self.collection_period
 
 
-    @setting(11, 'Get Time Length Range', returns = '(vv)')
+    @setting(11, returns = '(vv)')
     def get_time_length_range(self, c):
         if self.collectTimeRange is not None:
             return self.collectTimeRange
