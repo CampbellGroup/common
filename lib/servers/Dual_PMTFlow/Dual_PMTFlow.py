@@ -31,6 +31,7 @@ SIGNALID = 331483
 
 class Dual_PMTFlow(LabradServer):
     
+    debug = False
     name = 'Dual PMTFlow'
     onNewCount = Signal(SIGNALID, 'signal: new count', 'v')
     onNewCount2 = Signal(SIGNALID+10, 'signal: new count 2', 'v')
@@ -89,7 +90,7 @@ class Dual_PMTFlow(LabradServer):
     @inlineCallbacks
     def connect_data_vault(self):
         try:
-            #reconnect to data vault and navigate to the directory
+            # reconnect to data vault and navigate to the directory
             self.dv = yield self.client.data_vault
             yield self.dv.cd(self.saveFolder, True)    
             if self.openDataSet is not None:
@@ -213,8 +214,8 @@ class Dual_PMTFlow(LabradServer):
         return self.currentMode
     
     
-    @setting(4, 'Record Data', returns = '')
-    def recordData(self, c):
+    @setting(4, returns = '')
+    def record_data(self, c):
         """
         Starts recording data of the current PMT mode into datavault
         """
@@ -304,10 +305,15 @@ class Dual_PMTFlow(LabradServer):
         Note in differential mode, Diff counts get updates every time, but ON and OFF
         get updated every 2 times.
         """
-        if kind not in ['ON', 'OFF','DIFF']: raise Exception('Incorrect type')
-        if kind in ['OFF','DIFF'] and self.currentMode == 'Normal':raise Exception('in the wrong mode to process this request')
-        if not 0 < number < 1000: raise Exception('Incorrect Number')
-        if not self.recording.running: raise Exception('Not currently recording')
+        if kind not in ['ON', 'OFF','DIFF']: 
+            raise Exception('Incorrect type')
+        if kind in ['OFF','DIFF'] and self.currentMode == 'Normal':
+            raise Exception('in the wrong mode to process this request')
+        if not 0 < number < 1000: 
+            raise Exception('Incorrect Number')
+        if not self.recording.running: 
+            raise Exception('Not currently recording')
+            
         d = Deferred()
         self.requestList.append(self.readingRequest(d, kind, number))
         data = yield d
@@ -331,7 +337,7 @@ class Dual_PMTFlow(LabradServer):
         else:
             raise Exception("Not available because Pulser Server is not available")
 
-
+    # TODO: deprecate in favor of pmt_state()
     @setting(12, pmt_id = 'i', state = 'b', returns = '')
     def set_pmt_state(self, c, pmt_id, state):
         """
@@ -378,6 +384,11 @@ class Dual_PMTFlow(LabradServer):
     class readingRequest():
         
         def __init__(self, d, kind, count):
+            """
+            d: Deffered()
+            kind: str, 'ON', etc.
+            count:
+            """
             self.d = d
             self.count = count
             self.kind = kind
@@ -389,7 +400,12 @@ class Dual_PMTFlow(LabradServer):
     
     
     def processRequests(self, data):
-        if not len(self.requestList): return
+        """
+        This function is continually running after record_data is called.
+        """
+#        if self.debug : print "processRequests()"
+        if not len(self.requestList): 
+            return
         for dataPoint in data:
             for item,req in enumerate(self.requestList):
                 if dataPoint[1] != 0 and req.kind == 'ON':
@@ -405,24 +421,33 @@ class Dual_PMTFlow(LabradServer):
                     
     @inlineCallbacks
     def _record(self):
+        """
+        Called continuously after running record_data()
+        """
         for pmt in self.pmt_list:
-            if not pmt.enabled: return
-            try:
-                yield self.getPMTCounts(pmt.id)
-            except:
-                print 'Not Able to Get PMT Counts'
-                self.rawdata = []
-            if len(self.rawdata) != 0:
-                if self.currentMode == 'Normal':
-                    toDataVault = [ [elem[2] - self.startTime, elem[0], 0, 0] for elem in self.rawdata] # converting to format [time, normal count, 0 , 0]
-                elif self.currentMode =='Differential':
-                    toDataVault = self.convertDifferential(self.rawdata)
-                self.processRequests(toDataVault) #if we have any requests, process them
-                self.processSignals(toDataVault, pmt.id)
+            if not pmt.enabled:
+                if self.debug: print pmt.id, "not enabled."
+#                return
+            else: 
                 try:
-                    yield self.dv.add(toDataVault, context = pmt.context)
+                    yield self.getPMTCounts(pmt.id)
                 except:
-                    print 'Not Able to Save To Data Vault'
+                    print 'Not Able to Get PMT Counts'
+                    self.rawdata = []
+                if len(self.rawdata) != 0:
+                    if self.currentMode == 'Normal':
+                        if self.debug : print "_record() self.rawdata=", self.rawdata
+                        # converting to format [time, normal count, 0 , 0]
+                        toDataVault = [ [elem[2] - self.startTime, elem[0], 0, 0] for elem in self.rawdata] 
+                    elif self.currentMode =='Differential':
+                        toDataVault = self.convertDifferential(self.rawdata)
+                    self.processRequests(toDataVault)
+                    self.processSignals(toDataVault, pmt.id)
+                    try:
+                        yield self.dv.add(toDataVault, context = pmt.context)
+                    except:
+                        print 'Not Able to Save To Data Vault'
+    
     
     
     @inlineCallbacks
