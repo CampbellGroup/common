@@ -206,7 +206,7 @@ class Dual_PMTFlow(LabradServer):
         self.onNewSetting(('mode', mode), otherListeners)
 
 
-    @setting(3,, returns = 's')
+    @setting(3, returns = 's')
     def getcurrentmode(self, c):
         """
         Returns the currently running mode
