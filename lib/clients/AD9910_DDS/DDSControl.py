@@ -24,7 +24,7 @@ class DDSclient(QtGui.QWidget):
 
     @inlineCallbacks    
     def connect(self):
-        """Creates an Asynchronous connection to the wavemeter computer and
+        """Creates an Asynchronous connection to the DDS client and
         connects incoming signals to relavent functions
         """
         from labrad.wrappers import connectAsync
@@ -111,7 +111,7 @@ class DDSclient(QtGui.QWidget):
         chan = channel[1]
         yield self.server.output(channel[1], state, context = self.contexts[port])
         yield self.updateSettings(name, state, pos = 0)
-
+        
     @inlineCallbacks
     def updateSettings(self, name, value, pos):
         if name in self.settings:
