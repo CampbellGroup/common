@@ -195,16 +195,30 @@ class DDSDeviceServer(DeviceServer):
             devs += [(devName, (server, port))]
         returnValue(devs)
         
-    @setting(19, chan = 'i', amp = 'v[dbm]')
-    def amplitude(self, c, chan, amp):
+    @setting(19, chan = 'i', amp = 'v[dbm]', returns = '?')
+    def amplitude(self, c, chan, amp=None):
+        """
+        Get or set chan's amplitude
+        """
         dev = self.selectedDevice(c)
-        dev.setAmplitude(chan, amp)
+        if amp is not None:
+            dev.setAmplitude(chan, amp)
+            return
+        else:
+            return dev.getAmplitude(chan)          
         
-    @setting(20, chan = 'i', freq = 'v[MHz]')
-    def frequency(self, c, chan, freq):
+    @setting(20, chan = 'i', freq = 'v[MHz]', returns = '?')
+    def frequency(self, c, chan, freq=None):
+        """
+        Get or set chan's frequency
+        """
         dev = self.selectedDevice(c)
-        dev.setFrequency(chan, freq)
-        
+        if freq is not None:        
+            dev.setFrequency(chan, freq)
+            return
+        else:
+            return dev.getFrequency(chan)
+            
     @setting(21, chan = 'i', state = 'b')
     def output(self, c, chan, state):
         dev = self.selectedDevice(c)
