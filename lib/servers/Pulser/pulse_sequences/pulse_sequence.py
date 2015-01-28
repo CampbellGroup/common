@@ -11,7 +11,13 @@ class pulse_sequence(object):
     required_subsequences = []
     replaced_parameters = {}
 
-    def __init__(self, parameter_dict, start = WithUnit(0, 's')):
+    def __init__(self, parameter_dict, start=WithUnit(0, 's')):
+        """
+        Parameters
+        ----------
+        parameter_dict: TreeDict instance
+        start: labrad WithUnit's type, default(WithUnit(0, 's'))
+        """
         if not type(parameter_dict) == TreeDict:
             message = "replacement_dict must be a TreeDict in sequence {0}"
             raise Exception (message.format(self.__class__.__name__))
