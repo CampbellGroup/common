@@ -50,7 +50,10 @@ class ArduinoDDSDevice(DeviceWrapper):
         self.settings = {'Amplitude': W(-3, 'dbm'), 'Frequency': W(161, 'MHz')}
         p = self.packet()
         p.open(port)
-        p.baudrate(9600)
+        # baudrate of 9600 limits the write time to 100 us per bit.
+        # This should be changed to 115200, this will give a factor of 12 
+        # speed boost.
+        p.baudrate(57600)
 #        p.read() # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
@@ -81,7 +84,8 @@ class ArduinoDDSDevice(DeviceWrapper):
     def flushinput(self):
         """flush serial data"""
         yield self.server.flushinput(context = self.ctx)
-        
+
+    @inlineCallbacks    
     def setAmplitude(self, chan, amplitude, set = True):
         voltage = 10**((amplitude['dbm'] -10.0)/20)
         hexamp =  str(hex(int((voltage - 0.00022387211) * 16383/0.276376)))[2:]
@@ -89,22 +93,26 @@ class ArduinoDDSDevice(DeviceWrapper):
         output = '/I' + str(chan) + 'A' + hexamp
         if set:
             self.settings['Amplitude'] = amplitude
-        self.write(output)
-        
+        yield self.write(output)
+        time.sleep(0.05)
+
+    @inlineCallbacks    
     def setFrequency(self, chan, frequency):
         hexfreq = str(hex(int((frequency['Hz']) * 2147483647/(500e6))))[2:]
         hexfreq = hexfreq.rjust(8, '0')
         hexfreq = hexfreq.replace('L', '')
         self.settings['Frequency'] = frequency
         output = '/I' + str(chan) + 'F' + hexfreq
-        self.write(output)
-        
+        yield self.write(output)
+        time.sleep(0.05)
+
+    @inlineCallbacks    
     def ddsOutput(self, chan, state):
         if state:
             amp = self.settings['Amplitude']
-            self.setAmplitude(chan, amp)
+            yield self.setAmplitude(chan, amp)
         else:
-            self.setAmplitude(chan, W(-63, 'dbm'), set = False)
+            yield self.setAmplitude(chan, W(-63, 'dbm'), set = False)
             
     @inlineCallbacks
     def getFrequency(self, chan):
@@ -131,19 +139,16 @@ class ArduinoDDSDevice(DeviceWrapper):
 
     @inlineCallbacks
     def getAmplitude(self, chan):
-        print "getAmplitude chan=", chan
         output = '/I' + str(chan) + 'R0e'
         yield self.write(output)
         data = yield self.read()
         try :
-            print "in try"
             data = data.split(',')
             data = data[2][8:14]
             data = data.replace(' ','')
             data = int(data, 16)*0.276376
             returnValue(W(data, 'MHz'))
         except:
-            print "in except"
             time.sleep(0.1)
             output = '/I' + str(chan) + 'R0e'
             yield self.write(output)
@@ -168,6 +173,7 @@ class DDSDeviceServer(DeviceServer):
         print 'loading config info...',
         yield self.loadConfigInfo()
         print 'done.'
+        # Is analogous to a super call?
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
@@ -187,8 +193,10 @@ class DDSDeviceServer(DeviceServer):
         for name, port in self.serialLinks:
             if name not in self.client.servers:
                 continue
+            # The serial server of the appropriate computer
             server = self.client[name]
             ports = yield server.list_serial_ports()
+            # Checks that expected arduinos are plugged in.
             if port not in ports:
                 continue
             devName = '%s - %s' % (name, port)
