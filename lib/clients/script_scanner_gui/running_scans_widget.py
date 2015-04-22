@@ -184,7 +184,22 @@ class running_scans_list(QtGui.QTableWidget):
         self.reactor.stop()
         
 class running_combined(QtGui.QWidget):
+    """
+    What does this class do?
+    
+    Instantiated in the scripting_widget class
+    
+    TODO: more descriptive class name
+    TODO: rename class with proper syntax
+    """
     def __init__(self, reactor, font = None, parent = None):
+        """
+        Parameters
+        ----------
+        reactor: Qt reactor?
+        font: ?
+        parent: ?
+        """
         super(running_combined, self).__init__(parent)
         self.reactor = reactor
         self.parent = parent
@@ -207,6 +222,12 @@ class running_combined(QtGui.QWidget):
         self.setLayout(layout)
     
     def add(self, ident, name):
+        """
+        Parameters
+        ----------
+        ident: ?
+        name: ?
+        """
         self.scans_list.add(ident, name)
     
     def set_status(self, ident, status, percentage):
