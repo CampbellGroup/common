@@ -27,6 +27,9 @@ import scan_methods
 from scheduler import scheduler
 import sys
 
+
+# TODO: delete all function names in decorators.
+
 class script_class_parameters(object):
     '''
     storage class for information about the launchable script
@@ -171,6 +174,7 @@ class ScriptScanner(LabradServer, Signals):
         scan_id = self.scheduler.add_scan_to_queue(repeat_launch)
         return scan_id
 
+    # TODO: change function name to correspond to decorator name
     @setting(12, "New Script Scan", scan_script_name = 's', measure_script_name = 's', collection = 's', parameter_name = 's', minim = 'v', maxim = 'v', steps = 'w', units = 's')
     def new_scan(self, c, scan_script_name, measure_script_name, collection, parameter_name, minim, maxim, steps, units):
         #need error checking that parmaters are valid
