@@ -158,7 +158,7 @@ class scheduler(object):
         self.signals.on_queued_new_script((scan_id, scan.name, order))
         self.launch_scripts()
         return scan_id
-    
+
     def is_higher_priority_than_running(self, priority):
         try:
             priorities = [running.priority for running in self.running.itervalues()]
