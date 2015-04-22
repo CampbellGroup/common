@@ -72,10 +72,14 @@ class running_script(object):
         self.externally_launched = externally_launched
 
 class scheduler(object):
+    """
     
+    TODO: proper class name
+    """
     def __init__(self, signals):
         self.signals = signals
-        self.running = {} #dictionary in the form identification : running_script_instance
+        # dict[identification] = running_script_instance
+        self.running = {} 
         self.queue = priority_queue() #queue of tasks
         self._paused_by_script = []
         self.scheduled = {}
@@ -123,11 +127,26 @@ class scheduler(object):
         if not removed:
             raise Exception("Tring to remove scirpt ID {0} from queue but it's not in the queue".format(script_ID))
             
-    def add_scan_to_queue(self, scan, priority = 'Normal'):
-        #increment counter
+    def add_scan_to_queue(self, scan, priority='Normal'):
+        """
+        
+        This is called by scriptscanner.new_experiment.  self.scan_ID_counter
+        advances by 1 each time this is called, giving each new experiment
+        that will be run a distinct number.
+        
+        Parameters
+        ----------
+        scan: 
+        priority: str, where to put a scan in the queue default('Normal')
+        
+        Returns
+        -------
+        scan_id: int
+        """
+        # increment counter
         scan_id = self.scan_ID_counter
         self.scan_ID_counter += 1
-        #add to queue
+        # add to queue
         if priority == 'Normal':
             order = self.queue.put_last(1, (scan_id, scan,  1))
         elif priority == 'First in Queue':
@@ -148,7 +167,7 @@ class scheduler(object):
             return priority < highest_running
         except IndexError:
             return False
-        
+
     def get_non_conflicting(self):
         '''
         returns a list of experiments that can run concurrently with currently running experiments

@@ -57,6 +57,7 @@ class ScriptScanner(LabradServer, Signals):
         # Dictionary with experiment.name as keys and 
         # script_class_parameters instances are the values.
         self.script_parameters = {}
+        # Instance of a complicated object
         self.scheduler = scheduler(Signals)
         self.load_scripts()
 
@@ -136,11 +137,19 @@ class ScriptScanner(LabradServer, Signals):
     @setting(10, 'New Experiment', script_name = 's', returns = 'w')
     def new_script(self, c, script_name):
         '''
-        Launch script. Returns ID of the queued scan.
+        Queue an experiment for launching.  Returns the scan ID of the queued
+        experiment from a scheduler instance.
 
         Parameter
         ---------
         script: str, experiment to run.
+        
+        TODO: change name.  The name itself should actually be something
+        like add_new_experiment_to_queue
+        
+        Returns
+        -------
+        scan_id: int
         '''
         if script_name not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script_name))
