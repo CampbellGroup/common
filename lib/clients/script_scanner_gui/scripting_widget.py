@@ -45,18 +45,15 @@ class scripting_widget(QtGui.QWidget):
         self.scheduled.clear_all()
         self.queued.clear_all()
     
-    #selector
     def addExperiment(self, experiment):
         self.selector.addExperiment(experiment)
     
-    #queued
     def addQueued(self, ident, name, order):
         self.queued.add(ident, name, order)
     
     def removeQueued(self, ident):
         self.queued.remove(ident)
         
-    #scheduled    
     def addScheduled(self, ident, name, duration):
         self.scheduled.add(ident, name, duration)
     
@@ -67,7 +64,6 @@ class scripting_widget(QtGui.QWidget):
         ident, duration = info
         self.scheduled.change(ident, duration)
         
-    #running
     def runningScriptPaused(self, ident, is_paused):
         self.running.paused(ident, is_paused)
     

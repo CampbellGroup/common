@@ -146,7 +146,9 @@ class ScriptScanner(LabradServer, Signals):
         '''
         if script_name not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script_name))
+        # Grabs current parameters of script_name
         script = self.script_parameters[script_name]
+        # Possibly control cls/eliminate
         single_launch = scan_methods.single(script.cls)
         scan_id = self.scheduler.add_scan_to_queue(single_launch)
         return scan_id
