@@ -19,7 +19,7 @@ class pulse_sequence(object):
 		self._dds_pulses = []
 		self._ttl_pulses = []
 		self.replace = parameter_dict
-		self.parameters = self.fill_parameters(self.required_parameters , self.replace)
+		self.parameters = self.fill_parameters(self.required_parameters, self.replace)
 		self.sequence()
 	
 	@classmethod
