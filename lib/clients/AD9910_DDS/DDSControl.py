@@ -1,3 +1,4 @@
+import time as _time
 from common.lib.clients.qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
@@ -53,8 +54,8 @@ class DDSclient(QtGui.QWidget):
             port = self.chaninfo[chan][0]
             try: self.contexts[port]
             except:
-                self.contexts[port] = self.server.context()
-                self.server.select_device(port, context = self.contexts[port])
+                self.contexts[port] = yield self.server.context()
+                yield self.server.select_device(port, context = self.contexts[port])
             position = self.chaninfo[chan][1]
             channel = self.chaninfo[chan][2]
             initfreq = self.chaninfo[chan][3]
@@ -77,15 +78,16 @@ class DDSclient(QtGui.QWidget):
             widget.setStateNoSignal(initstate)
             widget.setPowerNoSignal(initpower)
             widget.setFreqNoSignal(initfreq)
+            
             yield self.powerChanged(initpower['dbm'], port, (chan, channel))
             yield self.freqChanged(initfreq['MHz'], port, (chan, channel))
             yield self.switchChanged(initstate, port, (chan, channel))
+
             widget.spinPower.valueChanged.connect(lambda value =  widget.spinPower.value(), port = port, channel = (chan, channel): self.powerChanged(value, port, channel))
             widget.spinFreq.valueChanged.connect(lambda value = widget.spinFreq.value(), port = port, channel = (chan, channel) : self.freqChanged(value, port, channel)) 
             widget.buttonSwitch.toggled.connect(lambda state = widget.buttonSwitch.isDown(), port = port, channel = (chan, channel) : self.switchChanged(state, port, channel))
             self.d[port] = widget
             subLayout.addWidget(self.d[port], position[0], position[1])
-        
         self.setLayout(layout)
     
     @inlineCallbacks
@@ -95,6 +97,7 @@ class DDSclient(QtGui.QWidget):
         chan = channel[1]
         yield self.server.amplitude(chan, value, context = self.contexts[port])
         yield self.updateSettings(name, value, pos = 1)
+        returnValue('test')
         
     
     @inlineCallbacks

@@ -18,7 +18,7 @@ class pmtWidget(QtGui.QWidget):
         from labrad.wrappers import connectAsync
         from labrad import types as T
         self.T = T
-        cxn = yield connectAsync()
+        cxn = yield connectAsync(name='Primary PMT')
         self.server = cxn.dual_pmtflow
         yield self.initializeContent()
         yield self.setupListeners()
