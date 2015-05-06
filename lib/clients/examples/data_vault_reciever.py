@@ -47,11 +47,13 @@ class DataVaultReciever(QtGui.QWidget):
                                       source=None, ID=self.ID_DIR) 
 
     def display_signal(self, cntx, signal):
+        print "in display_signal"
         message = "new data available signal"
         self.textedit.append(message)
 
     def dir_message(self, cntx, signal):
-        self.textedit.append(signal)
+        print "in dir_message."
+        self.textedit.append(signal[0])
 
     def closeEvent(self, x):
         #stop the reactor when closing the widget
