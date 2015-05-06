@@ -9,6 +9,7 @@ from PyQt4 import QtGui
 class DataVaultReciever(QtGui.QWidget):
 
     ID = 752311 # ID for the client to register to the server
+    ID_DIR = 214765
 
     def __init__(self, reactor, parent=None):
         super(DataVaultReciever, self).__init__(parent)
@@ -30,7 +31,7 @@ class DataVaultReciever(QtGui.QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        cxn = yield connectAsync(name = 'Signal Widget')
+        cxn = yield connectAsync(name='Data Vault Reciever')
         self.dv = cxn.data_vault
         yield self.dv.signal__data_available(self.ID)
         # connect to signal from server (note the method is named from parsed 
@@ -40,8 +41,16 @@ class DataVaultReciever(QtGui.QWidget):
         # This registers the client as a listener to the server and assigns a 
         # slot (function) from the client to the signal emitted from the server
         # In this case self.displaySignal
+                                      
+        yield self.dv.signal__new_dataset_dir(self.ID_DIR)
+        yield self.dv.addListener(listener=self.dir_message, 
+                                      source=None, ID=self.ID_DIR) 
 
     def display_signal(self, cntx, signal):
+        message = "new data available signal"
+        self.textedit.append(message)
+
+    def dir_message(self, cntx, signal):
         self.textedit.append(signal)
 
     def closeEvent(self, x):
