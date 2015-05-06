@@ -314,6 +314,9 @@ class script_scanner_gui(QtGui.QWidget):
         
     @inlineCallbacks
     def run_script(self, script):
+        """
+        The "Run" button calls this function.
+        """
         sc = yield self.cxn.get_server('ScriptScanner')
         script = str(script)
         try:

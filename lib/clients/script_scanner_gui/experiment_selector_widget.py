@@ -277,6 +277,9 @@ class experiment_selector_widget(QtGui.QWidget):
         self.dropdown.currentIndexChanged[QtCore.QString].connect(self.check_button_disable)
     
     def check_button_disable(self, selection):
+        """
+        Disables gui interface if scriptscanner server is disconnected
+        """
         if not selection:
             for button in [self.run_button, self.repeat_button, self.schedule_button, self.scan_button]:
                 button.setDisabled(True)
@@ -316,6 +319,12 @@ class experiment_selector_widget(QtGui.QWidget):
             self.on_scan.emit(scan, measure, parameter, start, stop, steps, units)
     
     def run_emit_selected(self):
+        """
+        Called by pressing the "Run" button.
+        
+        Connects to self.run_button widget.  You need to subscribe to 
+        self.on_run signals to detect new experiments.
+        """
         self.on_run.emit(self.dropdown.currentText())
     
     def addExperiment(self, experiment):
