@@ -42,19 +42,19 @@ class TextChangingButton(QtGui.QPushButton):
         return QtCore.QSize(37, 26)
 
 class QCustomWavemeterChannel(QtGui.QFrame):
-    def __init__(self, title, frequency, stretchedlabel, parent=None):
+    def __init__(self, title, frequency, stretchedlabel, displayPIDvoltage = None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
-        self.makeLayout(title, frequency, stretchedlabel)
+        self.makeLayout(title, frequency, stretchedlabel, displayPIDvoltage)
     
-    def makeLayout(self, title, frequency, stretchedlabel):
+    def makeLayout(self, title, frequency, stretchedlabel, displayPIDvoltage):
         layout = QtGui.QGridLayout()
-        title = QtGui.QLabel(title)
+        title = QtGui.QLabel(title)           
         title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         title.setAlignment(QtCore.Qt.AlignCenter)
+        self.PIDvoltage = QtGui.QLabel('0')
         if displayPIDvoltage == True:
-            self.PIDvoltage = QtGui.QLabel('0')
-            layout.addWidget(self.PIDvoltage,1,1,1,1)
+            layout.addWidget(self.PIDvoltage,2,2,1,1)
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
@@ -98,6 +98,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
-    icon = QCustomWavemeterChannel('369','Under Exposed', True)
+    icon = QCustomWavemeterChannel('369','Under Exposed', True, True)
     icon.show()
     app.exec_()

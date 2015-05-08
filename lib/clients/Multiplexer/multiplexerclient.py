@@ -76,15 +76,14 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__update_exp(SIGNALID3)
         yield self.server.signal__lock_changed(SIGNALID4)
         yield self.server.signal__output_changed(SIGNALID5)
-        if self.chaninfo[4] == True:
-            yield self.server.signal__PIDvoltage_changed(SIGNALID6)
-            yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
+        yield self.server.signal__pidvoltage_changed(SIGNALID6)
 
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1)
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
         yield self.server.addListener(listener = self.toggleLock, source = None, ID = SIGNALID4)
         yield self.server.addListener(listener = self.updateWLMOutput, source = None, ID = SIGNALID5)
+        yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
 
         self.initializeGUI()
 
@@ -118,8 +117,9 @@ class wavemeterclient(QtGui.QWidget):
             hint = self.chaninfo[chan][1]
             position = self.chaninfo[chan][2]
             stretched = self.chaninfo[chan][3]
+            displayPID = self.chaninfo[chan][4]
 
-            widget = QCustomWavemeterChannel(chan, hint, stretched)
+            widget = QCustomWavemeterChannel(chan, hint, stretched, displayPID)
             import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8/(float(hint)*1e3))

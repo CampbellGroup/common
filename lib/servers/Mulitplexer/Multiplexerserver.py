@@ -42,7 +42,7 @@ class MultiplexerServer(LabradServer):
     updateexp = Signal(UPDATEEXP, 'signal: update exp', '(ii)')
     lockchanged = Signal(LOCKSIGNAL, 'signal: lock changed', 'b')
     outputchanged = Signal(OUTPUTCHANGED, 'signal: output changed', 'b')
-    pidvoltagechanged = Signal(PIDVOLTAGE, 'signal: PIDvoltage changed', '(iv)')
+    pidvoltagechanged = Signal(PIDVOLTAGE, 'signal: pidvoltage changed', '(iv)')
     
     def initServer(self):
 
