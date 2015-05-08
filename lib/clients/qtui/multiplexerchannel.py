@@ -52,6 +52,9 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         title = QtGui.QLabel(title)
         title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         title.setAlignment(QtCore.Qt.AlignCenter)
+        if displayPIDvoltage == True:
+            self.PIDvoltage = QtGui.QLabel('0')
+            layout.addWidget(self.PIDvoltage,1,1,1,1)
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
         else:

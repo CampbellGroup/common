@@ -15,6 +15,7 @@ SIGNALID2 = 143533
 SIGNALID3 = 111221
 SIGNALID4 = 549210
 SIGNALID5 = 190909
+SIGNALID6 = 102588
 
 #this is the signal for the updated frequencys
 
@@ -70,12 +71,14 @@ class wavemeterclient(QtGui.QWidget):
 
         self.server = yield self.cxn.multiplexerserver
         self.chaninfo = multiplexer_config.info
-
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__selected_channels_changed(SIGNALID2)
         yield self.server.signal__update_exp(SIGNALID3)
         yield self.server.signal__lock_changed(SIGNALID4)
         yield self.server.signal__output_changed(SIGNALID5)
+        if self.chaninfo[4] == True:
+            yield self.server.signal__PIDvoltage_changed(SIGNALID6)
+            yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
 
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1)
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
@@ -162,6 +165,12 @@ class wavemeterclient(QtGui.QWidget):
                 self.d[chan].currentfrequency.setText('Over Exposed')
             else:
                 self.d[chan].currentfrequency.setText(str(freq)[0:10])
+                
+    def updatePIDvoltage(self, c, signal):
+        chan = signal[0]
+        value = signal[1]
+        if chan in self.d:
+            self.d[chan].PIDvoltage.setText(str(value))
 
     def toggleMeas(self, c, signal):
         chan = signal[0]

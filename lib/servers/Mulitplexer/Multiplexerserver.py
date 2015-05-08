@@ -28,6 +28,7 @@ CHANSIGNAL = 122485
 FREQSIGNAL = 122456
 LOCKSIGNAL = 112456
 OUTPUTCHANGED = 121212
+PIDVOLTAGE = 902484
 
 class MultiplexerServer(LabradServer):
     """
@@ -41,6 +42,7 @@ class MultiplexerServer(LabradServer):
     updateexp = Signal(UPDATEEXP, 'signal: update exp', '(ii)')
     lockchanged = Signal(LOCKSIGNAL, 'signal: lock changed', 'b')
     outputchanged = Signal(OUTPUTCHANGED, 'signal: output changed', 'b')
+    pidvoltagechanged = Signal(PIDVOLTAGE, 'signal: PIDvoltage changed', '(iv)')
     
     def initServer(self):
 
@@ -72,7 +74,7 @@ class MultiplexerServer(LabradServer):
         
         self.measureChan()
         
-        self.listeners = set()
+        self.listeners = set()output
 
         #####Main program functions 
         
@@ -155,7 +157,7 @@ class MultiplexerServer(LabradServer):
         self.outputchanged(output, notified)
         
 ###Get Functions      
-
+output
     @setting(20, "Get Amplitude", chan = 'i', returns = 'v')
     def getAmp(self, c, chan): 
         chan_c = c_long(chan)        
@@ -189,6 +191,7 @@ class MultiplexerServer(LabradServer):
     def getOutputVoltage(self, c, chan):
         chan_c = c_long(chan)
         volts = yield self.wmdll.GetDeviationSignalNum(chan_c,self.d)
+        self.pidvoltagechanged((chan,volts))
         returnValue(volts)  
         
 
@@ -225,7 +228,8 @@ class MultiplexerServer(LabradServer):
         reactor.callLater(0.1, self.measureChan)
         for chan in range(8):
             if self.getSwitcherState(self, chan + 1):
-                self.getFrequency(self, chan + 1)     
+                self.getFrequency(self, chan + 1) 
+                self.getOutputVoltage(self, chan + 1)    
         
 if __name__ == "__main__":
     from labrad import util
