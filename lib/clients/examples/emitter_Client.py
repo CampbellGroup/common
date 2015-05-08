@@ -56,7 +56,7 @@ class recieverWidget(QtGui.QWidget):
 if __name__=="__main__":
     #join Qt and twisted event loops
     a = QtGui.QApplication( [] )
-    import qt4reactor
+    import common.lib.qt4reactor as qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = recieverWidget(reactor)

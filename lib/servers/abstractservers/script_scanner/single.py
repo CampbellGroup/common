@@ -5,6 +5,9 @@ class single(experiment):
     runs a single epxeriment
     '''
     def __init__(self, script_cls):
+        """
+        script_cls: the experiment class
+        """
         self.script_cls = script_cls
         super(single,self).__init__(self.script_cls.name)
     

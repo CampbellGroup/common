@@ -27,40 +27,42 @@ import scan_methods
 from scheduler import scheduler
 import sys
 
+
+# TODO: delete all function names in decorators.
+
 class script_class_parameters(object):
     '''
     storage class for information about the launchable script
+    
+    TODO: rename this something meaningful.  Give it proper object syntax.
+    ExperimentPackage?  Ah, script_class_parameters describes the three
+    attributes of this class.  Maybe change to name or string instead 
+    of script.
     '''
     def  __init__(self, name, cls, parameters):
+        """
+        self.name: str, the experiment name
+        cls: a handle to the experiment class, this can be used to instantiate
+            an experiment, e.g. a = cls() will give an instance.
+        parameters: list, required experiment parameters
+        """
         self.name = name
         self.cls = cls
         self.parameters = parameters
+
 
 class ScriptScanner(LabradServer, Signals):
 
     name = 'ScriptScanner'
 
     def initServer(self):
-
-
+        
+        # Dictionary with experiment.name as keys and 
+        # script_class_parameters instances are the values.
         self.script_parameters = {}
+        # Instance of a complicated object
         self.scheduler = scheduler(Signals)
         self.load_scripts()
-
-#        try:
-#            print "in try!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-#            self.cxn = yield connectAsync(name = 'Script Scanner Registry Check')
-#            path = yield self.cxn.registry.get('configuration_path')
-#            self.cxn.disconnect()
-#            path = str(path)
-#            path = path.replace('/','.')
-#            path = path.replace('\\','.')
-#            config = getattr(__import__(path + '.scriptscanner_config', fromlist = ['scriptscanner_config']), 'scriptscanner_config')
-#            print config
-#        except:
-#           from common.lib.configuration_files.scriptscanner_config import scriptscanner_config as config
-#        else:
-#            print "else"
 
     def load_scripts(self):
         '''
@@ -138,15 +140,27 @@ class ScriptScanner(LabradServer, Signals):
     @setting(10, 'New Experiment', script_name = 's', returns = 'w')
     def new_script(self, c, script_name):
         '''
-        Launch script. Returns ID of the queued scan.
+        Queue an experiment for launching.  Returns the scan ID of the queued
+        experiment from a scheduler instance.
 
         Parameter
         ---------
         script: str, experiment to run.
+        
+        TODO: change name.  The name itself should actually be something
+        like add_new_experiment_to_queue
+        
+        Returns
+        -------
+        scan_id: int
         '''
         if script_name not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script_name))
+        # Grabs an instance of script_class_parameters that holds
+        # the experiment name, the experiment class, and the list of 
+        # required parameters for the experiment.
         script = self.script_parameters[script_name]
+        # single_launch is an experiment instance.
         single_launch = scan_methods.single(script.cls)
         scan_id = self.scheduler.add_scan_to_queue(single_launch)
         return scan_id
@@ -160,6 +174,7 @@ class ScriptScanner(LabradServer, Signals):
         scan_id = self.scheduler.add_scan_to_queue(repeat_launch)
         return scan_id
 
+    # TODO: change function name to correspond to decorator name
     @setting(12, "New Script Scan", scan_script_name = 's', measure_script_name = 's', collection = 's', parameter_name = 's', minim = 'v', maxim = 'v', steps = 'w', units = 's')
     def new_scan(self, c, scan_script_name, measure_script_name, collection, parameter_name, minim, maxim, steps, units):
         #need error checking that parmaters are valid
