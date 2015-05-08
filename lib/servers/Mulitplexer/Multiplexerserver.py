@@ -157,7 +157,7 @@ class MultiplexerServer(LabradServer):
         self.outputchanged(output, notified)
         
 ###Get Functions      
-output
+
     @setting(20, "Get Amplitude", chan = 'i', returns = 'v')
     def getAmp(self, c, chan): 
         chan_c = c_long(chan)        
