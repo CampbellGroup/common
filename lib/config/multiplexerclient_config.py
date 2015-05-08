@@ -1,8 +1,11 @@
 class multiplexer_config(object):
     '''
-    configuration file for multiplexer client
-    info is the configuration dictionary in the form
-    {channel_name: (port, hint, display_location, stretched, display_pid)), }
+    multiplexer client configuration file
+    
+    Attributes
+    ----------
+    info: dict
+    {channel_name: (port, hint, display_location, stretched, display_pid))}
     '''
     info = {'Channel 1' :(1, '384.230000', (1,1), True, False),
             'Channel 2' :(2, '384.230000', (1,2), True, False),
