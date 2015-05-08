@@ -74,7 +74,7 @@ class MultiplexerServer(LabradServer):
         
         self.measureChan()
         
-        self.listeners = set()output
+        self.listeners = set()
 
         #####Main program functions 
         
