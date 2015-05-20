@@ -167,8 +167,10 @@ class wavemeterclient(QtGui.QWidget):
                 self.d[chan].currentfrequency.setText(str(freq)[0:10])
                 
     def updatePIDvoltage(self, c, signal):
+        print 'in update'
         chan = signal[0]
         value = signal[1]
+        print value
         if chan in self.d:
             self.d[chan].PIDvoltage.setText(str(value))
 
