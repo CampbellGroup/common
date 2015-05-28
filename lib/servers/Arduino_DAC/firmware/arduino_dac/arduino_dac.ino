@@ -50,7 +50,7 @@ void loop()
      /*
      this next loop writes to the dac channel the output voltage from min (0b00000000) to max (0b11111111)
      */
-  for (int i = 0; i<8; i++) //output 0b11111111 (max voltage)
+  for (int i = 0; i<8; i++) // hard coded output 0b11111111 (max voltage)
    {
     digitalWrite(SPO,HIGH);
     digitalWrite(clk, HIGH);
