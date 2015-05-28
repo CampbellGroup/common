@@ -34,7 +34,7 @@ void loop()
   /*
   The following function Needs to iterate over the 4 most significant bits of input number in binary
   and output them to pin SPO. This specifies the channel from 1-8.This is currently hard coded to output 0b0001 (DAC A) with the largest
- allowed value being 0b1000 (DAC H) 
+ allowed values are 0b0001 to (DAC A) to 0b1000 (DAC H) 
   */
 
   for (int j = 0; j<3; j++) // output 000
