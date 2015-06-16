@@ -1,4 +1,10 @@
 /*
+Creates bytes to read in on serial commands
+*/
+byte chan = 0;
+byte value = 0;
+
+/*
 define clock pin, Serial Pin Output, Load DAC pin and Preset input pin respectively 
 */
 const int clk = 52;
@@ -7,6 +13,10 @@ const int LD = 24;
 const int PR = 25;
 void setup()
 {
+/*
+Set baudrate for serial communication
+*/
+  Serial.begin(57600);
 /*
 All pins are outputs from arduino to DAC
 */
@@ -26,6 +36,9 @@ All pins are set to low except preset (High means DAC ready for data)
 
 void loop()
 {
+  while(Serial.available() < 2); //wait for two bytes to be in the buffer
+  chan = Serial.read();
+  value = Serial.read();
   /* 
   insert read function
   Here we need a serial read to get a input number between 0 and 4096 to be parsed in binary
@@ -37,22 +50,31 @@ void loop()
  allowed values are 0b0001 to (DAC A) to 0b1000 (DAC H) 
   */
 
-  for (int j = 0; j<3; j++) // output 000
+  for (int j = 0; j<4; j++) // output 000
    {
-     digitalWrite(SPO, LOW);
+     boolean currentchanbit = chan & 9;
+     currentchanbit  = currentchanbit >> 3;
+//     if (currentbit == 1){
+//         Serial.print(1);
+//     }
+//     else{
+//         Serial.print(0);
+//     }
+     chan = chan << 1;
+     digitalWrite(SPO,currentchanbit);
      digitalWrite(clk, HIGH);// The data from SPO is read when clock is HIGH so set SPO before clock pulse
      digitalWrite(clk, LOW);
+     digitalWrite(SPO, LOW);
    }
-    digitalWrite(SPO, HIGH);// output 1
-    digitalWrite(clk, HIGH);
-    digitalWrite(clk, LOW);
-    digitalWrite(SPO, LOW);
      /*
      this next loop writes to the dac channel the output voltage from min (0b00000000) to max (0b11111111)
      */
   for (int i = 0; i<8; i++) // hard coded output 0b11111111 (max voltage)
    {
-    digitalWrite(SPO,HIGH);
+    boolean currentvaluebit = value & 255;
+    currentvaluebit = currentvaluebit >> 7;
+    value = value << 1;
+    digitalWrite(SPO,currentvaluebit);
     digitalWrite(clk, HIGH);
     digitalWrite(clk, LOW);
     digitalWrite(SPO, LOW); 
@@ -61,28 +83,4 @@ void loop()
    digitalWrite(clk,HIGH);
    digitalWrite(clk,LOW);
    digitalWrite(LD, LOW);
-   delay(1000);//leave at max voltage for 1 second
-   
-  for (int j = 0; j<3; j++) // choose DAC A
-   {
-     digitalWrite(SPO, LOW);
-     digitalWrite(clk, HIGH);
-     digitalWrite(clk, LOW);
-   }
-    digitalWrite(SPO, HIGH);
-    digitalWrite(clk, HIGH);
-    digitalWrite(clk, LOW);
-    digitalWrite(SPO, LOW);
-     
-  for (int i = 0; i<8; i++) // Write 0b00000000 (min voltage)
-   {
-    digitalWrite(SPO,LOW);
-    digitalWrite(clk, HIGH);
-    digitalWrite(clk, LOW);
-   }
-   digitalWrite(LD,HIGH);// load data into dac
-   digitalWrite(clk,HIGH);
-   digitalWrite(clk,LOW);
-   digitalWrite(LD, LOW);
-   delay(1000);// leave at min voltage for 1 second   // turn to max value
  }
