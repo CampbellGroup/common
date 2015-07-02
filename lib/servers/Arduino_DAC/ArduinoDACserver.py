@@ -64,15 +64,14 @@ class ArduinoDAC( SerialDeviceServer ):
                 print 'Check set up and restart serial server'
             else: raise
     
-    @setting(1, chan = 'i', value = 'v[V]')
+    @setting(1, chan = 'i', value = 'i')
     def DACOutput(self, c, chan, value):
-	if value > 3.0:
-	    value = 3.0
-	elif value < -3.0:
-	    value = -3.0
-	binout = int((value['V']/3.0 + 1)*128)
+        if value > 255:
+            value = 255
+        elif value < 0:
+            value = 0
         yield self.ser.write(chr(chan))
-        yield self.ser.write(chr(binout))               
+        yield self.ser.write(chr(value))               
     
 if __name__ == "__main__":
     from labrad import util
