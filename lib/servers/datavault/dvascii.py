@@ -19,7 +19,7 @@
 [info]
 name = Data Vault
 version = 2.4
-description = 
+description =
 instancename = Data Vault
 
 [startup]
@@ -184,7 +184,7 @@ def parseDependent( s ):
 
 class Session( object ):
     """Stores information about a directory on disk.
-    
+
     One session object is created for each data directory accessed.
     The session object manages reading from and writing to the config
     file, and manages the datasets in this directory.
@@ -200,7 +200,7 @@ class Session( object ):
     @staticmethod
     def exists( path ):
         """Check whether a session exists on disk for a given path.
-        
+
         This does not tell us whether a session object has been
         created for that path.
         """
@@ -208,7 +208,7 @@ class Session( object ):
 
     def __new__( cls, path, parent ):
         """Get a Session object.
-        
+
         If a session already exists for the given path, return it.
         Otherwise, create a new session instance.
         """
@@ -344,7 +344,7 @@ class Session( object ):
         self.parent.onNewDataset( name, self.listeners )
         ####self.parent.onNewDatasetDir((name, self.path), self.listeners) ####MR
         return dataset
-    
+
     def newMatrixDataset(self, title, size, dtype):
         num = self.counter
         self.counter += 1
@@ -356,7 +356,7 @@ class Session( object ):
         dataset.matrixcolumns = size[1]
         self.datasets[name] = dataset
         self.access()
-        
+
         self.parent.onNewDataset( name, self.listeners )
         return dataset
 
@@ -589,7 +589,7 @@ class Dataset:
     @property
     def data( self ):
         """Read data from file on demand.
-        
+
         The data is scheduled to be cleared from memory unless accessed."""
         if not hasattr( self, '_data' ):
             self._data = []
@@ -649,7 +649,7 @@ class Dataset:
         self.parent.onNewParameterDataset((int(self.name[0:5]), self.name[8:len(self.name)], self.session.path, name), self.parent.root.listeners)
         self.param_listeners = set()
         return name
-    
+
     ##### MK
     def addParameterOverWrite( self, name, data, saveNow = True ):
         done = False
@@ -668,11 +668,11 @@ class Dataset:
                 self.timeOutCallIDs.pop(dParam)
                 dParam.callback(data)
                 self.deferredParameterDict[name].pop(0) # delete the deferredLIST
-        
+
         # notify all listening contexts
         self.parent.onNewParameter( None, self.param_listeners )
         self.param_listeners = set()
-        return name    
+        return name
 
     def parameterTimeout(self, name, dParam):
         # call back the associated parameter deferred and remove it from the list!
@@ -748,7 +748,7 @@ class NumpyDataset( Dataset ):
 
     def _get_data( self ):
         """Read data from file on demand.
-        
+
         The data is scheduled to be cleared from memory unless accessed."""
         if not hasattr( self, '_data' ):
             def _get( f ):
@@ -800,32 +800,30 @@ class NumpyDataset( Dataset ):
         del self._data
         del self._dataTimeoutCall
 
-    def addData( self, data ):
+    def addData(self, data):
         if self.independents:
-            varcount = len( self.independents ) + len( self.dependents )
-        print "self.matrixrows", self.matrixrows
+            varcount = len(self.independents) + len(self.dependents)
         if self.matrixcolumns:
             varcount = self.matrixcolumns
-        data = data.asarray
         # reshape single row
-        if len( data.shape ) == 1:
-            data.shape = ( 1, data.size )
+        if len(data.shape) == 1:
+            data.shape = (1, data.size)
 
         # check row length
         if data.shape[-1] != varcount:
-            raise BadDataError( varcount, data.shape[-1] )
+            raise BadDataError(varcount, data.shape[-1])
 
         # append data to in-memory data
         if self.data.size > 0:
-            self.data = numpy.vstack( ( self.data, data ) )
+            self.data = numpy.vstack((self.data, data))
         else:
             self.data = data
 
         # append data to file
-        self._saveData( data )
+        self._saveData(data)
 
         # notify all listening contexts
-        self.parent.onDataAvailable( None, self.listeners )
+        self.parent.onDataAvailable(None, self.listeners)
         self.listeners = set()
 
     def getData( self, limit, start ):
@@ -977,7 +975,7 @@ class DataVault( LabradServer ):
                 returns = '*s' )
     def cd( self, c, path = None, create = False ):
         """Change the current directory.
-        
+
         The empty string '' refers to the root directory. If the 'create' flag
         is set to true, new directories will be created as needed.
         Returns the path to the new current directory.
@@ -1012,7 +1010,7 @@ class DataVault( LabradServer ):
     @setting( 8, name = 's', returns = '*s' )
     def mkdir( self, c, name ):
         """Make a new sub-directory in the current directory.
-        
+
         The current directory remains selected.  You must use the
         'cd' command to select the newly-created directory.
         Directory name cannot be empty.  Returns the path to the
@@ -1053,11 +1051,11 @@ class DataVault( LabradServer ):
         c['commentpos'] = 0
         c['writing'] = True
         return c['path'], c['dataset']
-    
+
     @setting( 73, name = 's', dtype = 's', size = '*i', returns = '(*s{path}, s{name})' )
     def newMatrix(self, c, name, size, dtype):
         """Create a new Matrix dataset
-        
+
         the size specifies dimensions [row, column]
         """
         if len( dtype ) != 1 or dtype not in 'fs': raise TypeError( "dtype keyword only accepts 'f' or 's'" )
@@ -1068,12 +1066,12 @@ class DataVault( LabradServer ):
         c['filepos'] = 0 # start at the beginning
         c['commentpos'] = 0
         c['writing'] = True
-        return c['path'], c['dataset'] 
+        return c['path'], c['dataset']
 
     @setting( 10, name = ['s', 'w'], returns = '(*s{path}, s{name})' )
     def open( self, c, name ):
         """Open a Dataset for reading.
-        
+
         You can specify the dataset by name or number.
         Returns the path and name for this dataset.
         """
@@ -1086,11 +1084,11 @@ class DataVault( LabradServer ):
         dataset.keepStreaming( c.ID, 0 )
         dataset.keepStreamingComments( c.ID, 0 )
         return c['path'], c['dataset']
-    
+
     @setting(11, name = ['s', 'w'], returns = '(*s{path}, s{name})' )
     def open_appendable(self, c, name):
         """Open a Dataset for reading and appending.
-        
+
         You can specify the dataset by name or number.
         Returns the path and name for this dataset.
         """
@@ -1111,7 +1109,7 @@ class DataVault( LabradServer ):
                  returns = '' )
     def add( self, c, data ):
         """Add data to the current dataset.
-        
+
         The number of elements in each row of data must be equal
         to the total number of variables in the data set
         (independents + dependents).
@@ -1124,7 +1122,7 @@ class DataVault( LabradServer ):
     @setting( 21, limit = 'w', startOver = 'b', returns = ['*2v', '*2s', '*s'] )
     def get( self, c, limit = None, startOver = False ):
         """Get data from the current dataset.
-        
+
         Limit is the maximum number of rows of data to return, with
         the default being to return the whole dataset.  Setting the
         startOver flag to true will return data starting at the beginning
@@ -1140,7 +1138,7 @@ class DataVault( LabradServer ):
     @setting( 100, returns = '(*(ss){independents}, *(sss){dependents})' )
     def variables( self, c ):
         """Get the independent and dependent variables for the current dataset.
-        
+
         Each independent variable is a cluster of (label, units).
         Each dependent variable is a cluster of (label, legend, units).
         Label is meant to be an axis label, which may be shared among several
@@ -1173,7 +1171,7 @@ class DataVault( LabradServer ):
     @setting( 123, 'get parameters' )
     def get_parameters( self, c ):
         """Get all parameters.
-        
+
         Returns a cluster of (name, value) clusters, one for each parameter.
         If the set has no parameters, nothing is returned (since empty clusters
         are not allowed).
@@ -1265,7 +1263,7 @@ class DataVault( LabradServer ):
             dataset.deferredParameterDict[name] = [d]
         result = yield d
         returnValue(result)
-        
+
     @setting( 200, 'add comment', comment = ['s'], user = ['s'], returns = [''] )
     def add_comment( self, c, comment, user = 'anonymous' ):
         """Add a comment to the current dataset."""
