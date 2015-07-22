@@ -4,13 +4,14 @@ import os
 
 SIGNALID = 874193
 
+
 class pmtWidget(QtGui.QWidget):
     def __init__(self, reactor, parent=None):
         super(pmtWidget, self).__init__(parent)
         self.reactor = reactor
-        basepath =  os.path.dirname(__file__)
-        path = os.path.join(basepath,"qtui", "pmtfrontend_2.ui")
-        uic.loadUi(path,self)
+        basepath = os.path.dirname(__file__)
+        path = os.path.join(basepath, "qtui", "pmtfrontend_2.ui")
+        uic.loadUi(path, self)
         self.connect()
 
     @inlineCallbacks
@@ -22,7 +23,7 @@ class pmtWidget(QtGui.QWidget):
         self.server = cxn.dual_pmtflow
         yield self.initializeContent()
         yield self.setupListeners()
-        #connect functions
+        # connect functions
         self.pushButton.toggled.connect(self.on_toggled)
         self.newSet.clicked.connect(self.onNewSet)
         self.doubleSpinBox.valueChanged.connect(self.onNewDuration)
@@ -56,12 +57,12 @@ class pmtWidget(QtGui.QWidget):
 
         self.doubleSpinBox.setValue(duration['s'])
 
-    def followSignal(self,signal,value):
-        #print signal,value
+    def followSignal(self, signal, value):
+        # print signal,value
         self.lcdNumber.display(value)
 
     def followSetting(self, signal, message):
-        setting,val = message
+        setting, val = message
         if setting == "mode":
             index = self.comboBox.findText(val)
             self.comboBox.blockSignals(True)
@@ -104,7 +105,7 @@ class pmtWidget(QtGui.QWidget):
         else:
             obj.setText('OFF')
 
-    def onNewData(self,count):
+    def onNewData(self, count):
         self.lcdNumber.display(count)
 
     @inlineCallbacks
@@ -115,8 +116,8 @@ class pmtWidget(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
     from common.lib.clients import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
