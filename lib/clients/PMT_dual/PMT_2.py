@@ -53,13 +53,13 @@ class pmtWidget(QtGui.QWidget):
         index = self.comboBox.findText(mode)
         self.comboBox.setCurrentIndex(index)
         self.lcdNumber.display('OFF')
-        
-        self.doubleSpinBox.setValue(duration)
-    
+
+        self.doubleSpinBox.setValue(duration['s'])
+
     def followSignal(self,signal,value):
         #print signal,value
         self.lcdNumber.display(value)
-    
+
     def followSetting(self, signal, message):
         setting,val = message
         if setting == "mode":
