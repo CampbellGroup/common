@@ -12,7 +12,7 @@ class pmtWidget(QtGui.QWidget):
         path = os.path.join(basepath,"qtui", "pmtfrontend_2.ui")
         uic.loadUi(path,self)
         self.connect()
-        
+
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
@@ -27,14 +27,14 @@ class pmtWidget(QtGui.QWidget):
         self.newSet.clicked.connect(self.onNewSet)
         self.doubleSpinBox.valueChanged.connect(self.onNewDuration)
         self.comboBox.currentIndexChanged.connect(self.onNewMode)
-    
+
     @inlineCallbacks
     def setupListeners(self):
         yield self.server.signal__new_count_2(SIGNALID)
         yield self.server.signal__new_setting(SIGNALID + 1)
         yield self.server.addListener(listener = self.followSignal, source = None, ID = SIGNALID)
         yield self.server.addListener(listener = self.followSetting, source = None, ID = SIGNALID + 1)
-    
+
     @inlineCallbacks
     def initializeContent(self):
         dataset = yield self.server.currentdataset()
@@ -75,7 +75,7 @@ class pmtWidget(QtGui.QWidget):
             self.doubleSpinBox.blockSignals(True)
             self.doubleSpinBox.setValue(float(val))
             self.doubleSpinBox.blockSignals(False)
-            
+
     @inlineCallbacks
     def on_toggled(self, state):
         if state:
@@ -86,34 +86,34 @@ class pmtWidget(QtGui.QWidget):
             yield self.server.set_pmt_state(2, False)
             self.lcdNumber.display('OFF')
         self.setText(self.pushButton)
-    
+
     @inlineCallbacks
     def onNewSet(self, x):
         newset = yield self.server.start_new_dataset()
         self.lineEdit.setText(newset)
-    
+
     @inlineCallbacks
     def onNewMode(self, mode):
         text = str(self.comboBox.itemText(mode))
         yield self.server.set_mode(text)
-        
+
     def setText(self, obj):
         state = obj.isChecked()
         if state:
             obj.setText('ON')
         else:
             obj.setText('OFF')
-    
+
     def onNewData(self,count):
         self.lcdNumber.display(count)
-    
+
     @inlineCallbacks
     def onNewDuration(self, value):
         value = self.T.Value(value, 's')
         yield self.server.set_time_length(value)
-    
+
     def closeEvent(self, x):
-        self.reactor.stop()   
+        self.reactor.stop()
 
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
