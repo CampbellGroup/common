@@ -30,6 +30,7 @@ All pins are outputs from arduino to DAC
   pinMode(LDAC, OUTPUT); //LDAC for Load DAC
   pinMode(SER, OUTPUT); // Enable
   pinMode(DB1, OUTPUT); // DB1 (used to determine the direction)
+
   
 /*
 All pins are set to low except Enable (High means DAC ready for data)
