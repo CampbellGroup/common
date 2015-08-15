@@ -197,7 +197,8 @@ class script_scanner_gui(QtGui.QWidget):
         self.ParametersEditor.on_parameter_change.connect(self.on_new_parameter)
 
     @inlineCallbacks
-    def scan_script(self, scan_script, measure_script, parameter, minim, maxim, steps, units):
+    def scan_script(self, scan_script, measure_script, parameter, minim, maxim,
+                    steps, units):
         scan_script = str(scan_script)
         measure_script = str(measure_script)
         collection, parameter_name = parameter
@@ -205,7 +206,9 @@ class script_scanner_gui(QtGui.QWidget):
         units = str(units)
         sc = yield self.cxn.get_server('ScriptScanner')
         try:
-            yield sc.new_script_scan(scan_script, measure_script, collection, parameter_name, minim, maxim, steps, units)
+            yield sc.new_script_scan(scan_script, measure_script, collection,
+                                     parameter_name, minim, maxim, steps,
+                                     units)
         except self.Error as e:
             self.displayError(e.msg)
 
