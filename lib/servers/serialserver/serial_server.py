@@ -219,7 +219,7 @@ class SerialServer(LabradServer):
     def timeout(self, c, data=T.Value(0,'s')):
         """Sets a timeout for read operations."""
         ser = self.getPort(c)
-        c['Timeout'] = min(data.value, 300)
+        c['Timeout'] = min(data.base_value, 300)
         return T.Value(c['Timeout'], 's')
 
 

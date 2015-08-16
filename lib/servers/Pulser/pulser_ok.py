@@ -335,7 +335,7 @@ class Pulser(LabradServer, DDS, LineTrigger):
         """
         Sets how long to collect photonslist in either 'Normal' or 'Differential' mode of operation
         """
-        new_time = float(new_time)
+        new_time = new_time['s']
         if not self.collectionTimeRange[0]<=new_time<=self.collectionTimeRange[1]: raise Exception('incorrect collection time')
         if mode not in self.collectionTime.keys(): raise("Incorrect mode")
         if mode == 'Normal':

@@ -33,10 +33,10 @@ import sys
 class script_class_parameters(object):
     '''
     storage class for information about the launchable script
-    
+
     TODO: rename this something meaningful.  Give it proper object syntax.
     ExperimentPackage?  Ah, script_class_parameters describes the three
-    attributes of this class.  Maybe change to name or string instead 
+    attributes of this class.  Maybe change to name or string instead
     of script.
     '''
     def  __init__(self, name, cls, parameters):
@@ -56,8 +56,8 @@ class ScriptScanner(LabradServer, Signals):
     name = 'ScriptScanner'
 
     def initServer(self):
-        
-        # Dictionary with experiment.name as keys and 
+
+        # Dictionary with experiment.name as keys and
         # script_class_parameters instances are the values.
         self.script_parameters = {}
         # Instance of a complicated object
@@ -146,10 +146,10 @@ class ScriptScanner(LabradServer, Signals):
         Parameter
         ---------
         script: str, experiment to run.
-        
+
         TODO: change name.  The name itself should actually be something
         like add_new_experiment_to_queue
-        
+
         Returns
         -------
         scan_id: int
@@ -157,7 +157,7 @@ class ScriptScanner(LabradServer, Signals):
         if script_name not in self.script_parameters.keys():
             raise Exception ("Script {} Not Found".format(script_name))
         # Grabs an instance of script_class_parameters that holds
-        # the experiment name, the experiment class, and the list of 
+        # the experiment name, the experiment class, and the list of
         # required parameters for the experiment.
         script = self.script_parameters[script_name]
         # single_launch is an experiment instance.
@@ -175,20 +175,27 @@ class ScriptScanner(LabradServer, Signals):
         return scan_id
 
     # TODO: change function name to correspond to decorator name
-    @setting(12, "New Script Scan", scan_script_name = 's', measure_script_name = 's', collection = 's', parameter_name = 's', minim = 'v', maxim = 'v', steps = 'w', units = 's')
-    def new_scan(self, c, scan_script_name, measure_script_name, collection, parameter_name, minim, maxim, steps, units):
-        #need error checking that parmaters are valid
+    @setting(12, "New Script Scan", scan_script_name='s',
+             measure_script_name='s', collection='s', parameter_name='s',
+             minim='v[]', maxim='v[]', steps='w', units='s')
+    def new_scan(self, c, scan_script_name, measure_script_name, collection,
+                 parameter_name, minim, maxim, steps, units):
+        # need error checking that parmaters are valid
         if scan_script_name not in self.script_parameters.keys():
-            raise Exception ("Script {} Not Found".format(scan_script_name))
+            raise Exception("Script {} Not Found".format(scan_script_name))
         if measure_script_name not in self.script_parameters.keys():
-            raise Exception ("Script {} Not Found".format(measure_script_name))
+            raise Exception("Script {} Not Found".format(measure_script_name))
         scan_script = self.script_parameters[scan_script_name]
         measure_script = self.script_parameters[measure_script_name]
-        parameter = (collection,parameter_name)
+        parameter = (collection, parameter_name)
         if scan_script == measure_script:
-            scan_launch = scan_methods.scan_experiment_1D(scan_script.cls, parameter, minim, maxim, steps, units)
+            scan_launch = scan_methods.scan_experiment_1D(scan_script.cls,
+                                                          parameter, minim,
+                                                          maxim, steps, units)
         else:
-            scan_launch = scan_methods.scan_experiment_1D_measure(scan_script.cls, measure_script.cls, parameter, minim, maxim, steps, units)
+            scan_launch = scan_methods.scan_experiment_1D_measure(
+                scan_script.cls, measure_script.cls, parameter, minim, maxim,
+                steps, units)
         scan_id = self.scheduler.add_scan_to_queue(scan_launch)
         return scan_id
 
