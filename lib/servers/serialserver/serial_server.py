@@ -18,7 +18,7 @@
 [info]
 name = Serial Server
 version = 1.3
-description = 
+description =
 instancename = %LABRADNODE% Serial Server
 
 [startup]
@@ -131,19 +131,19 @@ class SerialServer(LabradServer):
         if 'PortObject' in c:
             c['PortObject'].close()
             del c['PortObject']
-    
+
     @setting(12, 'flushInput', returns=[''])
     def flushinput(self,c):
         """Flushes the Input Buffer of the current serial port"""
         ser = self.getPort(c)
         ser.flushInput()
-        
+
     @setting(13, 'flushOutput', returns=[''])
     def flushoutput(self,c):
         """Flushes the Output Buffer of the current serial port"""
         ser = self.getPort(c)
         ser.flushOutput()
-        
+
     @setting(20, 'Baudrate',
                  data=[': List baudrates',
                        'w: Set baudrate (0: query current)'],
@@ -195,7 +195,7 @@ class SerialServer(LabradServer):
             return ser.getParity()
 
 
-    @setting(23, 'Stopbits', 
+    @setting(23, 'Stopbits',
                  data=[': List stopbits',
                        'w: Set stopbits (0: query current)'],
                  returns=['*w: Available stopbits',
@@ -219,7 +219,7 @@ class SerialServer(LabradServer):
     def timeout(self, c, data=T.Value(0,'s')):
         """Sets a timeout for read operations."""
         ser = self.getPort(c)
-        c['Timeout'] = min(data.base_value, 300)
+        c['Timeout'] = min(data['s'], 300)
         return T.Value(c['Timeout'], 's')
 
 
@@ -335,7 +335,7 @@ class SerialServer(LabradServer):
 
         if data:
             delim, skip = data, ''
-        
+
         else:
             delim, skip = '\n', '\r'
 
