@@ -14,7 +14,7 @@ import numpy as np
 import time
 
 class Dataset(QtCore.QObject):
-    
+
     """Class to handle incoming data and prepare them for plotting """
     def __init__(self, parent, cxn, context, dataset, directory, datasetName, reactor):
         super(Dataset, self).__init__()
@@ -31,7 +31,7 @@ class Dataset(QtCore.QObject):
         self.cnt = 0
         self.setupDataListener(self.context)
 #        self.setupFitListener(self.context)
-        
+
 #    @inlineCallbacks
 #    def checkForPlotParameter(self):
 #        self.parameters = yield self.cxn.data_vault.get_parameters(context = self.context)
@@ -44,13 +44,13 @@ class Dataset(QtCore.QObject):
 
     @inlineCallbacks
     def getWindowParameter(self):
-        try: 
+        try:
             value = yield self.cxn.data_vault.get_parameter('Window', context = self.context)
         except:
             value = None
         returnValue(value)
-                    
-    # open dataset in order to listen for new data signals in current context        
+
+    # open dataset in order to listen for new data signals in current context
     @inlineCallbacks
     def openDataset(self, context):
         yield self.cxn.data_vault.cd(self.directory, context = context)
@@ -60,13 +60,13 @@ class Dataset(QtCore.QObject):
         for parameter in self.parameters:
             parameterValue = yield self.cxn.data_vault.get_parameter(parameter, context = context)
             self.parameterValues.append(parameterValue)
-    
+
 #    @inlineCallbacks
 #    def setupParameterListener(self, context):
 #        yield self.cxn.data_vault.signal__new_parameter(66666, context = context)
 #        yield self.cxn.data_vault.addListener(listener = self.updateParameter, source = None, ID = 66666, context = context)
-    
-#    # Over 60 seconds, check if the dataset has the appropriate 'plotLive' parameter            
+
+#    # Over 60 seconds, check if the dataset has the appropriate 'plotLive' parameter
 #    @inlineCallbacks
 #    def listenForPlotParameter(self):
 #        for i in range(20):
@@ -74,8 +74,8 @@ class Dataset(QtCore.QObject):
 #                returnValue(self.hasPlotParameter)
 ##            yield deferToThread(time.sleep, .5)
 #            yield self.wait(.5)
-#        returnValue(self.hasPlotParameter)        
-#            
+#        returnValue(self.hasPlotParameter)
+#
 #    def updateParameter(self, x, y):
 #        self.checkForPlotParameter()
 
@@ -86,18 +86,18 @@ class Dataset(QtCore.QObject):
 #    def setupFitListener(self, context):
 #        yield self.cxn.data_vault.signal__new_parameter(22222, context = context)
 #        yield self.cxn.data_vault.addListener(listener = self.updateFit, source = None, ID = 22222, context = context)
-    
+
 #    # new data signal
     @inlineCallbacks
 #    def updateFit(self):
-    def fit(self):        
+    def fit(self):
         value = yield self.cxn.data_vault.get_parameter('Fit', context = self.context)
         variables = yield self.cxn.data_vault.variables(context = self.context)
         numberDependentVariables = len(variables[1])
 #       if (self.parameters != None):
         try:
             for window in self.parent.dwDict[self]:
-                window.fitFromScript(self.dataset, self.directory, numberDependentVariables, value) 
+                window.fitFromScript(self.dataset, self.directory, numberDependentVariables, value)
         except KeyError:
             print 'dwDict not created yet. Either the Fit parameter was added before data was created or the data is added too quickly. Try adding a pause after adding all the data intended for fitting.'
     # sets up the listener for new data
@@ -108,24 +108,24 @@ class Dataset(QtCore.QObject):
         #self.setupDeferred.callback(True)
         self.updatecounter = 0
         self.timer = self.startTimer(100)
-    
+
     # new data signal
     def updateData(self,x,y):
         self.updatecounter = self.updatecounter + 1
         self.getData(self.context)
 #        print 'still happening dataset'
-    
+
     def timerEvent(self,evt):
         #print self.updatecounter
 #        print 'in dataset'
 #        if self.updatecounter < 1:
 #            print 'slowing down!, less than 1 dataupdate per 100milliseconds '
         self.updatecounter = 0
-    
+
     def endTimer(self):
         self.killTimer(self.timer)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def disconnectDataSignal(self):
         yield self.cxn.data_vault.removeListener(listener = self.updateData, source = None, ID = 11111, context = self.context)
 #        yield self.cxn.data_vault.removeListener(listener = self.updateParameter, source = None, ID = 66666, context = self.context)
@@ -135,19 +135,19 @@ class Dataset(QtCore.QObject):
     def getData(self,context):
         Data = yield self.cxn.data_vault.get(100, context = context)
         if (self.data == None):
-            self.data = Data.asarray
+            self.data = Data
         else:
-            yield self.accessingData.acquire()         
-            self.data = np.append(self.data, Data.asarray, 0)
+            yield self.accessingData.acquire()
+            self.data = np.append(self.data, Data, 0)
             self.accessingData.release()
-        
+
     @inlineCallbacks
     def emptyDataBuffer(self):
         yield self.accessingData.acquire()
         del(self.data)
         self.data = None
         self.accessingData.release()
-    
+
     @inlineCallbacks
     def getYLabels(self):
         labels = []
@@ -155,8 +155,8 @@ class Dataset(QtCore.QObject):
         for i in range(len(variables[1])):
             labels.append(variables[1][i][1] + ' - ' + self.datasetName)
         returnValue(labels)
-            
+
     def wait(self, seconds, result=None):
         d = Deferred()
         self.reactor.callLater(seconds, d.callback, result)
-        return d    
+        return d
