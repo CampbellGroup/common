@@ -85,7 +85,7 @@ class PiCamera(LabradServer):
         yield None
         returnValue(green_array) 
 
-    @setting(4)
+    @setting(5)
     def blue_image_array(self, returns='?'):
         """
         Return the numpy array of B values of captured image data.
