@@ -31,6 +31,7 @@ class PiCamera(LabradServer):
     profiles.
     """
     name = 'Pi Camera'
+    _image_data = None
 
 
     @setting(1)
@@ -44,13 +45,15 @@ class PiCamera(LabradServer):
                 camera.capture(output, 'rgb')
                 print('Captured %dx%d image' % (
                         output.array.shape[1], output.array.shape[0]))
+                self._image_data = output.array
 
-
-    @setting(2, 'faux_echo', string='s', returns='s')
-    def fauxEcho(self, c, string):
+    @setting(2)
+    def image_array(self, returns='?'):
         """
+        Return the numpy array of capture image data.
         """
-        return string
+        yield None
+        returnValue(self._image_data)
 
         
 if __name__ == "__main__":
