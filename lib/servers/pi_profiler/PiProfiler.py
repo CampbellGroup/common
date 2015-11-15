@@ -62,6 +62,7 @@ class PiCamera(LabradServer):
         print "len(self._image_data[0]):", len(self._image_data[0])
         print "len(self._image_data[0][0]):", len(self._image_data[0][0])
         print "self._image_data[0][0]:", self._image_data[0][0]
+        print "sum(self._image_data[0][0]):", sum(self._image_data[0][0])
         returnValue(self._image_data)
 
         
