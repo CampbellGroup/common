@@ -57,6 +57,7 @@ class PiCamera(LabradServer):
         """
         yield None
         print "image_array type(self._image_data):", type(self._image_data)
+        print "self._image_data.shape():", self._image_data.shape()
         print "self._image_data[0]:", self._image_data[0]
         returnValue(self._image_data)
 
