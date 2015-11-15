@@ -17,6 +17,8 @@ timeout = 20
 ### END NODE INFO
 """
 import numpy as _n
+import picamera
+import picamera.array
 from labrad.server import LabradServer, setting
 from twisted.internet.defer import returnValue
 
@@ -30,12 +32,25 @@ class PiCamera(LabradServer):
     """
     name = 'Pi Camera'
 
-    @setting(1, 'faux_echo', string='s', returns='s')
+
+    @setting(1)
+    def capture_image(self, c):
+        """
+        Take a picture with the camera, populating self._image_data with a 
+        numpy array.
+        """
+        with picamera.PiCamera() as camera:
+            with picamera.array.PiRGBArray(camera) as output:
+                camera.capture(output, 'rgb')
+                print('Captured %dx%d image' % (
+                        output.array.shape[1], output.array.shape[0]))
+
+
+    @setting(2, 'faux_echo', string='s', returns='s')
     def fauxEcho(self, c, string):
         """
         """
         return string
-
 
         
 if __name__ == "__main__":
