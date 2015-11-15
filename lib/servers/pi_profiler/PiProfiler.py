@@ -47,12 +47,17 @@ class PiCamera(LabradServer):
                         output.array.shape[1], output.array.shape[0]))
                 self._image_data = output.array
 
+        print "capture_image type(self._image_data):", type(self._image_data)
+
+
     @setting(2)
     def image_array(self, returns='?'):
         """
         Return the numpy array of capture image data.
         """
         yield None
+        print "image_array type(self._image_data):", type(self._image_data)
+        print "self._image_data[0]:", self._image_data[0]
         returnValue(self._image_data)
 
         
