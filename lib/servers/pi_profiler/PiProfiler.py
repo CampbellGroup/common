@@ -72,7 +72,7 @@ class PiCamera(LabradServer):
         Return the numpy array of R values of captured image data.
         """        
         red_array = self._image_data[:, :, 0]
-        red_array = _n.array(red_array)
+        red_array = _n.array(red_array, dtype='float')
         print "type(red_array):", type(red_array)
         print "red_array[0]:", red_array[0]
         yield None
