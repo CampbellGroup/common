@@ -53,7 +53,8 @@ class PiCamera(LabradServer):
     @setting(2)
     def image_array(self, returns='?'):
         """
-        Return the numpy array of capture image data.
+        Return the numpy array of capture image data after it has been 
+        flattened to be something like greyscale, summing over RGB elements.
         """
         yield None
         print "image_array type(self._image_data):", type(self._image_data)
@@ -65,6 +66,33 @@ class PiCamera(LabradServer):
         print "sum(self._image_data[0][0]):", sum(self._image_data[0][0])
         returnValue(self._image_data)
 
+    @setting(3)
+    def red_image_array(self, returns='?'):
+        """
+        Return the numpy array of R values of captured image data.
+        """        
+        red_array = self._image_data[:, :, 0]
+        yield None
+        returnValue(red_array)        
+
+
+    @setting(4)
+    def green_image_array(self, returns='?'):
+        """
+        Return the numpy array of G values of captured image data.
+        """        
+        green_array = self._image_data[:, :, 1]
+        yield None
+        returnValue(green_array) 
+
+    @setting(4)
+    def blue_image_array(self, returns='?'):
+        """
+        Return the numpy array of B values of captured image data.
+        """        
+        blue_array = self._image_data[:, :, 2]
+        yield None
+        returnValue(blue_array)   
         
 if __name__ == "__main__":
     from labrad import util
