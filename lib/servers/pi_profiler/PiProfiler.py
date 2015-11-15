@@ -74,6 +74,8 @@ class PiCamera(LabradServer):
         red_array = self._image_data[:, :, 0]
         red_array = _n.array(red_array)
         print "type(red_array):", type(red_array)
+        print "red_array[0]:", red_array[0]
+        print "red_array[0].shape()", red_array[0].shape()
         print "red_array.shape():", red_array.shape()
         yield None
         returnValue(red_array)        
