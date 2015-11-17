@@ -1,7 +1,12 @@
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.threads import deferToThread
-from hardwareConfiguration import hardwareConfiguration
+
+try:
+    from config.pulser.hardwareConfiguration import hardwareConfiguration
+except:
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
+
 from labrad.units import WithUnit
 
 class LineTrigger(LabradServer):

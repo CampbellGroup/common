@@ -1,5 +1,9 @@
 import ok
-from hardwareConfiguration import hardwareConfiguration
+
+try:
+    from config.pulser.hardwareConfiguration import hardwareConfiguration
+except:
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
 class api(object):
     '''class containing all commands for interfacing with the fpga'''
