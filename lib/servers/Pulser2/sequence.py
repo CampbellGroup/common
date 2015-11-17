@@ -1,6 +1,11 @@
 import numpy
 import array
-from hardwareConfiguration import hardwareConfiguration
+
+try:
+    from config.pulser.hardwareConfiguration import hardwareConfiguration
+except:
+    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
+
 from decimal import Decimal
 
 class Sequence():

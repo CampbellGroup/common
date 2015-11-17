@@ -26,7 +26,7 @@ class api(object):
             tmp = ok.FrontPanel()
             tmp.OpenBySerial(serial)
             iden = tmp.GetDeviceID()
-            print iden
+            print iden, self.okDeviceID
             if iden == self.okDeviceID:
                 self.xem = tmp
                 print 'Connected to {}'.format(iden)
