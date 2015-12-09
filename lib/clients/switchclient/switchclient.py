@@ -11,7 +11,7 @@ class switchclient(QtGui.QWidget):
     
 
 
-    def __init__(self, reactor, cxn = None):
+    def __init__(self, reactor, cxn=None):
         """initializels the GUI creates the reactor 
             and empty dictionary for channel widgets to 
             be stored for iteration. also grabs chan info
