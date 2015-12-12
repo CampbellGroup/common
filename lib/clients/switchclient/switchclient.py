@@ -11,7 +11,7 @@ class switchclient(QtGui.QWidget):
     
 
 
-    def __init__(self, reactor, parent = None):
+    def __init__(self, reactor, cxn=None):
         """initializels the GUI creates the reactor 
             and empty dictionary for channel widgets to 
             be stored for iteration. also grabs chan info
@@ -20,7 +20,8 @@ class switchclient(QtGui.QWidget):
             
         super(switchclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.reactor = reactor     
+        self.reactor = reactor    
+	self.cxn = cxn 
         self.d = {}     
         self.connect()
         
@@ -31,9 +32,12 @@ class switchclient(QtGui.QWidget):
         
         """
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(name = "switch client")
-        self.server = yield self.cxn.arduinottl   
-        self.reg = yield self.cxn.registry
+        if self.cxn is None:
+            self.cxn = connection("Switch Client")
+            yield self.cxn.connect()
+	self.server = yield self.cxn.get_server('arduinottl')
+        self.reg = yield self.cxn.get_server('registry') 
+
         try:
             yield self.reg.cd('settings')
             self.settings = yield self.reg.dir()
