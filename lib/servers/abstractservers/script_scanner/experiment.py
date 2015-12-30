@@ -21,22 +21,22 @@ class experiment(experiment_info):
             try:
                 self.cxn = labrad.connect()
             except Exception as error:
-                error_message = "Not able to connect to LabRAD" + error
+                error_message = error + '\n' + "Not able to connect to LabRAD"
                 raise Exception(error_message)
         try:
             self.sc = self.cxn.servers['ScriptScanner']
         except KeyError as error:
-            error_message = "ScriptScanner is not running" + error
+            error_message = error + '\n' + "ScriptScanner is not running"
             raise KeyError(error_message)
         try:
             self.pv = self.cxn.servers['ParameterVault']
         except KeyError as error:
-            error_message = "ParameterVault is not running" + error
+            error_message = error + '\n' + "ParameterVault is not running"
             raise KeyError(error_message)
         try:
             self.context = self.cxn.context()
         except Exception as error:
-            error_message = "self.cxn.context is not available" + error
+            error_message = error + '\n' + "self.cxn.context is not available"
             raise Exception(error_message)
 
     def execute(self, ident):
