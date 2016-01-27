@@ -145,18 +145,15 @@ class SerialServer(LabradServer):
         ser.flushOutput()
 
     @setting(20, 'Baudrate',
-                 data=[': List common baudrates',
-                       'w: Set baudrate (0: query current)'],
-                 returns=['w: Selected baudrate', '*w: Available baudrates'])
+                 data=[': Selected baudrate','i: Set baudrate'],
+                 returns=['i: Selected baudrate'])
     def baudrate(self, c, data=None):
         """Sets the baudrate."""
         ser = self.getPort(c)
-        brates = [long(x[1]) for x in ser.getSupportedBaudrates()]
         if data is None:
-            return brates
-        else:
-            if data != 0: 
-                ser.setBaudrate(data)
+            return long(ser.getBaudrate())
+        else: 
+            ser.setBaudrate(data)
             return long(ser.getBaudrate())
 
 
