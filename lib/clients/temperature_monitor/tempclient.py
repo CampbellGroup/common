@@ -105,9 +105,9 @@ class TemperatureMonitor(QtGui.QWidget):
             if data2[kk, 4] >= starttime:
                 for i in range(4):
                     if data2[kk,i] >= 150:
-                        data2[kk,i] = 150
+                        data2[kk,i] = float('NaN')
                     elif data2[kk, i] <= 40:
-                        data2[kk, i] = 40
+                        data2[kk, i] = float('NaN')
                 data3.append(data2[kk])
         plt.ion()
         fig, ax = plt.subplots()
