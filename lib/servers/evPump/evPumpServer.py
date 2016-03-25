@@ -72,12 +72,25 @@ class eVPump( SerialDeviceServer ):
                 print 'Check set up and restart serial server'
             else: raise
         self.measurePump()
-        
+
+    @inlineCallbacks
+    def toggleLaser(self, value):
+        if value:
+            yield self.ser.write_line('ON')
+        else:
+            yield self.ser.write_line('OFF')
+            
+    @inlineCallbacks
+    def toggleShutter(self, value):
+        if value:
+            yield self.ser.write_line('SHT:1')
+        else:
+            yield self.ser.write_line('SHT:0')
+
     @inlineCallbacks
     def _readPower(self):
         yield self.ser.write_line('?P')
         power = yield self.ser.read_line()
-        print power
         try:    
             self.power = U(float(power),'W')
         except:
@@ -87,7 +100,6 @@ class eVPump( SerialDeviceServer ):
     def _readCurrent(self):
         yield self.ser.write_line('?C')
         current = yield self.ser.read_line()
-        print current
         try:
             self.current = U(float(current),'A')    
         except:
@@ -97,7 +109,6 @@ class eVPump( SerialDeviceServer ):
     def _readTemperature(self):
         yield self.ser.write_line('?T')
         temp = yield self.ser.read_line()
-        print temp
         try:
             self.temperature = U(float(temp),'degC')
         except:
