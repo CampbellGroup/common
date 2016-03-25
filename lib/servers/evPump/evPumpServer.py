@@ -73,15 +73,15 @@ class eVPump( SerialDeviceServer ):
             else: raise
         self.measurePump()
 
-    @inlineCallbacks
-    def toggleLaser(self, value):
+    @setting(1, 'toggle laser', value = 'b')
+    def toggleLaser(self, c, value):
         if value:
             yield self.ser.write_line('ON')
         else:
             yield self.ser.write_line('OFF')
             
-    @inlineCallbacks
-    def toggleShutter(self, value):
+    @setting(2, 'toggle shutter', value = 'b')
+    def toggleShutter(self, c, value):
         if value:
             yield self.ser.write_line('SHT:1')
         else:

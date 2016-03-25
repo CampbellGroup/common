@@ -7,6 +7,7 @@ Created on Mar 25, 2016
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui, QtCore
+from common.lib.clients.qtui.switch import QCustomSwitchChannel
 
 SIGNALID1 = 421956
 SIGNALID2 = 444296
@@ -60,6 +61,12 @@ class eVPumpClient(QtGui.QWidget):
 
         self.currentprogbar = QtGui.QProgressBar()
         self.currentprogbar.setOrientation(QtCore.Qt.Vertical)
+        
+        self.laserswitch = QCustomSwitchChannel('Laser',('On','Off'))
+        self.shutterswitch = QCustomSwitchChannel('Shutter',('Open','Closed'))
+
+        self.laserswitch.TTLswitch.toggled.connect(self.onLasertoggled)
+        self.shutterswitch.TTLswitch.toggled.connect(self.onShuttertoggled)
 
         self.powerprogbar = QtGui.QProgressBar()
         self.powerprogbar.setOrientation(QtCore.Qt.Vertical)
@@ -74,18 +81,28 @@ class eVPumpClient(QtGui.QWidget):
         layout.addWidget(self.powerlabel,     1,1,1,1)
         layout.addWidget(self.templabel,      10,0,1,1)
         layout.addWidget(self.tempdisplay,    10,1,1,1)
+        layout.addWidget(self.laserswitch,    8,8)
+        layout.addWidget(self.shutterswitch,    8,9)
 
         self.setLayout(layout)
+
+    @inlineCallbacks
+    def onShuttertoggled(self, value):  
+        yield self.server.toggle_shutter(value)
         
-    def updateCurrent(self,c,  current):
+    @inlineCallbacks
+    def onLasertoggled(self, value):  
+        yield self.server.toggle_laser(value)
+        
+    def updateCurrent(self,c, current):
         self.currentprogbar.setValue(current['A'])
 
-    def updatePower(self, c, power):
+    def updatePower(self,c, power):
         powerperc = power['W']*100/15.0
         self.powerprogbar.setValue(powerperc)
         self.powerprogbar.setFormat(str(power['W']) + 'W')
         
-    def updateTemp(self, c, temp):
+    def updateTemp(self,c, temp):
         self.tempdisplay.display(str(temp['degC']))
 
     def closeEvent(self, x):
