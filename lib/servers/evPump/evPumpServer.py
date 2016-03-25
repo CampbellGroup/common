@@ -86,6 +86,16 @@ class eVPump( SerialDeviceServer ):
             yield self.ser.write_line('SHT:1')
         else:
             yield self.ser.write_line('SHT:0')
+            
+    @setting(3, 'set power', value = 'v[W]')
+    def setPower(self, c, value):
+        value = str(value['W'])
+        yield self.ser.write_line('P:' + value)
+        
+    @setting(4, 'read power', returns = 'v[W]')
+    def readPower(self,c):
+        yield None
+        returnValue(self.power)
 
     @inlineCallbacks
     def _readPower(self):

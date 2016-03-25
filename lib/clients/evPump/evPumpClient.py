@@ -8,6 +8,7 @@ from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui, QtCore
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
+from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
 
 SIGNALID1 = 421956
 SIGNALID2 = 444296
@@ -19,7 +20,9 @@ class eVPumpClient(QtGui.QWidget):
         super(eVPumpClient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.cxn = cxn
-        self.reactor = reactor         
+        self.reactor = reactor 
+        from labrad.units import WithUnit as U
+        self.U = U        
         self.connect()
         
     @inlineCallbacks
@@ -42,7 +45,8 @@ class eVPumpClient(QtGui.QWidget):
         yield self.server.addListener(listener = self.updateTemp,  source = None, ID = SIGNALID3)
 
         self.initializeGUI()
-        
+    
+    @inlineCallbacks    
     def initializeGUI(self):  
         layout = QtGui.QGridLayout() 
         font = QtGui.QFont()
@@ -55,9 +59,19 @@ class eVPumpClient(QtGui.QWidget):
         self.templabel = QtGui.QLabel('Laser Diode Temp')
         self.currentlabel = QtGui.QLabel('Current')
         self.powerlabel = QtGui.QLabel('Power')
+
+        self.powerspinbox = QtGui.QDoubleSpinBox()
+        self.powerspinbox.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        self.powerspinbox.setDecimals(2)
+        self.powerspinbox.setSingleStep(0.01)
+        self.powerspinbox.setRange(0.0,15.0)
+        self.powerspinbox.valueChanged.connect(self.changePower)
+        self.powerspinbox.setKeyboardTracking(False)
+        initpower = yield self.server.read_power()
+        self.powerspinbox.setValue(initpower['W'])
         
         self.tempdisplay = QtGui.QLCDNumber()
-        self.tempdisplay.setDigitCount(6)
+        self.tempdisplay.setDigitCount(5)
 
         self.currentprogbar = QtGui.QProgressBar()
         self.currentprogbar.setOrientation(QtCore.Qt.Vertical)
@@ -82,7 +96,8 @@ class eVPumpClient(QtGui.QWidget):
         layout.addWidget(self.templabel,      10,0,1,1)
         layout.addWidget(self.tempdisplay,    10,1,1,1)
         layout.addWidget(self.laserswitch,    8,8)
-        layout.addWidget(self.shutterswitch,    8,9)
+        layout.addWidget(self.shutterswitch,    9,8)
+        layout.addWidget(self.powerspinbox,       4,8)
 
         self.setLayout(layout)
 
@@ -94,8 +109,14 @@ class eVPumpClient(QtGui.QWidget):
     def onLasertoggled(self, value):  
         yield self.server.toggle_laser(value)
         
+    @inlineCallbacks
+    def changePower(self, value):
+        yield self.server.set_power(self.U(value, 'W'))
+        
     def updateCurrent(self,c, current):
-        self.currentprogbar.setValue(current['A'])
+        currentperc = current['A']*100/24.0
+        self.currentprogbar.setValue(currentperc)
+        self.currentprogbar.setFormat(str(current['A']) + 'A')
 
     def updatePower(self,c, power):
         powerperc = power['W']*100/15.0
