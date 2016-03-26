@@ -88,7 +88,7 @@ class eVPump(SerialDeviceServer):
         else:
             yield self.ser.write_line('SHT:0')
             
-    @setting(3, 'set power', value = 'v[W]')
+    @setting(3, 'set_power', value = 'v[W]')
     def set_power(self, c, value):
         value = str(value['W'])
         yield self.ser.write_line('P:' + value)
