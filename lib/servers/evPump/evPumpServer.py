@@ -37,7 +37,7 @@ SERVERNAME = 'eVPump'
 TIMEOUT = 1.0
 BAUDRATE = 115200
 
-class eVPump( SerialDeviceServer ):
+class eVPump(SerialDeviceServer):
     name = SERVERNAME
     regKey = 'eVPump'
     port = None
