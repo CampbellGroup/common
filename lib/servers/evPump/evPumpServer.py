@@ -171,7 +171,7 @@ class eVPump(SerialDeviceServer):
         returnValue(self.temperature)
         
     @setting(14, 'get_diode_current_limit', returns = 'v[A]')
-    def get_current_limit(self, c):
+    def get_diode_current_limit(self, c):
         yield self.ser.write_line('?DCL')
         value = yield self.ser.read_line()
         value = float(value)
