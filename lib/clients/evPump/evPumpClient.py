@@ -12,6 +12,7 @@ from common.lib.clients.qtui.switch import QCustomSwitchChannel
 SIGNALID1 = 421956
 SIGNALID2 = 444296
 SIGNALID3 = 123462
+SIGNALID4 = 649731
 
 class eVPumpClient(QtGui.QWidget):
     
@@ -38,10 +39,12 @@ class eVPumpClient(QtGui.QWidget):
         yield self.server.signal__current_changed(SIGNALID1)
         yield self.server.signal__power_changed(SIGNALID2)
         yield self.server.signal__temp_changed(SIGNALID3)
+        yield self.server.signal__stat_changed(SIGNALID4)
 
         yield self.server.addListener(listener = self.updateCurrent, source = None, ID = SIGNALID1)
         yield self.server.addListener(listener = self.updatePower, source = None, ID = SIGNALID2)
         yield self.server.addListener(listener = self.updateTemp,  source = None, ID = SIGNALID3)
+        yield self.server.addListener(listener = self.updateStat,  source = None, ID = SIGNALID4)
 
         self.initializeGUI()
     
@@ -57,10 +60,11 @@ class eVPumpClient(QtGui.QWidget):
         self.title.setFont(font)
         self.title.setAlignment(QtCore.Qt.AlignCenter)
         
-        self.templabel = QtGui.QLabel('Laser Diode Temp')
+        self.templabel = QtGui.QLabel('Diode Temp degC')
         self.currentlabel = QtGui.QLabel('Current')
         self.powerlabel = QtGui.QLabel('Power')
-        self.powercontrollabel = QtGui.QLabel('Power Control (W)')
+        self.powercontrollabel = QtGui.QLabel('Power Control')
+        self.statuslabel = QtGui.QLabel('Laser Status: ')
         self.currentcontrollabel = QtGui.QLabel('Current Control (A)')
         self.controlmodelabel = QtGui.QLabel('Control Mode')
         
@@ -103,7 +107,8 @@ class eVPumpClient(QtGui.QWidget):
         layout.addWidget(self.currentlabel,   1,0,1,1)
         layout.addWidget(self.powerlabel,     1,1,1,1)
         layout.addWidget(self.templabel,      10,0,1,2)
-        layout.addWidget(self.tempdisplay,    10,2,2,1)
+        layout.addWidget(self.statuslabel,    11,0,1,1)
+        layout.addWidget(self.tempdisplay,    9,2,4,1)
         layout.addWidget(self.laserswitch,    6,2)
         layout.addWidget(self.shutterswitch,    7,2)
         layout.addWidget(self.powercontrollabel,   2,2) 
@@ -122,6 +127,9 @@ class eVPumpClient(QtGui.QWidget):
         
         initcurrent = yield self.server.get_current_setpoint()
         self.currentspinbox.setValue(initcurrent['A'])
+        
+        initOn = yield self.server.diode_status()
+        self.laserswitch.TTLswitch.setChecked(initOn)
         
         self.setLayout(layout)
 
@@ -185,6 +193,9 @@ class eVPumpClient(QtGui.QWidget):
         
     def updateTemp(self,c, temp):
         self.tempdisplay.display(str(temp['degC']))
+        
+    def updateStat(self,c, stat):
+        self.statuslabel.setText('Laser Status: \n' + stat)
 
     def closeEvent(self, x):
         self.reactor.stop()

@@ -23,17 +23,15 @@ Created on Mar 25, 2016
 UPDATECURR = 150327
 UPDATEPOW = 114327
 UPDATETMP = 153422
+UPDATESTAT = 356575
 
-from common.lib.servers.serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
-from labrad.types import Error
+from common.lib.servers.serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError
 from twisted.internet import reactor
 from labrad.server import Signal
 from labrad import types as T
-from twisted.internet.task import LoopingCall
 from twisted.internet.defer import returnValue
 from labrad.support import getNodeName
 from labrad.units import WithUnit as U
-from labrad.util import wakeupCall
 
 SERVERNAME = 'eVPump'
 TIMEOUT = 1.0
@@ -48,10 +46,12 @@ class eVPump( SerialDeviceServer ):
     temperature = None
     power = None
     current = None
+    status = None
 
     currentchanged = Signal(UPDATECURR, 'signal: current changed', 'v')
     powerchanged = Signal(UPDATEPOW, 'signal: power changed', 'v')
     temperaturechanged = Signal(UPDATETMP, 'signal: temp changed', 'v')
+    statuschanged = Signal(UPDATESTAT, 'signal: stat changed', 's')
     
     @inlineCallbacks
     def initServer( self ):
@@ -106,7 +106,7 @@ class eVPump( SerialDeviceServer ):
     def readCurrent(self,c):
         yield None
         returnValue(self.current)
-        
+
     @setting(7, 'diode status', returns = 'b')
     def diodeStatus(self,c):
         yield self.ser.write_line('?D')
@@ -116,9 +116,8 @@ class eVPump( SerialDeviceServer ):
         
     @setting(8, 'system status', returns = 's')
     def systemStatus(self,c):
-        yield self.ser.write_line('?F')
-        value = self.ser.read_line()
-        returnValue(value)
+        yield None
+        returnValue(self.status)
         
     @setting(9, 'get power setpoint', returns = 'v[W]')
     def getPowerSetpoint(self, c):
@@ -204,6 +203,11 @@ class eVPump( SerialDeviceServer ):
             self.temperature = U(float(temp),'degC')
         except:
             self.temperature = None
+            
+    @inlineCallbacks
+    def _readStatus(self):
+        yield self.ser.write_line('?F')
+        self.status = yield self.ser.read_line()
 
     @inlineCallbacks
     def measurePump(self):
@@ -211,9 +215,11 @@ class eVPump( SerialDeviceServer ):
         yield self._readPower()
         yield self._readCurrent()
         yield self._readTemperature()
+        yield self._readStatus()
         self.currentchanged(self.current)
         self.powerchanged(self.power) 
         self.temperaturechanged(self.temperature)
+        self.statuschanged(self.status)
     
 if __name__ == "__main__":
     from labrad import util
