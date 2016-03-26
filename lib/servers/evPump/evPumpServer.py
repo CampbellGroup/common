@@ -96,6 +96,87 @@ class eVPump( SerialDeviceServer ):
     def readPower(self,c):
         yield None
         returnValue(self.power)
+        
+    @setting(5, 'set current', value = 'v[A]')
+    def setCurrent(self, c, value):
+        value = str(value['A'])
+        yield self.ser.write_line('C1:' + value)
+        
+    @setting(6, 'read current', returns = 'v[A]')
+    def readCurrent(self,c):
+        yield None
+        returnValue(self.current)
+        
+    @setting(7, 'diode status', returns = 'b')
+    def diodeStatus(self,c):
+        yield self.ser.write_line('?D')
+        value = yield self.ser.read_line()
+        value = bool(float(value))
+        returnValue(value)
+        
+    @setting(8, 'system status', returns = 's')
+    def systemStatus(self,c):
+        yield self.ser.write_line('?F')
+        value = self.ser.read_line()
+        returnValue(value)
+        
+    @setting(9, 'get power setpoint', returns = 'v[W]')
+    def getPowerSetpoint(self, c):
+        yield self.ser.write_line('?PSET')
+        value = yield self.ser.read_line()
+        value = U(float(value), 'W')
+        returnValue(value)
+        
+    @setting(15, 'get current setpoint', returns = 'v[A]')
+    def getCurrentSetpoint(self, c):
+        yield self.ser.write_line('?CS1')
+        value = yield self.ser.read_line()
+        if value:
+            value = U(float(value), 'A')
+        else:
+            value = U(0.0, 'A')
+        returnValue(value)
+        
+    @setting(10, 'get shutter status', returns = 'b')
+    def getShutterStatus(self, c):
+        yield self.ser.write_line('?SHT')
+        value = yield self.ser.read_line()
+        value = bool(float(value))
+        returnValue(value)
+    
+    @setting(11, 'set control mode', mode = 's')
+    def setControlMode(self, c, mode):
+        if mode == 'current':
+            yield self.ser.write_line('M:0')
+        elif mode == 'power':
+            yield self.ser.write_line('M:1')            
+        else:
+            yield None
+            
+    @setting(12, 'get control mode', returns = 's')
+    def getControlMode(self, c):
+        yield self.ser.write_line('?M')
+        value = yield self.ser.read_line()
+        if value == '0':
+            value = 'current'
+        elif value == '1':
+            value = 'power'
+        else:
+            value = None
+        returnValue(value)
+        
+    @setting(13, 'read temperature', returns = 'v[degC]')
+    def readTemperature(self,c):
+        yield None
+        returnValue(self.temperature)
+        
+    @setting(14, 'get diode current limit', returns = 'v[A]')
+    def getCurrentLimit(self, c):
+        yield self.ser.write_line('?DCL')
+        value = yield self.ser.read_line()
+        value = float(value)
+        value = U(value, 'A')
+        returnValue(value)
 
     @inlineCallbacks
     def _readPower(self):
