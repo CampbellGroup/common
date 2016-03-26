@@ -55,7 +55,8 @@ class eVPump( SerialDeviceServer ):
     
     @inlineCallbacks
     def initServer( self ):
-        if not self.regKey or not self.serNode: raise SerialDeviceError( 'Must define regKey and serNode attributes' )
+        if not self.regKey or not self.serNode: 
+            raise SerialDeviceError( 'Must define regKey and serNode attributes' )
         port = yield self.getPortFromReg( self.regKey )
         self.port = port
         print port
@@ -71,63 +72,63 @@ class eVPump( SerialDeviceServer ):
                 print 'Error opening serial connection'
                 print 'Check set up and restart serial server'
             else: raise
-        self.measurePump()
+        self.measure_pump()
 
     @setting(1, 'toggle laser', value = 'b')
-    def toggleLaser(self, c, value):
+    def toggle_laser(self, c, value):
         if value:
             yield self.ser.write_line('ON')
         else:
             yield self.ser.write_line('OFF')
             
     @setting(2, 'toggle shutter', value = 'b')
-    def toggleShutter(self, c, value):
+    def toggle_shutter(self, c, value):
         if value:
             yield self.ser.write_line('SHT:1')
         else:
             yield self.ser.write_line('SHT:0')
             
     @setting(3, 'set power', value = 'v[W]')
-    def setPower(self, c, value):
+    def set_power(self, c, value):
         value = str(value['W'])
         yield self.ser.write_line('P:' + value)
         
     @setting(4, 'read power', returns = 'v[W]')
-    def readPower(self,c):
+    def read_power(self,c):
         yield None
         returnValue(self.power)
         
     @setting(5, 'set current', value = 'v[A]')
-    def setCurrent(self, c, value):
+    def set_current(self, c, value):
         value = str(value['A'])
         yield self.ser.write_line('C1:' + value)
         
     @setting(6, 'read current', returns = 'v[A]')
-    def readCurrent(self,c):
+    def read_current(self,c):
         yield None
         returnValue(self.current)
 
     @setting(7, 'diode status', returns = 'b')
-    def diodeStatus(self,c):
+    def diode_status(self,c):
         yield self.ser.write_line('?D')
         value = yield self.ser.read_line()
         value = bool(float(value))
         returnValue(value)
         
     @setting(8, 'system status', returns = 's')
-    def systemStatus(self,c):
+    def system_status(self,c):
         yield None
         returnValue(self.status)
         
     @setting(9, 'get power setpoint', returns = 'v[W]')
-    def getPowerSetpoint(self, c):
+    def get_power_setpoint(self, c):
         yield self.ser.write_line('?PSET')
         value = yield self.ser.read_line()
         value = U(float(value), 'W')
         returnValue(value)
         
     @setting(15, 'get current setpoint', returns = 'v[A]')
-    def getCurrentSetpoint(self, c):
+    def get_current_setpoint(self, c):
         yield self.ser.write_line('?CS1')
         value = yield self.ser.read_line()
         if value:
@@ -137,14 +138,14 @@ class eVPump( SerialDeviceServer ):
         returnValue(value)
         
     @setting(10, 'get shutter status', returns = 'b')
-    def getShutterStatus(self, c):
+    def get_shutter_status(self, c):
         yield self.ser.write_line('?SHT')
         value = yield self.ser.read_line()
         value = bool(float(value))
         returnValue(value)
     
     @setting(11, 'set control mode', mode = 's')
-    def setControlMode(self, c, mode):
+    def set_control_mode(self, c, mode):
         if mode == 'current':
             yield self.ser.write_line('M:0')
         elif mode == 'power':
@@ -153,7 +154,7 @@ class eVPump( SerialDeviceServer ):
             yield None
             
     @setting(12, 'get control mode', returns = 's')
-    def getControlMode(self, c):
+    def get_control_mode(self, c):
         yield self.ser.write_line('?M')
         value = yield self.ser.read_line()
         if value == '0':
@@ -165,12 +166,12 @@ class eVPump( SerialDeviceServer ):
         returnValue(value)
         
     @setting(13, 'read temperature', returns = 'v[degC]')
-    def readTemperature(self,c):
+    def read_temperature(self,c):
         yield None
         returnValue(self.temperature)
         
     @setting(14, 'get diode current limit', returns = 'v[A]')
-    def getCurrentLimit(self, c):
+    def get_current_limit(self, c):
         yield self.ser.write_line('?DCL')
         value = yield self.ser.read_line()
         value = float(value)
@@ -178,7 +179,7 @@ class eVPump( SerialDeviceServer ):
         returnValue(value)
 
     @inlineCallbacks
-    def _readPower(self):
+    def _read_power(self):
         yield self.ser.write_line('?P')
         power = yield self.ser.read_line()
         try:    
@@ -187,7 +188,7 @@ class eVPump( SerialDeviceServer ):
             self.power = None
             
     @inlineCallbacks
-    def _readCurrent(self):
+    def _read_current(self):
         yield self.ser.write_line('?C')
         current = yield self.ser.read_line()
         try:
@@ -196,7 +197,7 @@ class eVPump( SerialDeviceServer ):
             self.current = None
             
     @inlineCallbacks
-    def _readTemperature(self):
+    def _read_temperature(self):
         yield self.ser.write_line('?T')
         temp = yield self.ser.read_line()
         try:
@@ -205,17 +206,17 @@ class eVPump( SerialDeviceServer ):
             self.temperature = None
             
     @inlineCallbacks
-    def _readStatus(self):
+    def _read_status(self):
         yield self.ser.write_line('?F')
         self.status = yield self.ser.read_line()
 
     @inlineCallbacks
-    def measurePump(self):
-        reactor.callLater(.1, self.measurePump)
-        yield self._readPower()
-        yield self._readCurrent()
-        yield self._readTemperature()
-        yield self._readStatus()
+    def measure_pump(self):
+        reactor.callLater(.1, self.measure_pump)
+        yield self._read_power()
+        yield self._read_current()
+        yield self._read_temperature()
+        yield self._read_status()
         self.currentchanged(self.current)
         self.powerchanged(self.power) 
         self.temperaturechanged(self.temperature)
