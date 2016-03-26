@@ -165,8 +165,8 @@ class eVPump(SerialDeviceServer):
             value = None
         returnValue(value)
         
-    @setting(13, 'read temperature', returns = 'v[degC]')
-    def read_temperature(self,c):
+    @setting(13, 'get temperature', returns = 'v[degC]')
+    def get_temperature(self,c):
         yield None
         returnValue(self.temperature)
         
