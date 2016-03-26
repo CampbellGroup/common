@@ -48,10 +48,10 @@ class eVPump(SerialDeviceServer):
     current = None
     status = None
 
-    currentchanged = Signal(UPDATECURR, 'signal: current changed', 'v')
-    powerchanged = Signal(UPDATEPOW, 'signal: power changed', 'v')
-    temperaturechanged = Signal(UPDATETMP, 'signal: temp changed', 'v')
-    statuschanged = Signal(UPDATESTAT, 'signal: stat changed', 's')
+    currentchanged = Signal(UPDATECURR, 'signal__current_changed', 'v')
+    powerchanged = Signal(UPDATEPOW, 'signal__power_changed', 'v')
+    temperaturechanged = Signal(UPDATETMP, 'signal__temp_changed', 'v')
+    statuschanged = Signal(UPDATESTAT, 'signal__stat_changed', 's')
     
     @inlineCallbacks
     def initServer( self ):
@@ -74,14 +74,14 @@ class eVPump(SerialDeviceServer):
             else: raise
         self.measure_pump()
 
-    @setting(1, 'toggle laser', value = 'b')
+    @setting(1, 'toggle_laser', value = 'b')
     def toggle_laser(self, c, value):
         if value:
             yield self.ser.write_line('ON')
         else:
             yield self.ser.write_line('OFF')
             
-    @setting(2, 'toggle shutter', value = 'b')
+    @setting(2, 'toggle_shutter', value = 'b')
     def toggle_shutter(self, c, value):
         if value:
             yield self.ser.write_line('SHT:1')
@@ -93,41 +93,41 @@ class eVPump(SerialDeviceServer):
         value = str(value['W'])
         yield self.ser.write_line('P:' + value)
         
-    @setting(4, 'read power', returns = 'v[W]')
+    @setting(4, 'read_power', returns = 'v[W]')
     def read_power(self,c):
         yield None
         returnValue(self.power)
         
-    @setting(5, 'set current', value = 'v[A]')
+    @setting(5, 'set_current', value = 'v[A]')
     def set_current(self, c, value):
         value = str(value['A'])
         yield self.ser.write_line('C1:' + value)
         
-    @setting(6, 'read current', returns = 'v[A]')
+    @setting(6, 'read_current', returns = 'v[A]')
     def read_current(self,c):
         yield None
         returnValue(self.current)
 
-    @setting(7, 'diode status', returns = 'b')
+    @setting(7, 'diode_status', returns = 'b')
     def diode_status(self,c):
         yield self.ser.write_line('?D')
         value = yield self.ser.read_line()
         value = bool(float(value))
         returnValue(value)
         
-    @setting(8, 'system status', returns = 's')
+    @setting(8, 'system_status', returns = 's')
     def system_status(self,c):
         yield None
         returnValue(self.status)
         
-    @setting(9, 'get power setpoint', returns = 'v[W]')
+    @setting(9, 'get_power_setpoint', returns = 'v[W]')
     def get_power_setpoint(self, c):
         yield self.ser.write_line('?PSET')
         value = yield self.ser.read_line()
         value = U(float(value), 'W')
         returnValue(value)
         
-    @setting(15, 'get current setpoint', returns = 'v[A]')
+    @setting(15, 'get_current_setpoint', returns = 'v[A]')
     def get_current_setpoint(self, c):
         yield self.ser.write_line('?CS1')
         value = yield self.ser.read_line()
@@ -137,14 +137,14 @@ class eVPump(SerialDeviceServer):
             value = U(0.0, 'A')
         returnValue(value)
         
-    @setting(10, 'get shutter status', returns = 'b')
+    @setting(10, 'get_shutter_status', returns = 'b')
     def get_shutter_status(self, c):
         yield self.ser.write_line('?SHT')
         value = yield self.ser.read_line()
         value = bool(float(value))
         returnValue(value)
     
-    @setting(11, 'set control mode', mode = 's')
+    @setting(11, 'set_control_mode', mode = 's')
     def set_control_mode(self, c, mode):
         if mode == 'current':
             yield self.ser.write_line('M:0')
@@ -153,7 +153,7 @@ class eVPump(SerialDeviceServer):
         else:
             yield None
             
-    @setting(12, 'get control mode', returns = 's')
+    @setting(12, 'get_control_mode', returns = 's')
     def get_control_mode(self, c):
         yield self.ser.write_line('?M')
         value = yield self.ser.read_line()
@@ -165,12 +165,12 @@ class eVPump(SerialDeviceServer):
             value = None
         returnValue(value)
         
-    @setting(13, 'get temperature', returns = 'v[degC]')
+    @setting(13, 'get_temperature', returns = 'v[degC]')
     def get_temperature(self,c):
         yield None
         returnValue(self.temperature)
         
-    @setting(14, 'get diode current limit', returns = 'v[A]')
+    @setting(14, 'get_diode_current_limit', returns = 'v[A]')
     def get_current_limit(self, c):
         yield self.ser.write_line('?DCL')
         value = yield self.ser.read_line()
