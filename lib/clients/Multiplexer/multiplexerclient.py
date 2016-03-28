@@ -5,7 +5,7 @@ try:
     from config.multiplexerclient_config import multiplexer_config
 except:
     from common.lib.config.multiplexerclient_config import multiplexer_config
-#from wlm_client_config import multiplexer_config
+
 import socket
 
 
@@ -52,7 +52,7 @@ class wavemeterclient(QtGui.QWidget):
         """initializels the GUI creates the reactor
             and empty dictionary for channel widgets to
             be stored for iteration. also grabs chan info
-            from wlm_client_config file
+            from multiplexer_config
         """
         super(wavemeterclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
@@ -66,11 +66,12 @@ class wavemeterclient(QtGui.QWidget):
         connects incoming signals to relavent functions
 
         """
+        self.chaninfo = multiplexer_config.info
+        self.wavemeterIP = multiplexer_config.ip
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('10.97.112.2', name = socket.gethostname() + ' Wave Meter Client')
+        self.cxn = yield connectAsync(self.wavemeterIP, name = socket.gethostname() + ' Wave Meter Client')
 
         self.server = yield self.cxn.multiplexerserver
-        self.chaninfo = multiplexer_config.info
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__selected_channels_changed(SIGNALID2)
         yield self.server.signal__update_exp(SIGNALID3)
@@ -165,7 +166,7 @@ class wavemeterclient(QtGui.QWidget):
                 self.d[chan].currentfrequency.setText('Over Exposed')
             else:
                 self.d[chan].currentfrequency.setText(str(freq)[0:10])
-                
+
     def updatePIDvoltage(self, c, signal):
         chan = signal[0]
         value = signal[1]
