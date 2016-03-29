@@ -194,7 +194,12 @@ class eVPumpClient(QtGui.QWidget):
         self.tempdisplay.display(str(temp['degC']))
         
     def update_stat(self,c, stat):
-        self.statuslabel.setText('Laser Status: \n' + stat)
+        css_text = "<span style>Laser Status: <br/></span>" 
+        if stat == 'System Ready':
+            css_text += "<span style='color:#00ff00;'>%s</span>" % stat
+        else: 
+            css_text += "<span style='color:#ff0000;'>%s</span>" % stat
+        self.statuslabel.setText(css_text)
 
     def closeEvent(self, x):
         self.reactor.stop()
