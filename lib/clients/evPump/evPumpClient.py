@@ -76,7 +76,7 @@ class eVPumpClient(QtGui.QWidget):
         self.powerspinbox.setDecimals(2)
         self.powerspinbox.setSingleStep(0.01)
         self.powerspinbox.setRange(0.0,15.0)
-        self.powerspinbox.valueChanged.connect(self.changePower)
+        self.powerspinbox.valueChanged.connect(self.change_power)
         self.powerspinbox.setKeyboardTracking(False)
         
         self.currentspinbox = QtGui.QDoubleSpinBox()
@@ -84,7 +84,7 @@ class eVPumpClient(QtGui.QWidget):
         self.currentspinbox.setDecimals(3)
         self.currentspinbox.setSingleStep(0.001)
         self.currentspinbox.setRange(0.0,7.2)
-        self.currentspinbox.valueChanged.connect(self.changeCurrent)
+        self.currentspinbox.valueChanged.connect(self.change_current)
         self.currentspinbox.setKeyboardTracking(False)
         
         self.tempdisplay = QtGui.QLCDNumber()
