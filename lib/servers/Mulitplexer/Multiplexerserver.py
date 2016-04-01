@@ -29,6 +29,8 @@ FREQSIGNAL = 122456
 LOCKSIGNAL = 112456
 OUTPUTCHANGED = 121212
 PIDVOLTAGE = 902484
+CHANNELLOCK = 282388
+AMPCHANGED = 142308
 
 class PID(object):
     """
@@ -139,13 +141,14 @@ class MultiplexerServer(LabradServer):
         self.PID_P = c_long(1034)
         self.PID_I = c_long(1035)
         self.PID_D = c_long(1036)
-        self.PID_T = c_long(1033)
+        self.PID_dt = c_long(1060)
+        self.PIDConstdt = c_long(1059)
         self.DeviationSensitivityFactor = c_long(1037)
         self.DeviationSensitivityDimension = c_long(1040)
         self.DeviationUnit = c_long(1041)
         self.DeviationPolarity = c_long(1038)
         self.DeviationChannel = c_long(1063)
-        self.useFrequencyUnits = c_long(2)
+        self.UseFrequencyUnits = c_long(2)
 
         # Getting the amplitude in the GetAmplitudeNum function can
         # return the max, min, and average of the interference pattern
@@ -270,28 +273,40 @@ class MultiplexerServer(LabradServer):
         '''Sets the P PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
         value = c_double(P)
-        yield = self.wmdll.SetPIDSettings(self.PID_P, port_c, self.l, value)
+        yield self.wmdll.SetPIDSetting(self.PID_P, port_c, self.l, value)
 
     @setting(18,"set pid i", dacPort ='w', I = 'v')
     def set_pid_i(self, c, dacPort, I):
         '''Sets the I PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
         value = c_double(I)
-        yield = self.wmdll.SetPIDSettings(self.PID_I, port_c, self.l, value)
+        yield self.wmdll.SetPIDSetting(self.PID_I, port_c, self.l, value)
 
     @setting(19,"set pid d", dacPort ='w', D = 'v')
     def set_pid_d(self, c, dacPort, D):
         '''Sets the D PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
         value = c_double(D)
-        yield = self.wmdll.SetPIDSettings(self.PID_D, port_c, self.l, value)
+        yield self.wmdll.SetPIDSetting(self.PID_D, port_c, self.l, value)
 
-    @setting(39,"set pid t", dacPort ='w', T = 'v')
-    def set_pid_t(self, c, dacPort, T):
+    @setting(39,"set pid dt", dacPort ='w', dt = 'v')
+    def set_pid_dt(self, c, dacPort, dt):
         '''Sets the dt PID settings for a given DAC port.'''
+        if dt <= 0:
+            returnValue("dt must be greater than zero")
+        else:
+            port_c = c_long(dacPort)
+            value = c_double(dt)
+            yield self.wmdll.SetPIDSetting(self.PID_dt, port_c, self.l, value)
+
+    @setting(121,"set const dt", dacPort ='w', dt = 'b')
+    def set_const_dt(self, c, dacPort, dt):
+        '''Activates the dt PID settings for a given DAC port. This makes each dt
+        in the integration constant as opposed to oscillating values based on the
+        system time, which changes when changing wm settings.'''
         port_c = c_long(dacPort)
-        value = c_double(T)
-        yield = self.wmdll.SetPIDSettings(self.PID_T, port_c, self.l, value)
+        value = c_long(dt)
+        yield self.wmdll.SetPIDSetting(self.PIDConstdt, port_c, value, self.d)
 
     @setting(40,"set pid sensitivity", dacPort ='w', sensitivityFactor = 'v', sensitivityExponent = 'i')
     def set_pid_sensitivity(self, c, dacPort, sensitivityFactor, sensitivityExponent):
@@ -299,43 +314,44 @@ class MultiplexerServer(LabradServer):
         Sensitivity = (sensitivityFactor*V)/(THz*10^[sensitivityExponent])
         sensitivityFactor range is [1,9.99].'''
         port_c = c_long(dacPort)
-        sFactor = c_long(sensitivityFactor)
-        sPower = c_double(sensitivityPower)
+        sFactor = c_double(sensitivityFactor)
+        sExponent = c_long(sensitivityExponent)
         # Make sure the units are set to frequency
-        yield = self.wmdll.SetPIDSettings(self.DeviationUnit, port_c, self.UseFrequencyUnits, self.d)
-        yield = self.wmdll.SetPIDSettings(self.DeviationSensitivityDimension, port_c, sPower, self.d)
-        yield = self.wmdll.SetPIDSettings(self.DeviationSensitivityFactor, port_c, self.l, sFactor)
+        yield self.wmdll.SetPIDSetting(self.DeviationUnit, port_c, self.UseFrequencyUnits, self.d)
+        yield self.wmdll.SetPIDSetting(self.DeviationSensitivityDimension, port_c, sExponent, self.d)
+        yield self.wmdll.SetPIDSetting(self.DeviationSensitivityFactor, port_c, self.l, sFactor)
 
     @setting(41,"set pid polarity", dacPort ='w', polarity = 'i')
     def set_pid_polarity(self, c, dacPort, polarity):
         '''Sets the polarity for a given DAC port. Allowed values are +/- 1.'''
-        if value == 1 or value == -1:
+        if polarity == 1 or polarity == -1:
             port_c = c_long(dacPort)
             value = c_long(polarity)
-            yield = self.wmdll.SetPIDSettings(self.DeviationPolarity, port_c, value, self.d)
+            yield self.wmdll.SetPIDSetting(self.DeviationPolarity, port_c, value, self.d)
         else:
             returnValue("Polarity must be +/- 1")
 
     @setting(42,"set channel lock", dacPort ='w', waveMeterChannel = 'w', lock = 'b')
     def set_channel_lock(self, c, dacPort, waveMeterChannel, lock):
         '''Locks a wavemeter channel to a given DAC port.'''
+        port_c = c_long(dacPort)
+        chan_c = c_long(waveMeterChannel)
 
         # Check to ensure a valid PID Course number is set, otherwise
         # trying to lock a channel turns off lock to main PID lock switch
-        course = self.getPIDCourse(c,waveMeterChannel)
+
+        course_c = create_string_buffer(1024)
+        yield self.wmdll.GetPIDCourseNum(port_c, pointer(course_c))
+        course = float(course_c.value)
         if course <= 0:
             returnValue("Set PID Course to a valid number")
         else:
             notified = self.getOtherListeners(c)
-            port_c = c_long(dacPort)
-            chan_c = c_long(waveMeterChannel)
-
             if lock == 1:
-                yield = self.wmdll.SetPIDSettings(self.DeviationChannel, port_c, chan_c, self.d)
+                yield self.wmdll.SetPIDSetting(self.DeviationChannel, port_c, chan_c, self.d)
             elif lock == 0:
-                yield = self.wmdll.SetPIDSettings(self.DeviationChannel, port_c, c_long(0), self.d)
+                yield self.wmdll.SetPIDSetting(self.DeviationChannel, port_c, c_long(0), self.d)
             self.channellock((dacPort,waveMeterChannel,lock), notified)
-
 ###Get Functions
 
     @setting(20, "Get Amplitude", chan = 'w', returns = 'v')
@@ -402,14 +418,14 @@ class MultiplexerServer(LabradServer):
             value = False
         returnValue(value)
 
-    @setting(29, "Get Channel Lock", dacPort = 'w', waveMeterChannel = 'w', returns = 'w')
+    @setting(29, "Get Channel Lock", dacPort = 'w', waveMeterChannel = 'w', returns = '?')
     def getSingleLockState(self, c, dacPort, waveMeterChannel):
-        """ Checks if the wm channel assigned to the DAC port, equivalent to that
+        """ Checks if the wm channel is assigned to the DAC port, equivalent to that
         wm channel being locked. 0 means no channel assigned which is equivalent
         to unlocked."""
         port_c = c_long(dacPort)
         wmChannel = c_long()
-        yield = self.wmdll.SetPIDSettings(self.DeviationChannel, port_c, pointer(wmChannel), self.d)
+        yield self.wmdll.GetPIDSetting(self.DeviationChannel, port_c, pointer(wmChannel), self.d)
         returnChannel = wmChannel.value
         if returnChannel == waveMeterChannel:
             returnValue(1)
@@ -428,7 +444,7 @@ class MultiplexerServer(LabradServer):
         '''Gets the P PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
         P = c_double()
-        yield = self.wmdll.SetPIDSettings(self.PID_P, port_c, self.l, pointer(P))
+        yield self.wmdll.GetPIDSetting(self.PID_P, port_c, self.l, pointer(P))
         returnValue(P.value)
 
     @setting(33,"get pid i", dacPort ='w', returns = 'v')
@@ -436,7 +452,7 @@ class MultiplexerServer(LabradServer):
         '''Gets the I PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
         I = c_double()
-        yield = self.wmdll.SetPIDSettings(self.PID_I, port_c, self.l, pointer(I))
+        yield self.wmdll.GetPIDSetting(self.PID_I, port_c, self.l, pointer(I))
         returnValue(I.value)
 
     @setting(34,"get pid d", dacPort ='w', returns = 'v')
@@ -444,33 +460,43 @@ class MultiplexerServer(LabradServer):
         '''Gets the D PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
         D = c_double()
-        yield = self.wmdll.SetPIDSettings(self.PID_D, port_c, self.l, pointer(D))
+        yield self.wmdll.GetPIDSetting(self.PID_D, port_c, self.l, pointer(D))
         returnValue(D.value)
 
-    @setting(35,"get pid t", dacPort ='w', returns = 'v')
-    def get_pid_t(self, c, dacPort):
+    @setting(35,"get pid dt", dacPort ='w', returns = 'v')
+    def get_pid_dt(self, c, dacPort):
         '''Gets the dt PID settings for a given DAC port.'''
         port_c = c_long(dacPort)
-        T = c_double()
-        yield = self.wmdll.SetPIDSettings(self.PID_T, port_c, self.l, pointer(T))
-        returnValue(T.value)
+        dt = c_double()
+        yield self.wmdll.GetPIDSetting(self.PID_dt, port_c, self.l, pointer(dt))
+        returnValue(dt.value)
 
-    @setting(35,"get pid sensitivity", dacPort ='w', returns = '*v')
+    @setting(122,"get const dt", dacPort ='w', returns = 'i')
+    def get_const_dt(self, c, dacPort):
+        '''Gets the dt PID settings for a given DAC port. This makes each dt
+        in the integration constant as opposed to oscillating values based on the
+        system time, which changes when changing wm settings.'''
+        port_c = c_long(dacPort)
+        dt = c_long()
+        yield self.wmdll.GetPIDSetting(self.PIDConstdt, port_c, pointer(dt), self.d)
+        returnValue(dt.value)
+
+    @setting(55,"get pid sensitivity", dacPort ='w', returns = '*v')
     def get_pid_sensitivity(self, c, dacPort):
         '''Gets the PID sensitivity for a given DAC port [sensitivity factor, sensitivity power].'''
         port_c = c_long(dacPort)
-        sFactor = c_long()
-        sPower = c_double()
-        yield = self.wmdll.SetPIDSettings(self.DeviationSensitivityDimension, port_c, pointer(sPower), self.d)
-        yield = self.wmdll.SetPIDSettings(self.DeviationSensitivityFactor, port_c, self.l, pointer(sFactor))
-        returnValue([sFactor.value,sPower.value])
+        sFactor = c_double()
+        sExponent = c_long()
+        yield self.wmdll.GetPIDSetting(self.DeviationSensitivityDimension, port_c, pointer(sExponent), self.d)
+        yield self.wmdll.GetPIDSetting(self.DeviationSensitivityFactor, port_c, self.l, pointer(sFactor))
+        returnValue([sFactor.value,sExponent.value])
 
-    @setting(36,"get pid polarity", dacPort ='w', returns = 'w')
+    @setting(36,"get pid polarity", dacPort ='w', returns = 'i')
     def get_pid_polarity(self, c, dacPort):
         '''Gets the polarity for a given DAC port. Allowed values are +/- 1.'''
         port_c = c_long(dacPort)
         polarity = c_long()
-        yield = self.wmdll.SetPIDSettings(self.DeviationPolarity, port_c, pointer(polarity), self.d)
+        yield self.wmdll.GetPIDSetting(self.DeviationPolarity, port_c, pointer(polarity), self.d)
         returnValue(polarity.value)
 
     def measureChan(self):
