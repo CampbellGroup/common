@@ -249,7 +249,7 @@ class MultiplexerServer(LabradServer):
 
     @setting(15, "Set DAC Voltage", dacPort = 'i', value = 'v')
     def setDACVoltage(self, c, dacPort, value):
-        '''Sets voltage of specified DAC channel. Can only be used
+        '''Sets voltage of specified DAC channel in V. Can only be used
         when all PID control is off: set_lock_state = 0'''
         chan_c = c_long(dacPort)
         #convert Volts to mV
@@ -386,7 +386,7 @@ class MultiplexerServer(LabradServer):
 
     @setting(25,"Get Output Voltage", dacPort = 'w', returns = 'v')
     def getOutputVoltage(self, c, dacPort):
-        '''Gets the output voltage of the specified DAC channel'''
+        '''Gets the output voltage (mV) of the specified DAC channel'''
         chan_c = c_long(dacPort)
         volts = yield self.wmdll.GetDeviationSignalNum(chan_c,self.d)
         self.pidvoltagechanged((dacPort,volts))
@@ -431,8 +431,6 @@ class MultiplexerServer(LabradServer):
             returnValue(1)
         elif returnChannel == 0:
             returnValue(0)
-        else:
-            returnValue("DAC channel is locked to a different wavemeter channel")
 
     @setting(31, "get total channels", returns = 'w')
     def getChannelCount(self,c):

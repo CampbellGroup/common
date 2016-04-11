@@ -1,4 +1,5 @@
 from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
+from common.lib.clients.qtui.multiplexerPID import QCustomPID
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui, QtCore
 try:
@@ -91,7 +92,8 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.addListener(listener = self.toggleLock, source = None, ID = SIGNALID4)
         yield self.server.addListener(listener = self.updateWLMOutput, source = None, ID = SIGNALID5)
         yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
-        yield self.server.addListener(listener = self.updateDACAmplitude, source = None, ID = SIGNALID8)
+        yield self.server.addListener(listener = self.toggleChannelLock, source = None, ID = SIGNALID7)
+        yield self.server.addListener(listener = self.updateAmplitude, source = None, ID = SIGNALID8)
 
         self.initializeGUI()
 
@@ -128,8 +130,9 @@ class wavemeterclient(QtGui.QWidget):
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
 
+            self.dacPorts[wmChannel] = dacPort
 
-            widget = QCustomWavemeterChannel(chan, hint, stretched, displayPID)
+            widget = QCustomWavemeterChannel(wmChannel, dacPort, hint, stretched, displayPID)
             import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8/(float(hint)*1e3))
@@ -141,21 +144,32 @@ class wavemeterclient(QtGui.QWidget):
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
 
-            widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), port = wmChannel : self.expChanged(exp, wmChannel))
+            widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), wmChannel = wmChannel : self.expChanged(exp, wmChannel))
             initvalue = yield self.server.get_exposure(wmChannel)
-            print initvalue
             widget.spinExp.setValue(initvalue)
             initmeas = yield self.server.get_switcher_signal_state(wmChannel)
             initmeas = initmeas
             widget.measSwitch.setChecked(bool(initmeas))
-            widget.measSwitch.toggled.connect(lambda state = widget.measSwitch.isDown(), port = wmChannel  : self.changeState(state, wmChannel))
-            widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), port = wmChannel : self.freqChanged(freq, wmChannel))
+            widget.measSwitch.toggled.connect(lambda state = widget.measSwitch.isDown(), wmChannel = wmChannel  : self.changeState(state, wmChannel))
+            widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), wmChannel = wmChannel : self.freqChanged(freq, wmChannel))
+            initLock = yield self.server.get_channel_lock(dacPort, wmChannel)
+            widget.lockChannel.setChecked(bool(initLock))
+            widget.lockChannel.toggled.connect(lambda state = widget.lockChannel.isDown(), wmChannel = wmChannel  : self.lockSingleChannel(state, wmChannel))
+            widget.setPID.toggled.connect(lambda state = widget.lockChannel.isDown(), dacPort = dacPort  : self.InitializePIDGUI(dacPort))
 
             self.d[wmChannel] = widget
-            self.dacPorts[wmChannel] = dacPort
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
 
         self.setLayout(layout)
+
+
+    @inlineCallbacks
+    def InitializePIDGUI(self,dacPort):
+        print "clicked"
+        .pid = QCustomPID(dacPort)
+        pInit = yield self.server.get_pid_p(dacPort)
+        pid.spinP.setValue(pInit)
+        pid.show()
 
     @inlineCallbacks
     def expChanged(self, exp, chan):
@@ -179,10 +193,11 @@ class wavemeterclient(QtGui.QWidget):
                 self.d[chan].currentfrequency.setText(str(freq)[0:10])
 
     def updatePIDvoltage(self, c, signal):
-        chan = signal[0]
+        dacPort = signal[0]
         value = signal[1]
-        if chan in self.d:
-            self.d[chan].PIDvoltage.setText('DAC Voltage (mV)\n'+"{:.1f}".format(value))
+        for chan in self.dacPorts:
+            if self.dacPorts[chan] == dacPort:
+                self.d[chan].PIDvoltage.setText('DAC Voltage (mV)\n'+"{:.1f}".format(value))
 
     def toggleMeas(self, c, signal):
         chan = signal[0]
@@ -193,6 +208,12 @@ class wavemeterclient(QtGui.QWidget):
     def toggleLock(self, c, signal):
         self.lockSwitch.setChecked(signal)
 
+    def toggleChannelLock(self, c, signal):
+        wmChannel = signal[1]
+        state = signal[2]
+        if wmChannel in self.d:
+            self.d[wmChannel].lockChannel.setChecked(bool(state))
+
     def updateexp(self,c, signal):
         chan = signal[0]
         value = signal[1]
@@ -202,7 +223,7 @@ class wavemeterclient(QtGui.QWidget):
     def updateWLMOutput(self, c, signal):
         self.startSwitch.setChecked(signal)
 
-    def updateDACAmplitude(self, c, signal):
+    def updateAmplitude(self, c, signal):
         wmChannel = signal[0]
         value = signal[1]
         if wmChannel in self.d:
@@ -213,8 +234,17 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.set_switcher_signal_state(chan, state)
 
     @inlineCallbacks
-    def freqChanged(self,freq, port):
-        yield self.server.set_pid_course(port, freq)
+    def lockSingleChannel(self, state, wmChannel):
+        dacPort = self.dacPorts[wmChannel]
+        if dacPort == 0:
+            self.d[wmChannel].lockChannel.setChecked(bool(dacPort))
+        else:
+            yield self.server.set_channel_lock(dacPort, wmChannel, state)
+
+    @inlineCallbacks
+    def freqChanged(self,freq, wmChannel):
+        dacPort = self.dacPorts[wmChannel]
+        yield self.server.set_pid_course(dacPort, freq)
 
     @inlineCallbacks
     def setLock(self, state):
@@ -225,8 +255,9 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.set_wlm_output(state)
 
     @inlineCallbacks
-    def getPIDCourse(self, chan, hint):
-        course = yield self.server.get_pid_course(chan)
+    def getPIDCourse(self, wmChannel, hint):
+        dacPort = self.dacPorts[wmChannel]
+        course = yield self.server.get_pid_course(dacPort)
         try:
             course = float(course)
         except:
