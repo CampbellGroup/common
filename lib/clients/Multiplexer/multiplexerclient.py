@@ -188,13 +188,13 @@ class wavemeterclient(QtGui.QWidget):
         self.pid.spinExp.setValue(sensInit[1])
         self.pid.polarityBox.setCurrentIndex(self.index[polInit])
 
-        self.pid.spinP.valueChaned.connect(lambda p = self.pid.spinP.value(), dacPort = dacPort : self.changeP(p, dacPort))
-        self.pid.spinI.valueChaned.connect(lambda i = self.pid.spinI.value(), dacPort = dacPort : self.changeI(i, dacPort))
-        self.pid.spinD.valueChaned.connect(lambda d = self.pid.spinD.value(), dacPort = dacPort : self.changeP(d, dacPort))
-        self.pid.spinDt.valueChaned.connect(lambda dt = self.pid.spinDt.value(), dacPort = dacPort : self.changeDt(dt, dacPort))
-        self.pid.useDTBox.stateChaned.connect(lambda state = self.pid.useDTBox.isChecked(), dacPort = dacPort : self.constDt(state, dacPort))
-        self.pid.spinFactor.valueChaned.connect(lambda factor = self.pid.spinFactor.value(), dacPort = dacPort : self.changeFactor(factor, dacPort))
-        self.pid.spinExp.valueChaned.connect(lambda exponent = self.pid.spinExp.value(), dacPort = dacPort : self.changeExponent(exponent, dacPort))
+        self.pid.spinP.valueChanged.connect(lambda p = self.pid.spinP.value(), dacPort = dacPort : self.changeP(p, dacPort))
+        self.pid.spinI.valueChanged.connect(lambda i = self.pid.spinI.value(), dacPort = dacPort : self.changeI(i, dacPort))
+        self.pid.spinD.valueChanged.connect(lambda d = self.pid.spinD.value(), dacPort = dacPort : self.changeD(d, dacPort))
+        self.pid.spinDt.valueChanged.connect(lambda dt = self.pid.spinDt.value(), dacPort = dacPort : self.changeDt(dt, dacPort))
+        self.pid.useDTBox.stateChanged.connect(lambda state = self.pid.useDTBox.isChecked(), dacPort = dacPort : self.constDt(state, dacPort))
+        self.pid.spinFactor.valueChanged.connect(lambda factor = self.pid.spinFactor.value(), dacPort = dacPort : self.changeFactor(factor, dacPort))
+        self.pid.spinExp.valueChanged.connect(lambda exponent = self.pid.spinExp.value(), dacPort = dacPort : self.changeExponent(exponent, dacPort))
         self.pid.polarityBox.currentIndexChanged.connect(lambda index = self.pid.polarityBox.currentIndex(), dacPort = dacPort : self.changePolarity(index, dacPort))
 
         self.pid.show()
@@ -310,15 +310,18 @@ class wavemeterclient(QtGui.QWidget):
 
     @inlineCallbacks
     def constDt(self, state, dacPort):
-        yield self.server.set_const_dt(dacPort,state)
+        if state == 0:
+            yield self.server.set_const_dt(dacPort,False)
+        else:
+            yield self.server.set_const_dt(dacPort,True)
 
     @inlineCallbacks
     def changeFactor(self, factor, dacPort):
-        yield self.server.set_pid_sensitivity(dacPort, factor,  self.pid.spinExp.value())
+        yield self.server.set_pid_sensitivity(dacPort, factor,  int(self.pid.spinExp.value()))
 
     @inlineCallbacks
     def changeExponent(self, exponent, dacPort):
-        yield self.server.set_pid_sensitivity(dacPort, self.pid.spinFactor.value(), exponent)
+        yield self.server.set_pid_sensitivity(dacPort, self.pid.spinFactor.value(), int(exponent))
 
     @inlineCallbacks
     def changePolarity(self, index, dacPort):
