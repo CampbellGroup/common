@@ -33,7 +33,10 @@ AMPCHANGED = 142308
 
 class MultiplexerServer(LabradServer):
     """
-    Multiplexer Server for Wavelength Meter
+    Multiplexer server for WS-U wavelength meter.
+
+    A DLL is required to run this server.  See initServer for the path location
+    for the library.
     """
     name = 'Multiplexerserver'
 
@@ -60,9 +63,26 @@ class MultiplexerServer(LabradServer):
         self.l = ctypes.c_long(0)
         self.b = ctypes.c_bool(0)
 
-        # Each variable that can be changed (P,I,D,etc..) in the
-        # SetPIDSettings function is assigned a constant which must be
-        # passed to the function when calling. Below is the map.
+        self.set_pid_variables()
+
+        # Getting the amplitude in the GetAmplitudeNum function can
+        # return the max, min, and average of the interference pattern
+        self.AmplitudeMin = ctypes.c_long(0)
+        self.AmplitudeMax = ctypes.c_long(2)
+        self.AmplitudeAvg = ctypes.c_long(4)
+
+        self.set_dll_variables()
+
+        self.measureChan()
+
+        self.listeners = set()
+
+    def set_pid_variables(self):
+        """
+        Each variable that can be changed (P,I,D,etc..) in the
+        SetPIDSettings function is assigned a constant which must be
+        passed to the function when calling. Below is the map.
+        """
         self.PID_P = ctypes.c_long(1034)
         self.PID_I = ctypes.c_long(1035)
         self.PID_D = ctypes.c_long(1036)
@@ -75,13 +95,10 @@ class MultiplexerServer(LabradServer):
         self.DeviationChannel = ctypes.c_long(1063)
         self.UseFrequencyUnits = ctypes.c_long(2)
 
-        # Getting the amplitude in the GetAmplitudeNum function can
-        # return the max, min, and average of the interference pattern
-        self.AmplitudeMin = ctypes.c_long(0)
-        self.AmplitudeMax = ctypes.c_long(2)
-        self.AmplitudeAvg = ctypes.c_long(4)
-
-        # allocates c_types for dll functions
+    def set_dll_variables(self):
+        """
+        Allocate c_types for dll functions.
+        """
         self.wmdll.GetActiveChannel.restype = ctypes.c_long
         self.wmdll.GetAmplitudeNum.restype = ctypes.c_long
         self.wmdll.GetDeviationMode.restype = ctypes.c_bool
@@ -102,10 +119,6 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetSwitcherMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignal.restype = ctypes.c_long
         self.wmdll.SetPIDSetting.restype = ctypes.c_long
-
-        self.measureChan()
-
-        self.listeners = set()
 
     def initContext(self, c):
         """Initialize a new context object."""
