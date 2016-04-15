@@ -210,7 +210,7 @@ class MultiplexerServer(LabradServer):
     # Set functions
 
     @setting(10, "set_exposure_time", chan='i', ms='i')
-    def setExposureTime(self, c, chan, ms):
+    def set_exposure_time(self, c, chan, ms):
         notified = self.getOtherListeners(c)
         ms_c = ctypes.c_long(ms)
         chan_c = ctypes.c_long(chan)
@@ -218,7 +218,7 @@ class MultiplexerServer(LabradServer):
         self.updateexp((chan, ms), notified)
 
     @setting(11, "set_lock_state", state='b')
-    def setLockState(self, c, state):
+    def set_lock_state(self, c, state):
         """ Turns on PID regulation for all channels. Must be on
         for individual channel locking to work."""
         notified = self.getOtherListeners(c)
@@ -227,14 +227,14 @@ class MultiplexerServer(LabradServer):
         self.lockchanged(state, notified)
 
     @setting(12, "set_switcher_mode", mode='b')
-    def setSwitcherMode(self, c, mode):
+    def set_switcher_mode(self, c, mode):
         """ Allows measuring of multiple channels with multiplexer.
         Should always be set to on."""
         mode_c = ctypes.c_long(mode)
         yield self.wmdll.SetSwitcherMode(mode_c)
 
     @setting(13, "set_switcher_signal_state", chan='i', state='b')
-    def setSwitcherState(self, c, chan, state):
+    def set_switcher_signal_state(self, c, chan, state):
         """ Turns on and off individual channel measurement"""
         notified = self.getOtherListeners(c)
         chan_c = ctypes.c_long(chan)
@@ -245,14 +245,14 @@ class MultiplexerServer(LabradServer):
         self.measuredchanged((chan, state), notified)
 
     @setting(14, "set_pid_course", dacPort='w', course='v')
-    def setPIDCourse(self, c, dacPort, course):
+    def set_pid_course(self, c, dacPort, course):
         """Set reference frequency in THz for the PID control"""
         chan_c = ctypes.c_long(dacPort)
         course_c = ctypes.c_char_p('=' + str(course))
         yield self.wmdll.SetPIDCourseNum(chan_c, course_c)
 
     @setting(15, "set_dac_voltage", dacPort='i', value='v')
-    def setDACVoltage(self, c, dacPort, value):
+    def set_dac_voltage(self, c, dacPort, value):
         """Sets voltage of specified DAC channel in V. Can only be used
         when all PID control is off: set_lock_state = 0"""
         chan_c = ctypes.c_long(dacPort)
@@ -262,7 +262,7 @@ class MultiplexerServer(LabradServer):
         yield self.wmdll.SetDeviationSignalNum(chan_c, value_c)
 
     @setting(16, "set_wlm_output", output='b')
-    def setWLMOutput(self, c, output):
+    def set_wlm_output(self, c, output):
         """Start or stops wavemeter
         """
         notified = self.getOtherListeners(c)
@@ -374,7 +374,7 @@ class MultiplexerServer(LabradServer):
     # Get Functions
 
     @setting(20, "get_amplitude", chan='w', returns='v')
-    def getAmp(self, c, chan):
+    def get_amplitude(self, c, chan):
         chan_c = ctypes.c_long(chan)
         amp = yield self.wmdll.GetAmplitudeNum(chan_c, self.AmplitudeMax,
                                                self.l)
@@ -383,30 +383,30 @@ class MultiplexerServer(LabradServer):
         returnValue(amp)
 
     @setting(21, "get_exposure", chan='i', returns='i')
-    def getExp(self, c, chan):
+    def get_exposure(self, c, chan):
         chan_c = ctypes.c_long(chan)
         exp = yield self.wmdll.GetExposureNum(chan_c, 1, self.l)
         returnValue(exp)
 
     @setting(22, "get_frequency", chan='i', returns='v')
-    def getFrequency(self, c, chan):
+    def get_frequency(self, c, chan):
         chan_c = ctypes.c_long(chan)
         freq = yield self.wmdll.GetFrequencyNum(chan_c, self.d)
         self.freqchanged((chan, freq))
         returnValue(freq)
 
     @setting(23, "get_lock_state", returns='b')
-    def getLockState(self, c):
+    def get_lock_state(self, c):
         state = yield self.wmdll.GetDeviationMode(0)
         returnValue(state)
 
     @setting(24, "get_switcher_mode", returns='b')
-    def getSwitcherMode(self, c):
+    def get_switcher_mode(self, c):
         state = yield self.wmdll.GetSwitcherMode(0)
         returnValue(bool(state))
 
     @setting(25, "get_output_voltage", dacPort='w', returns='v')
-    def getOutputVoltage(self, c, dacPort):
+    def get_output_voltage(self, c, dacPort):
         """Gets the output voltage (mV) of the specified DAC channel"""
         chan_c = ctypes.c_long(dacPort)
         volts = yield self.wmdll.GetDeviationSignalNum(chan_c, self.d)
@@ -414,7 +414,7 @@ class MultiplexerServer(LabradServer):
         returnValue(volts)
 
     @setting(26, "get_switcher_signal_state", chan='i', returns='b')
-    def getSwitcherState(self, c, chan):
+    def get_switcher_signal_state(self, c, chan):
         chan_c = ctypes.c_long(chan)
         use_c = ctypes.c_long(0)
         show_c = ctypes.c_long(0)
@@ -425,7 +425,7 @@ class MultiplexerServer(LabradServer):
         returnValue(use)
 
     @setting(27, "get_pid_course", dacPort='w', returns='s')
-    def getPIDCourse(self, c, dacPort):
+    def get_pid_course(self, c, dacPort):
         chan_c = ctypes.c_long(dacPort)
         course_c = ctypes.create_string_buffer(1024)
         yield self.wmdll.GetPIDCourseNum(chan_c, ctypes.pointer(course_c))
@@ -433,7 +433,7 @@ class MultiplexerServer(LabradServer):
         returnValue(value)
 
     @setting(28, "get_wlm_output", returns='b')
-    def getWLMOutput(self, c):
+    def get_wlm_output(self, c):
         value = yield self.wmdll.GetOperationState(ctypes.c_short(0))
         if value == 2:
             value = True
@@ -443,7 +443,7 @@ class MultiplexerServer(LabradServer):
 
     @setting(29, "get_channel_lock", dacPort='w', waveMeterChannel='w',
              returns='?')
-    def getSingleLockState(self, c, dacPort, waveMeterChannel):
+    def get_channel_lock(self, c, dacPort, waveMeterChannel):
         """ Checks if the wm channel is assigned to the DAC port, equivalent to
         that wm channel being locked. 0 means no channel assigned which is
         equivalent to unlocked."""
@@ -459,7 +459,7 @@ class MultiplexerServer(LabradServer):
             returnValue(0)
 
     @setting(31, "get_total_channels", returns='w')
-    def getChannelCount(self, c):
+    def get_total_channels(self, c):
         count = yield self.wmdll.GetChannelsCount(ctypes.c_long(0))
         returnValue(count)
 
@@ -546,14 +546,14 @@ class MultiplexerServer(LabradServer):
         reactor.callLater(0.1, self.measureChan)
         count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
         for chan in range(count):
-            if self.getSwitcherState(self, chan + 1):
-                self.getFrequency(self, chan + 1)
-                self.getOutputVoltage(self, chan + 1)
-                self.getAmp(self, chan + 1)
-#                if self.getSingleLockState(self, chan + 1):
+            if self.get_switcher_signal_state(self, chan + 1):
+                self.get_frequency(self, chan + 1)
+                self.get_output_voltage(self, chan + 1)
+                self.get_amplitude(self, chan + 1)
+#                if self.get_channel_lock(self, chan + 1):
 #                    value = self.calcPID(chan)
 #                    print value
-#                    self.setDACVoltage(chan + 1, value)
+#                    self.set_dac_voltage(chan + 1, value)
 
 
 if __name__ == "__main__":
