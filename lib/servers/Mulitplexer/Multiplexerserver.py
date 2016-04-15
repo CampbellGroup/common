@@ -1,8 +1,3 @@
-from labrad.server import LabradServer, setting, Signal
-from twisted.internet.defer import returnValue
-import ctypes
-from twisted.internet import reactor
-
 """
 ### BEGIN NODE INFO
 [info]
@@ -20,6 +15,11 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+
+from labrad.server import LabradServer, setting, Signal
+from twisted.internet.defer import returnValue
+import ctypes
+from twisted.internet import reactor
 
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
