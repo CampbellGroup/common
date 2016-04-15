@@ -1,8 +1,6 @@
 from labrad.server import LabradServer, setting, Signal
-from twisted.internet.defer import returnValue, inlineCallbacks
-from twisted.internet.threads import deferToThread
+from twisted.internet.defer import returnValue
 import ctypes
-from labrad.units import WithUnit
 from twisted.internet import reactor
 
 """
