@@ -4,33 +4,33 @@ from PyQt4 import QtGui, QtCore
 class StretchedLabel(QtGui.QLabel):
     def __init__(self, *args, **kwargs):
         QtGui.QLabel.__init__(self, *args, **kwargs)
-        self.setMinimumSize(400, 150)
+        self.setMinimumSize(QtCore.QSize(350, 100))
 #        self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
-#        self.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=50))
-
+#        self.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=30))
 
     def resizeEvent(self, evt):
-               
+
         font = self.font()
         font.setPixelSize(self.width() * 0.14 - 14 )
         self.setFont(font)
 
 class TextChangingButton(QtGui.QPushButton):
-    """Button that changes its text to ON or OFF and colors when it's pressed""" 
+    """Button that changes its text to ON or OFF and colors when it's pressed"""
     def __init__(self, addtext = None, parent = None):
         super(TextChangingButton, self).__init__(parent)
         self.setCheckable(True)
         self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setMaximumHeight(30)
         #connect signal for appearance changing
         self.addtext = addtext
-        if self.addtext == None: 
+        if self.addtext == None:
             self.addtext = ''
         else:
             self.addtext = self.addtext + '   '
         self.toggled.connect(self.setAppearance)
         self.setAppearance(self.isDown())
-    
+
     def setAppearance(self, down, addtext = None):
         if down:
             self.setText(self.addtext + 'On')
@@ -42,32 +42,44 @@ class TextChangingButton(QtGui.QPushButton):
         return QtCore.QSize(37, 26)
 
 class QCustomWavemeterChannel(QtGui.QFrame):
-    def __init__(self, title, frequency, stretchedlabel, displayPIDvoltage = None, parent=None):
+    def __init__(self, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage = None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
-        self.makeLayout(title, frequency, stretchedlabel, displayPIDvoltage)
-    
-    def makeLayout(self, title, frequency, stretchedlabel, displayPIDvoltage):
+        self.makeLayout(wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage)
+
+    def makeLayout(self, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage):
         layout = QtGui.QGridLayout()
-        title = QtGui.QLabel(title)           
-        title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
-        title.setAlignment(QtCore.Qt.AlignCenter)
+        wmLabel = QtGui.QLabel("Channel " + str(wmChannel))
+        wmLabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        wmLabel.setAlignment(QtCore.Qt.AlignCenter)
+        DACLabel = QtGui.QLabel("DAC Port " + str(DACPort))
+        DACLabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        #DACLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.PIDvoltage = QtGui.QLabel('0')
+        self.PIDvoltage.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=20))
+        self.interfAmp = QtGui.QLabel('Interferometer Amp\n' +'0')
+        self.interfAmp.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=20))
         if displayPIDvoltage == True:
-            layout.addWidget(self.PIDvoltage,2,2,1,1)
+            layout.addWidget(self.PIDvoltage,4,2,1,1)
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
             self.currentfrequency = QtGui.QLabel(frequency)
-        self.currentfrequency.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=50))
+        self.currentfrequency.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=40))
         self.currentfrequency.setAlignment(QtCore.Qt.AlignCenter)
 #        self.currentfrequency.setSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Maximum)
         frequencylabel = QtGui.QLabel('Set Frequency')
+        frequencylabel.setAlignment(QtCore.Qt.AlignBottom)
+        frequencylabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
         exposurelabel = QtGui.QLabel('Set Exposure (ms)')
-        layout.addWidget(title, 0,0,1,3)
-        layout.addWidget(self.currentfrequency,1, 0, 1, 3)
-        layout.addWidget(frequencylabel,2, 0, 1, 1)
-        layout.addWidget(exposurelabel,2, 1, 1, 1)
+        exposurelabel.setAlignment(QtCore.Qt.AlignBottom)
+        exposurelabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
+        layout.addWidget(wmLabel, 0,1,1,1)
+        layout.addWidget(DACLabel,0,0,1,1)
+        layout.addWidget(self.currentfrequency,1, 0, 3, 2)
+        layout.addWidget(frequencylabel,3, 0, 1, 1)
+        layout.addWidget(exposurelabel,3, 1, 1, 1)
+        layout.addWidget(self.interfAmp,3,2,1,1)
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
         self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
@@ -81,23 +93,30 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setSingleStep(1)
         self.spinExp.setRange(0, 2000.0)
         self.spinExp.setKeyboardTracking(False)
-        layout.addWidget(self.spinFreq,     3, 0)
-        layout.addWidget(self.spinExp,    3, 1)
+        layout.addWidget(self.spinFreq,     4, 0)
+        layout.addWidget(self.spinExp,    4, 1)
         self.measSwitch = TextChangingButton('WLM Measure')
-        layout.addWidget(self.measSwitch, 3, 2)
+        layout.addWidget(self.measSwitch, 0, 2)
+        self.lockChannel = TextChangingButton('Lock Channel')
+        self.setPID = QtGui.QPushButton('Set PID')
+        self.setPID.setMaximumHeight(30)
+        self.setPID.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
+        layout.addWidget(self.lockChannel,1,2,1,1)
+        layout.addWidget(self.setPID,2,2,1,1)
+
         layout.minimumSize()
-            
+
         self.setLayout(layout)
-    
+
     def setExpRange(self, exprange):
         self.spinExp.setRange(exprange)
-    
+
     def setFreqRange(self, freqrange):
         self.spinFreq.setRange(freqrange)
-        
+
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
-    icon = QCustomWavemeterChannel('369','Under Exposed', True, True)
+    icon = QCustomWavemeterChannel(1, 4, 'Under Exposed', False, True)
     icon.show()
     app.exec_()
