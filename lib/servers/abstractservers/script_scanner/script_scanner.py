@@ -18,7 +18,7 @@ timeout = 20
 from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
-from signals import Signals
+from script_signals_server import ScriptSignalsServer
 try:
     from config.scriptscanner_config import config
 except:
@@ -49,7 +49,7 @@ class script_class_parameters(object):
         self.parameters = parameters
 
 
-class ScriptScanner(Signals):
+class ScriptScanner(ScriptSignalsServer):
 
     name = 'ScriptScanner'
 
@@ -59,7 +59,7 @@ class ScriptScanner(Signals):
         # script_class_parameters instances are the values.
         self.script_parameters = {}
         # Instance of a complicated object
-        self.scheduler = scheduler(Signals)
+        self.scheduler = scheduler(ScriptSignalsServer)
         self.load_scripts()
 
     def load_scripts(self):
