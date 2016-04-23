@@ -119,8 +119,8 @@ class wavemeterclient(QtGui.QWidget):
         self.lockSwitch.toggled.connect(self.setLock)
         self.startSwitch.toggled.connect(self.setOutput)
 
-        subLayout.addWidget(self.lockSwitch, 0, 3)
-        subLayout.addWidget(self.startSwitch, 0, 1)
+        subLayout.addWidget(self.lockSwitch, 0, 2)
+        subLayout.addWidget(self.startSwitch, 0, 0)
 
         for chan in self.chaninfo:
             wmChannel = self.chaninfo[chan][0]
@@ -130,7 +130,7 @@ class wavemeterclient(QtGui.QWidget):
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
 
-            widget = QCustomWavemeterChannel(wmChannel, dacPort, hint, stretched, displayPID)
+            widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPID)
             import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8/(float(hint)*1e3))
@@ -225,6 +225,7 @@ class wavemeterclient(QtGui.QWidget):
         value = signal[1]
         if dacPort in self.wmChannels:
             self.d[self.wmChannels[dacPort]].PIDvoltage.setText('DAC Voltage (mV)\n'+"{:.1f}".format(value))
+            self.d[self.wmChannels[dacPort]].PIDindicator.update_slider(value/1000.0)
 
     def toggleMeas(self, c, signal):
         chan = signal[0]
@@ -254,8 +255,9 @@ class wavemeterclient(QtGui.QWidget):
         wmChannel = signal[0]
         value = signal[1]
         if wmChannel in self.d:
-            self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
-
+            #self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
+            self.d[wmChannel].powermeter.setValue(int(value/40.0))#('Interferometer Amp\n' + str(value))
+    
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
 
