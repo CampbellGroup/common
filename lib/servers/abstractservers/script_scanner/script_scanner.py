@@ -15,7 +15,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 '''
-from labrad.server import LabradServer, setting
+from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
 from signals import Signals
@@ -51,7 +51,7 @@ class script_class_parameters(object):
         self.parameters = parameters
 
 
-class ScriptScanner(LabradServer, Signals):
+class ScriptScanner(Signals):
 
     name = 'ScriptScanner'
 
