@@ -224,7 +224,7 @@ class wavemeterclient(QtGui.QWidget):
         dacPort = signal[0]
         value = signal[1]
         if dacPort in self.wmChannels:
-            self.d[self.wmChannels[dacPort]].PIDvoltage.setText('DAC Voltage (mV)\n'+"{:.1f}".format(value))
+            self.d[self.wmChannels[dacPort]].PIDvoltage.setText('DAC Voltage (mV)  '+"{:.1f}".format(value))
             self.d[self.wmChannels[dacPort]].PIDindicator.update_slider(value/1000.0)
 
     def toggleMeas(self, c, signal):

@@ -63,8 +63,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         configLabel.setAlignment(QtCore.Qt.AlignCenter)
         
 
-        self.PIDvoltage = QtGui.QLabel('DAC Voltage (mV)\n -.-')
-        self.PIDvoltage.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=20))
+        self.PIDvoltage = QtGui.QLabel('DAC Voltage (mV)  -.-')
+        self.PIDvoltage.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=12))
         
         self.PIDindicator = SlideIndicator([-5.0,5.0])
         
@@ -74,8 +74,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.powermeter.setMeterBorder("orange")
         
         if displayPIDvoltage == True:
-            layout.addWidget(self.PIDvoltage,   4,2,1,1)
-            layout.addWidget(self.PIDindicator, 6,2,1,1)
+            layout.addWidget(self.PIDvoltage,   5,2,1,1)
+            layout.addWidget(self.PIDindicator, 4,2,1,1)
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
