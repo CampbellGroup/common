@@ -88,7 +88,7 @@ class ScriptScanner(Signals):
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
 
-    @setting(0, "Get_available_scripts", returns='*s')
+    @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
         return self.script_parameters.keys()
 
