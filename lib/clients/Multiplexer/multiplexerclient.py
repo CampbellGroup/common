@@ -142,7 +142,7 @@ class wavemeterclient(QtGui.QWidget):
                 initcourse = yield self.getPIDCourse(dacPort, hint)
                 widget.spinFreq.setValue(initcourse)
                 widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), dacPort = dacPort : self.freqChanged(freq, dacPort))
-                widget.setPID.clicked.connect(lambda state = widget.setPID.isDown(), dacPort = dacPort  : self.InitializePIDGUI(dacPort))
+                widget.setPID.clicked.connect(lambda state = widget.setPID.isDown(), chan = chan, dacPort = dacPort  : self.InitializePIDGUI(dacPort, chan))
                 initLock = yield self.server.get_channel_lock(dacPort, wmChannel)
                 widget.lockChannel.setChecked(bool(initLock))
                 widget.lockChannel.toggled.connect(lambda state = widget.lockChannel.isDown(), dacPort = dacPort  : self.lockSingleChannel(state, dacPort))
@@ -166,8 +166,9 @@ class wavemeterclient(QtGui.QWidget):
 
 
     @inlineCallbacks
-    def InitializePIDGUI(self,dacPort):
+    def InitializePIDGUI(self,dacPort,chan):
         self.pid = QCustomPID(dacPort)
+        self.pid.setWindowTitle(chan + ' PID settings')
         self.index = {1:0,-1:1}
 
         pInit = yield self.server.get_pid_p(dacPort)
