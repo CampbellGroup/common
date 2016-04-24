@@ -449,8 +449,12 @@ class MultiplexerServer(LabradServer):
         system time, which changes when changing wm settings."""
         port_c = ctypes.c_long(dacPort)
         dt = ctypes.c_long()
+        if self.WavemeterVersion == 1312:
+            dummyarg = self.l
+        else:
+            dummyarg = self.d
         yield self.wmdll.GetPIDSetting(self.PIDConstdt, port_c,
-                                       ctypes.pointer(dt), self.d)
+                                       ctypes.pointer(dt), dummyarg)
 
         returnValue(dt.value)
 
