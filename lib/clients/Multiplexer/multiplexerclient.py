@@ -169,6 +169,7 @@ class wavemeterclient(QtGui.QWidget):
     def InitializePIDGUI(self,dacPort,chan):
         self.pid = QCustomPID(dacPort)
         self.pid.setWindowTitle(chan + ' PID settings')
+        self.pid.move(self.pos())
         self.index = {1:0,-1:1}
 
         pInit = yield self.server.get_pid_p(dacPort)
@@ -257,7 +258,7 @@ class wavemeterclient(QtGui.QWidget):
         value = signal[1]
         if wmChannel in self.d:
             #self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
-            self.d[wmChannel].powermeter.setValue(int(value/40.0))#('Interferometer Amp\n' + str(value))
+            self.d[wmChannel].powermeter.setValue(value)#('Interferometer Amp\n' + str(value))
     
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
