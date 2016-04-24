@@ -449,10 +449,12 @@ class MultiplexerServer(LabradServer):
         system time, which changes when changing wm settings."""
         port_c = ctypes.c_long(dacPort)
         dt = ctypes.c_long()
+        
         if self.WavemeterVersion == 1312:
             dummyarg = self.l
         else:
             dummyarg = self.d
+            
         yield self.wmdll.GetPIDSetting(self.PIDConstdt, port_c,
                                        ctypes.pointer(dt), dummyarg)
 
@@ -465,9 +467,15 @@ class MultiplexerServer(LabradServer):
         port_c = ctypes.c_long(dacPort)
         sFactor = ctypes.c_double()
         sExponent = ctypes.c_long()
+        
+        if self.WavemeterVersion == 1312:
+            dummyarg = self.l
+        else:
+            dummyarg = self.d
+            
         yield self.wmdll.GetPIDSetting(self.DeviationSensitivityDimension,
                                        port_c, ctypes.pointer(sExponent),
-                                       self.d)
+                                       dummyarg)
 
         yield self.wmdll.GetPIDSetting(self.DeviationSensitivityFactor, port_c,
                                        self.l, ctypes.pointer(sFactor))
@@ -479,8 +487,14 @@ class MultiplexerServer(LabradServer):
         """Gets the polarity for a given DAC port. Allowed values are +/- 1."""
         port_c = ctypes.c_long(dacPort)
         polarity = ctypes.c_long()
+        
+        if self.WavemeterVersion == 1312:
+            dummyarg = self.l
+        else:
+            dummyarg = self.d
+            
         yield self.wmdll.GetPIDSetting(self.DeviationPolarity, port_c,
-                                       ctypes.pointer(polarity), self.d)
+                                       ctypes.pointer(polarity), dummyarg)
 
         returnValue(polarity.value)
 
