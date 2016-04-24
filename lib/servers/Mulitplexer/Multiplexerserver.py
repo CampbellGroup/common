@@ -294,6 +294,8 @@ class MultiplexerServer(LabradServer):
         course_c = ctypes.create_string_buffer(1024)
         yield self.wmdll.GetPIDCourseNum(port_c, ctypes.pointer(course_c))
         course = float(course_c.value)
+        if self.WavemeterVersion == 1312:
+            returnValue("Version of WLM does not support individual locking")
         if course <= 0:
             returnValue("Set PID Course to a valid number")
         else:
