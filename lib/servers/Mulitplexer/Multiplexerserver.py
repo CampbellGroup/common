@@ -384,6 +384,8 @@ class MultiplexerServer(LabradServer):
         """ Checks if the wm channel is assigned to the DAC port, equivalent to
         that wm channel being locked. 0 means no channel assigned which is
         equivalent to unlocked."""
+        if self.WavemeterVersion == 1312:
+            returnValue(0)
         port_c = ctypes.c_long(dacPort)
         wmChannel = ctypes.c_long()
         yield self.wmdll.GetPIDSetting(self.DeviationChannel, port_c,
