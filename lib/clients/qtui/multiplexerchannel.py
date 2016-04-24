@@ -66,7 +66,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.PIDvoltage = QtGui.QLabel('DAC Voltage (mV)  -.-')
         self.PIDvoltage.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=12))
         
-        self.PIDindicator = SlideIndicator([-5.0,5.0])
+        self.PIDindicator = SlideIndicator([-10.0,10.0])
         
         self.powermeter = MQProgressBar()
         self.powermeter.setOrientation(QtCore.Qt.Vertical)
