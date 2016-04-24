@@ -129,8 +129,14 @@ class wavemeterclient(QtGui.QWidget):
             stretched = self.chaninfo[chan][3]
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
-
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPID)
+            
+            try: 
+                rails = self.chaninfo[chan][6]
+                widget.PIDindicator.set_rails(rails)
+            except:
+                rails = [-10.0,10.0]
+                widget.PIDindicator.set_rails(rails)
             import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8/(float(hint)*1e3))
