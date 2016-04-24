@@ -72,7 +72,8 @@ class MultiplexerServer(LabradServer):
         self.AmplitudeAvg = ctypes.c_long(4)
 
         self.set_dll_variables()
-
+        self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
+        
         self.measureChan()
 
         self.listeners = set()
@@ -110,6 +111,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.GetSwitcherSignalStates.restype = ctypes.c_long
         self.wmdll.GetChannelsCount.restype = ctypes.c_long
         self.wmdll.GetPIDSetting.restype = ctypes.c_long
+        self.wmdll.GetWLMVersion.restype = ctypes.c_long
 
         self.wmdll.SetDeviationMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignalNum.restype = ctypes.c_double
@@ -118,7 +120,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetSwitcherSignalStates.restype = ctypes.c_long
         self.wmdll.SetSwitcherMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignal.restype = ctypes.c_long
-        self.wmdll.SetPIDSetting.restype = ctypes.c_long
+        self.wmdll.SetPIDSetting.restype = ctypes.c_long      
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -485,10 +487,6 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-#                if self.get_channel_lock(self, chan + 1):
-#                    value = self.calcPID(chan)
-#                    print value
-#                    self.set_dac_voltage(chan + 1, value)
 
 
 if __name__ == "__main__":
