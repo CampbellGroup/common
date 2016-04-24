@@ -74,8 +74,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.powermeter.setMeterBorder("orange")
         
         if displayPIDvoltage == True:
-            layout.addWidget(self.PIDvoltage,   5,2,1,1)
-            layout.addWidget(self.PIDindicator, 4,2,1,1)
+            layout.addWidget(self.PIDvoltage,   6,2,1,1)
+            layout.addWidget(self.PIDindicator, 5,2,1,1)
         if stretchedlabel == True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
@@ -120,11 +120,11 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(self.spinFreq,         6, 0)
         layout.addWidget(self.spinExp,          6, 1)
         layout.addWidget(self.measSwitch,       0, 2)
-        layout.addWidget(self.lockChannel,      0,2,1,1)
-        layout.addWidget(self.setPID,           1,2,1,1)
+        layout.addWidget(self.lockChannel,      1,2,1,1)
+        layout.addWidget(self.setPID,           2,2,1,1)
         layout.addWidget(chanName,              0,0,1,2)
-        layout.addWidget(configtitle,           2,2,1,1)        
-        layout.addWidget(configLabel,           3,2,1,1)
+        layout.addWidget(configtitle,           3,2,1,1)        
+        layout.addWidget(configLabel,           4,2,1,1)
         layout.addWidget(self.currentfrequency, 1, 0, 4, 2)
         layout.addWidget(frequencylabel,        5, 0, 1, 1)
         layout.addWidget(exposurelabel,         5, 1, 1, 1)
