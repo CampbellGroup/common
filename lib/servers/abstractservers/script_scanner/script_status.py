@@ -1,5 +1,5 @@
 from twisted.internet.defer import inlineCallbacks, DeferredLock, Deferred
-from signals import Signals
+
 
 class script_semaphore(object):
     '''class for storing information about runtime behavior script'''
@@ -13,19 +13,19 @@ class script_semaphore(object):
         self.should_stop = False
         self.ident = ident
         self.signals = signals
-        
+
     def get_progress(self):
         return (self.status, self.percentage_complete)
-    
+
     def set_percentage(self, perc):
         if not 0.0 <= perc <= 100.0: raise Exception ("Incorrect Percentage of Completion")
         self.percentage_complete = perc
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
-    
+
     def launch_confirmed(self):
         self.status = 'Running'
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
-        
+
     @inlineCallbacks
     def pause(self):
         '''
@@ -60,7 +60,7 @@ class script_semaphore(object):
         #if was paused, unpause:
         if self.pause_lock.locked:
             self.pause_lock.release()
-    
+
     def set_pausing(self, should_pause):
         '''if asking to pause, returns a deferred which is fired when sciprt actually paused'''
         if should_pause:
@@ -83,13 +83,13 @@ class script_semaphore(object):
 #            print 'releasing the lock!'
             self.pause_lock.release()
         return request
-            
+
     def stop_confirmed(self):
         self.should_stop = False
         self.status = 'Stopped'
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
         self.signals.on_running_script_stopped(self.ident)
-    
+
     def finish_confirmed(self):
         #call back all pause requests
         for request_list in [self.pause_requests, self.continue_requests]:
@@ -101,7 +101,7 @@ class script_semaphore(object):
             self.status = 'Finished'
             self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
         self.signals.on_running_script_finished(self.ident)
-    
+
     def error_finish_confirmed(self, error):
         self.status = 'Error'
         self.signals.on_running_new_status((self.ident, self.status, self.percentage_complete))
