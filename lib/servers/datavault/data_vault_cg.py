@@ -17,10 +17,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Data Vault
+name = Data Vault cg
 version = 2.4
 description =
-instancename = Data Vault
+instancename = Data Vault cg
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -855,14 +855,14 @@ if useNumpy:
 
 
 class DataVault( LabradServer ):
-    name = 'Data Vault'
+    name = 'Data Vault cg'
 
     @inlineCallbacks
     def initServer( self ):
         # load configuration info from registry
         global DATADIR
         try:
-            path = ['', 'Servers', self.name, 'Repository']
+            path = ['', 'Servers', 'Data Vault', 'Repository']
             nodename = util.getNodeName()
             reg = self.client.registry
             try:
