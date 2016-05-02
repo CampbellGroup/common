@@ -119,8 +119,8 @@ class wavemeterclient(QtGui.QWidget):
         self.lockSwitch.toggled.connect(self.setLock)
         self.startSwitch.toggled.connect(self.setOutput)
 
-        subLayout.addWidget(self.lockSwitch, 0, 3)
-        subLayout.addWidget(self.startSwitch, 0, 1)
+        subLayout.addWidget(self.lockSwitch, 0, 2)
+        subLayout.addWidget(self.startSwitch, 0, 0)
 
         for chan in self.chaninfo:
             wmChannel = self.chaninfo[chan][0]
@@ -129,8 +129,15 @@ class wavemeterclient(QtGui.QWidget):
             stretched = self.chaninfo[chan][3]
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
-
-            widget = QCustomWavemeterChannel(wmChannel, dacPort, hint, stretched, displayPID)
+            widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPID)
+            
+            if displayPID:
+                try: 
+                    rails = self.chaninfo[chan][6]
+                    widget.PIDindicator.set_rails(rails)
+                except:
+                    rails = [-10.0,10.0]
+                    widget.PIDindicator.set_rails(rails)
             import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8/(float(hint)*1e3))
@@ -142,7 +149,7 @@ class wavemeterclient(QtGui.QWidget):
                 initcourse = yield self.getPIDCourse(dacPort, hint)
                 widget.spinFreq.setValue(initcourse)
                 widget.spinFreq.valueChanged.connect(lambda freq = widget.spinFreq.value(), dacPort = dacPort : self.freqChanged(freq, dacPort))
-                widget.setPID.clicked.connect(lambda state = widget.setPID.isDown(), dacPort = dacPort  : self.InitializePIDGUI(dacPort))
+                widget.setPID.clicked.connect(lambda state = widget.setPID.isDown(), chan = chan, dacPort = dacPort  : self.InitializePIDGUI(dacPort, chan))
                 initLock = yield self.server.get_channel_lock(dacPort, wmChannel)
                 widget.lockChannel.setChecked(bool(initLock))
                 widget.lockChannel.toggled.connect(lambda state = widget.lockChannel.isDown(), dacPort = dacPort  : self.lockSingleChannel(state, dacPort))
@@ -166,8 +173,10 @@ class wavemeterclient(QtGui.QWidget):
 
 
     @inlineCallbacks
-    def InitializePIDGUI(self,dacPort):
+    def InitializePIDGUI(self,dacPort,chan):
         self.pid = QCustomPID(dacPort)
+        self.pid.setWindowTitle(chan + ' PID settings')
+        self.pid.move(self.pos())
         self.index = {1:0,-1:1}
 
         pInit = yield self.server.get_pid_p(dacPort)
@@ -224,7 +233,11 @@ class wavemeterclient(QtGui.QWidget):
         dacPort = signal[0]
         value = signal[1]
         if dacPort in self.wmChannels:
-            self.d[self.wmChannels[dacPort]].PIDvoltage.setText('DAC Voltage (mV)\n'+"{:.1f}".format(value))
+            try:
+                self.d[self.wmChannels[dacPort]].PIDvoltage.setText('DAC Voltage (mV)  '+"{:.1f}".format(value))
+                self.d[self.wmChannels[dacPort]].PIDindicator.update_slider(value/1000.0)
+            except:
+                pass
 
     def toggleMeas(self, c, signal):
         chan = signal[0]
@@ -254,8 +267,9 @@ class wavemeterclient(QtGui.QWidget):
         wmChannel = signal[0]
         value = signal[1]
         if wmChannel in self.d:
-            self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
-
+            #self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
+            self.d[wmChannel].powermeter.setValue(value)#('Interferometer Amp\n' + str(value))
+    
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
 
