@@ -199,19 +199,10 @@ class eVPumpClient(QtGui.QWidget):
         yield self.update_temperature()
         yield self.update_system_status()
 
-#        yield self.server._read_current()
-#        yield self.server._read_temperature()
-#        yield self.server._read_status()
-#        self.server.currentchanged(self.server.current)
-#        self.server.powerchanged(self.server.power)
-#        self.server.temperaturechanged(self.server.temperature)
-#        self.server.statuschanged(self.server.status)
-
     @inlineCallbacks
     def update_current(self):
         current = yield self.server.get_current()
         current_percentage = current['A']*100/self._max_current
-        print "current_percentage=", current_percentage
         self.currentprogbar.setValue(current_percentage)
         self.currentprogbar.setFormat(str(current['A']) + 'A')
 
@@ -219,20 +210,17 @@ class eVPumpClient(QtGui.QWidget):
     def update_power(self):
         power = yield self.server.get_power()
         power_percentage = power['W']*100/self._max_power
-        print "power_percentage=", power_percentage
         self.powerprogbar.setValue(power_percentage)
         self.powerprogbar.setFormat(str(power['W']) + 'W')
 
     @inlineCallbacks
     def update_temperature(self):
         temperature = yield self.server.get_temperature()
-        print "temperature=", temperature
         self.tempdisplay.display(str(temperature['degC']))
 
     @inlineCallbacks
     def update_system_status(self):
         sys_status = yield self.server.get_system_status()
-        print "sys_status=", sys_status
         css_text = "<span style>Laser Status: <br/></span>"
         if sys_status == 'System Ready':
             css_text += "<span style='color:#00ff00;'>%s</span>" % sys_status
