@@ -72,7 +72,6 @@ class eVPump(SerialDeviceServer):
                 print 'Check set up and restart serial server'
             else:
                 raise
-        self.measure_pump()
 
     @setting(1, 'toggle_laser', value='b')
     def toggle_laser(self, c, value):
@@ -209,18 +208,6 @@ class eVPump(SerialDeviceServer):
     def _read_status(self):
         yield self.ser.write_line('?F')
         self.status = yield self.ser.read_line()
-
-    @inlineCallbacks
-    def measure_pump(self):
-        reactor.callLater(.1, self.measure_pump)
-        yield self._read_power()
-        yield self._read_current()
-        yield self._read_temperature()
-        yield self._read_status()
-        self.currentchanged(self.current)
-        self.powerchanged(self.power)
-        self.temperaturechanged(self.temperature)
-        self.statuschanged(self.status)
 
 if __name__ == "__main__":
     from labrad import util

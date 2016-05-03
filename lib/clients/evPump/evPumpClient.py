@@ -51,6 +51,7 @@ class eVPumpClient(QtGui.QWidget):
                                       ID=SIGNALID4)
 
         self.initialize_GUI()
+        self.looping_pump_measurement()
 
     @inlineCallbacks
     def initialize_GUI(self):
@@ -186,6 +187,18 @@ class eVPumpClient(QtGui.QWidget):
             self.currentspinbox.setEnabled(False)
         else:
             self.controlcombo.setCurrentIndex(-1)
+
+    @inlineCallbacks
+    def looping_pump_measurement(self):
+        reactor.callLater(.1, self.looping_pump_measurement)
+        yield self.server._read_power()
+        yield self.server._read_current()
+        yield self.server._read_temperature()
+        yield self.server._read_status()
+        self.server.currentchanged(self.server.current)
+        self.server.powerchanged(self.server.power)
+        self.server.temperaturechanged(self.server.temperature)
+        self.server.statuschanged(self.server.status)
 
     def update_current(self, c, current):
         currentperc = current['A']*100/24.0
