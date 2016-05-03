@@ -42,7 +42,7 @@ class eVPump(SerialDeviceServer):
     serNode = getNodeName()
     timeout = T.Value(TIMEOUT, 's')
     temperature = None
-    power = None
+    _power = None
     current = None
     status = None
 
@@ -94,8 +94,8 @@ class eVPump(SerialDeviceServer):
 
     @setting(4, 'read_power', returns='v[W]')
     def read_power(self, c):
-        yield None
-        returnValue(self.power)
+        yield self._read_power()
+        returnValue(self._power)
 
     @setting(5, 'set_current', value='v[A]')
     def set_current(self, c, value):
@@ -182,9 +182,9 @@ class eVPump(SerialDeviceServer):
         yield self.ser.write_line('?P')
         power = yield self.ser.read_line()
         try:
-            self.power = U(float(power), 'W')
+            self._power = U(float(power), 'W')
         except:
-            self.power = None
+            self._power = None
 
     @inlineCallbacks
     def _read_current(self):
