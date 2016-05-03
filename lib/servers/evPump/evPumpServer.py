@@ -44,7 +44,7 @@ class eVPump(SerialDeviceServer):
     temperature = None
     _power = None
     _current = None
-    status = None
+    _system_status = None
 
     currentchanged = Signal(UPDATECURR, 'signal__current_changed', 'v')
     powerchanged = Signal(UPDATEPOW, 'signal__power_changed', 'v')
@@ -93,7 +93,7 @@ class eVPump(SerialDeviceServer):
         yield self.ser.write_line('P:' + value)
 
     @setting(4, 'read_power', returns='v[W]')
-    def read_power(self, c):
+    def get_power(self, c):
         yield self._read_power()
         returnValue(self._power)
 
@@ -103,7 +103,7 @@ class eVPump(SerialDeviceServer):
         yield self.ser.write_line('C1:' + value)
 
     @setting(6, 'read_current', returns='v[A]')
-    def read_current(self, c):
+    def get_current(self, c):
         yield self._read_current()
         returnValue(self._current)
 
@@ -114,10 +114,10 @@ class eVPump(SerialDeviceServer):
         value = bool(float(value))
         returnValue(value)
 
-    @setting(8, 'system_status', returns='s')
-    def system_status(self, c):
-        yield None
-        returnValue(self.status)
+    @setting(8, 'get_system_status', returns='s')
+    def get_system_status(self, c):
+        yield self._read_system_status()
+        returnValue(self._system_status)
 
     @setting(9, 'get_power_setpoint', returns='v[W]')
     def get_power_setpoint(self, c):
@@ -205,9 +205,9 @@ class eVPump(SerialDeviceServer):
             self.temperature = None
 
     @inlineCallbacks
-    def _read_status(self):
+    def _read_system_status(self):
         yield self.ser.write_line('?F')
-        self.status = yield self.ser.read_line()
+        self._system_status = yield self.ser.read_line()
 
 if __name__ == "__main__":
     from labrad import util

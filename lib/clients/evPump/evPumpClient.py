@@ -101,8 +101,9 @@ class eVPumpClient(QtGui.QWidget):
         self.currentprogbar = QtGui.QProgressBar()
         self.currentprogbar.setOrientation(QtCore.Qt.Vertical)
 
-        self.laserswitch = QCustomSwitchChannel('Laser',('On','Off'))
-        self.shutterswitch = QCustomSwitchChannel('Shutter',('Open','Closed'))
+        self.laserswitch = QCustomSwitchChannel('Laser', ('On', 'Off'))
+        self.shutterswitch = QCustomSwitchChannel('Shutter',
+                                                  ('Open', 'Closed'))
 
         self.powerprogbar = QtGui.QProgressBar()
         self.powerprogbar.setOrientation(QtCore.Qt.Vertical)
@@ -195,6 +196,8 @@ class eVPumpClient(QtGui.QWidget):
         reactor.callLater(0.5, self.looping_pump_measurement)
         yield self.update_power()
         yield self.update_current()
+        yield self.update_temperature()
+        yield self.update_system_status()
 
 #        yield self.server._read_current()
 #        yield self.server._read_temperature()
@@ -206,7 +209,7 @@ class eVPumpClient(QtGui.QWidget):
 
     @inlineCallbacks
     def update_current(self):
-        current = yield self.server.read_current()
+        current = yield self.server.get_current()
         current_percentage = current['A']*100/self._max_current
         print "current_percentage=", current_percentage
         self.currentprogbar.setValue(current_percentage)
@@ -214,21 +217,27 @@ class eVPumpClient(QtGui.QWidget):
 
     @inlineCallbacks
     def update_power(self):
-        power = yield self.server.read_power()
+        power = yield self.server.get_power()
         power_percentage = power['W']*100/self._max_power
         print "power_percentage=", power_percentage
         self.powerprogbar.setValue(power_percentage)
         self.powerprogbar.setFormat(str(power['W']) + 'W')
 
-    def update_temp(self, c, temp):
-        self.tempdisplay.display(str(temp['degC']))
+    @inlineCallbacks
+    def update_temperature(self):
+        temperature = yield self.server.get_temperature()
+        print "temperature=", temperature
+        self.tempdisplay.display(str(temperature['degC']))
 
-    def update_stat(self, c, stat):
+    @inlineCallbacks
+    def update_system_status(self):
+        sys_status = yield self.server.get_system_status()
+        print "sys_status=", sys_status
         css_text = "<span style>Laser Status: <br/></span>"
-        if stat == 'System Ready':
-            css_text += "<span style='color:#00ff00;'>%s</span>" % stat
+        if sys_status == 'System Ready':
+            css_text += "<span style='color:#00ff00;'>%s</span>" % sys_status
         else:
-            css_text += "<span style='color:#ff0000;'>%s</span>" % stat
+            css_text += "<span style='color:#ff0000;'>%s</span>" % sys_status
         self.statuslabel.setText(css_text)
 
     def closeEvent(self, x):
