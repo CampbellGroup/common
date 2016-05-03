@@ -208,6 +208,7 @@ class eVPumpClient(QtGui.QWidget):
     def update_current(self):
         current = yield self.server.read_current()
         current_percentage = current['A']*100/self._max_current
+        print "current_percentage=", current_percentage
         self.currentprogbar.setValue(current_percentage)
         self.currentprogbar.setFormat(str(current['A']) + 'A')
 
@@ -215,7 +216,7 @@ class eVPumpClient(QtGui.QWidget):
     def update_power(self):
         power = yield self.server.read_power()
         power_percentage = power['W']*100/self._max_power
-        print power_percentage
+        print "power_percentage=", power_percentage
         self.powerprogbar.setValue(power_percentage)
         self.powerprogbar.setFormat(str(power['W']) + 'W')
 
