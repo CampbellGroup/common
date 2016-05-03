@@ -41,10 +41,10 @@ class eVPump(SerialDeviceServer):
     port = None
     serNode = getNodeName()
     timeout = T.Value(TIMEOUT, 's')
-    temperature = None
-    power = None
-    current = None
-    status = None
+    _temperature = None
+    _power = None
+    _current = None
+    _system_status = None
 
     currentchanged = Signal(UPDATECURR, 'signal__current_changed', 'v')
     powerchanged = Signal(UPDATEPOW, 'signal__power_changed', 'v')
@@ -72,7 +72,6 @@ class eVPump(SerialDeviceServer):
                 print 'Check set up and restart serial server'
             else:
                 raise
-        self.measure_pump()
 
     @setting(1, 'toggle_laser', value='b')
     def toggle_laser(self, c, value):
@@ -93,20 +92,20 @@ class eVPump(SerialDeviceServer):
         value = str(value['W'])
         yield self.ser.write_line('P:' + value)
 
-    @setting(4, 'read_power', returns='v[W]')
-    def read_power(self, c):
-        yield None
-        returnValue(self.power)
+    @setting(4, 'get_power', returns='v[W]')
+    def get_power(self, c):
+        yield self._read_power()
+        returnValue(self._power)
 
     @setting(5, 'set_current', value='v[A]')
     def set_current(self, c, value):
         value = str(value['A'])
         yield self.ser.write_line('C1:' + value)
 
-    @setting(6, 'read_current', returns='v[A]')
-    def read_current(self, c):
-        yield None
-        returnValue(self.current)
+    @setting(6, 'get_current', returns='v[A]')
+    def get_current(self, c):
+        yield self._read_current()
+        returnValue(self._current)
 
     @setting(7, 'diode_status', returns='b')
     def diode_status(self, c):
@@ -115,10 +114,10 @@ class eVPump(SerialDeviceServer):
         value = bool(float(value))
         returnValue(value)
 
-    @setting(8, 'system_status', returns='s')
-    def system_status(self, c):
-        yield None
-        returnValue(self.status)
+    @setting(8, 'get_system_status', returns='s')
+    def get_system_status(self, c):
+        yield self._read_system_status()
+        returnValue(self._system_status)
 
     @setting(9, 'get_power_setpoint', returns='v[W]')
     def get_power_setpoint(self, c):
@@ -167,8 +166,8 @@ class eVPump(SerialDeviceServer):
 
     @setting(13, 'get_temperature', returns='v[degC]')
     def get_temperature(self, c):
-        yield None
-        returnValue(self.temperature)
+        yield self._read_temperature()
+        returnValue(self._temperature)
 
     @setting(14, 'get_diode_current_limit', returns='v[A]')
     def get_diode_current_limit(self, c):
@@ -183,44 +182,32 @@ class eVPump(SerialDeviceServer):
         yield self.ser.write_line('?P')
         power = yield self.ser.read_line()
         try:
-            self.power = U(float(power), 'W')
+            self._power = U(float(power), 'W')
         except:
-            self.power = None
+            self._power = None
 
     @inlineCallbacks
     def _read_current(self):
         yield self.ser.write_line('?C')
         current = yield self.ser.read_line()
         try:
-            self.current = U(float(current), 'A')
+            self._current = U(float(current), 'A')
         except:
-            self.current = None
+            self._current = None
 
     @inlineCallbacks
     def _read_temperature(self):
         yield self.ser.write_line('?T')
         temp = yield self.ser.read_line()
         try:
-            self.temperature = U(float(temp), 'degC')
+            self._temperature = U(float(temp), 'degC')
         except:
-            self.temperature = None
+            self._temperature = None
 
     @inlineCallbacks
-    def _read_status(self):
+    def _read_system_status(self):
         yield self.ser.write_line('?F')
-        self.status = yield self.ser.read_line()
-
-    @inlineCallbacks
-    def measure_pump(self):
-        reactor.callLater(.1, self.measure_pump)
-        yield self._read_power()
-        yield self._read_current()
-        yield self._read_temperature()
-        yield self._read_status()
-        self.currentchanged(self.current)
-        self.powerchanged(self.power)
-        self.temperaturechanged(self.temperature)
-        self.statuschanged(self.status)
+        self._system_status = yield self.ser.read_line()
 
 if __name__ == "__main__":
     from labrad import util
