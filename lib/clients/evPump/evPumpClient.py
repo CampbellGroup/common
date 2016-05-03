@@ -18,6 +18,8 @@ class eVPumpClient(QtGui.QWidget):
 
     def __init__(self, reactor, cxn=None):
         super(eVPumpClient, self).__init__()
+        self._max_power = 15.0
+        self._max_current = 24.0
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.cxn = cxn
         self.reactor = reactor
@@ -51,7 +53,7 @@ class eVPumpClient(QtGui.QWidget):
                                       ID=SIGNALID4)
 
         self.initialize_GUI()
-        self.looping_pump_measurement()
+        yield self.looping_pump_measurement()
 
     @inlineCallbacks
     def initialize_GUI(self):
@@ -190,24 +192,31 @@ class eVPumpClient(QtGui.QWidget):
 
     @inlineCallbacks
     def looping_pump_measurement(self):
-        reactor.callLater(.1, self.looping_pump_measurement)
-        yield self.server._read_power()
-        yield self.server._read_current()
-        yield self.server._read_temperature()
-        yield self.server._read_status()
-        self.server.currentchanged(self.server.current)
-        self.server.powerchanged(self.server.power)
-        self.server.temperaturechanged(self.server.temperature)
-        self.server.statuschanged(self.server.status)
+        reactor.callLater(0.5, self.looping_pump_measurement)
+        yield self.update_power()
+        yield self.update_current()
 
-    def update_current(self, c, current):
-        currentperc = current['A']*100/24.0
-        self.currentprogbar.setValue(currentperc)
+#        yield self.server._read_current()
+#        yield self.server._read_temperature()
+#        yield self.server._read_status()
+#        self.server.currentchanged(self.server.current)
+#        self.server.powerchanged(self.server.power)
+#        self.server.temperaturechanged(self.server.temperature)
+#        self.server.statuschanged(self.server.status)
+
+    @inlineCallbacks
+    def update_current(self):
+        current = yield self.server.read_current()
+        current_percentage = current['A']*100/self._max_current
+        self.currentprogbar.setValue(current_percentage)
         self.currentprogbar.setFormat(str(current['A']) + 'A')
 
-    def update_power(self, c, power):
-        powerperc = power['W']*100/15.0
-        self.powerprogbar.setValue(powerperc)
+    @inlineCallbacks
+    def update_power(self):
+        power = yield self.server.read_power()
+        power_percentage = power['W']*100/self._max_power
+        print power_percentage
+        self.powerprogbar.setValue(power_percentage)
         self.powerprogbar.setFormat(str(power['W']) + 'W')
 
     def update_temp(self, c, temp):
