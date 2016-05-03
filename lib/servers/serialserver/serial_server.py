@@ -151,10 +151,10 @@ class SerialServer(LabradServer):
         """Sets the baudrate."""
         ser = self.getPort(c)
         if data is None:
-            return long(ser.getBaudrate())
-        else: 
-            ser.setBaudrate(data)
-            return long(ser.getBaudrate())
+            return long(ser.baudrate)
+        else:
+            baudrate = ser.baudrate = data
+            return long(baudrate)
 
 
     @setting(21, 'Bytesize',
