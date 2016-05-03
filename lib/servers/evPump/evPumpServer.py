@@ -93,8 +93,8 @@ class eVPump(SerialDeviceServer):
         value = str(value['W'])
         yield self.ser.write_line('P:' + value)
 
-    @setting(4, 'read_power', returns='v[W]')
-    def read_power(self, c):
+    @setting(4, 'get_power', returns='v[W]')
+    def get_power(self, c):
         yield None
         returnValue(self.power)
 
@@ -103,8 +103,8 @@ class eVPump(SerialDeviceServer):
         value = str(value['A'])
         yield self.ser.write_line('C1:' + value)
 
-    @setting(6, 'read_current', returns='v[A]')
-    def read_current(self, c):
+    @setting(6, 'get_current', returns='v[A]')
+    def get_current(self, c):
         yield None
         returnValue(self.current)
 
@@ -179,7 +179,7 @@ class eVPump(SerialDeviceServer):
         returnValue(value)
 
     @inlineCallbacks
-    def _read_power(self):
+    def _get_power(self):
         yield self.ser.write_line('?P')
         power = yield self.ser.read_line()
         try:
@@ -188,7 +188,7 @@ class eVPump(SerialDeviceServer):
             self.power = None
 
     @inlineCallbacks
-    def _read_current(self):
+    def _get_current(self):
         yield self.ser.write_line('?C')
         current = yield self.ser.read_line()
         try:
@@ -197,7 +197,7 @@ class eVPump(SerialDeviceServer):
             self.current = None
 
     @inlineCallbacks
-    def _read_temperature(self):
+    def _get_temperature(self):
         yield self.ser.write_line('?T')
         temp = yield self.ser.read_line()
         try:
@@ -206,17 +206,17 @@ class eVPump(SerialDeviceServer):
             self.temperature = None
 
     @inlineCallbacks
-    def _read_status(self):
+    def _get_system_status(self):
         yield self.ser.write_line('?F')
         self.status = yield self.ser.read_line()
 
     @inlineCallbacks
     def measure_pump(self):
         reactor.callLater(.1, self.measure_pump)
-        yield self._read_power()
-        yield self._read_current()
-        yield self._read_temperature()
-        yield self._read_status()
+        yield self._get_power()
+        yield self._get_current()
+        yield self._get_temperature()
+        yield self._get_system_status()
         self.currentchanged(self.current)
         self.powerchanged(self.power)
         self.temperaturechanged(self.temperature)
