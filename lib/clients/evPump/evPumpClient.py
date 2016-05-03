@@ -47,10 +47,10 @@ class eVPumpClient(QtGui.QWidget):
                                       source=None, ID=SIGNALID1)
         yield self.server.addListener(listener=self.update_power, source=None,
                                       ID=SIGNALID2)
-        yield self.server.addListener(listener=self.update_temp, source=None,
-                                      ID=SIGNALID3)
-        yield self.server.addListener(listener=self.update_stat, source=None,
-                                      ID=SIGNALID4)
+        yield self.server.addListener(listener=self.update_temperature,
+                                      source=None, ID=SIGNALID3)
+        yield self.server.addListener(listener=self.update_system_status,
+                                      source=None, ID=SIGNALID4)
 
         self.initialize_GUI()
         yield self.looping_pump_measurement()

@@ -92,7 +92,7 @@ class eVPump(SerialDeviceServer):
         value = str(value['W'])
         yield self.ser.write_line('P:' + value)
 
-    @setting(4, 'read_power', returns='v[W]')
+    @setting(4, 'get_power', returns='v[W]')
     def get_power(self, c):
         yield self._read_power()
         returnValue(self._power)
@@ -102,7 +102,7 @@ class eVPump(SerialDeviceServer):
         value = str(value['A'])
         yield self.ser.write_line('C1:' + value)
 
-    @setting(6, 'read_current', returns='v[A]')
+    @setting(6, 'get_current', returns='v[A]')
     def get_current(self, c):
         yield self._read_current()
         returnValue(self._current)
