@@ -30,7 +30,6 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-
 from labrad import types as T, util
 from labrad.errors import Error
 from labrad.server import LabradServer, setting
@@ -164,11 +163,11 @@ class SerialServer(LabradServer):
     def bytesize(self, c, data=None):
         """Sets the bytesize."""
         ser = self.getPort(c)
-        bsizes = ser.BYTESIZES
+        bytesizes = ser.BYTESIZES
         if data is None:
-            return bsizes
+            return bytesizes
         else:
-            if data in bsizes:
+            if data in bytesizes:
                 ser.bytesize = data
             return long(ser.bytesize)
 
@@ -180,12 +179,12 @@ class SerialServer(LabradServer):
     def parity(self, c, data=None):
         """Sets the parity."""
         ser = self.getPort(c)
-        bsizes =  ser.PARITIES
+        parities =  ser.PARITIES
         if data is None:
-            return bsizes
+            return parities
         else:
             data = data.upper()
-            if data in bsizes:
+            if data in parities:
                 ser.parity = data
             return ser.parity
 
@@ -197,11 +196,11 @@ class SerialServer(LabradServer):
     def stopbits(self, c, data=None):
         """Sets the number of stop bits."""
         ser = self.getPort(c)
-        bsizes =  ser.STOPBITS
+        stopbits =  ser.STOPBITS
         if data is None:
-            return bsizes
+            return stopbits
         else:
-            if data in bsizes:
+            if data in stopbits:
                 ser.stopbits = data
             return long(ser.stopbits)
 
