@@ -153,8 +153,8 @@ class SerialServer(LabradServer):
         if data is None:
             return long(ser.baudrate)
         else:
-            baudrate = ser.baudrate = data
-            return long(baudrate)
+            ser.baudrate = data
+            return long(ser.baudrate)
 
     @setting(21, 'Bytesize',
                  data=[': List bytesizes',
