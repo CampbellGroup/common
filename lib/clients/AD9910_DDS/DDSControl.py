@@ -127,15 +127,11 @@ class DDSclient(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-
-
 if __name__=="__main__":
     a = QtGui.QApplication( [] )
-    from common.lib.clients import qt4reactor
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     DDSWidget = DDSclient(reactor)
     DDSWidget.show()
     reactor.run()
-
-

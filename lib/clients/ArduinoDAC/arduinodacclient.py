@@ -171,27 +171,25 @@ class dacclient(QtGui.QWidget):
             if currentvalue >= 255: break
             self.setvalue(currentvalue + 1, [name, dacchan])
             self.d[dacchan].spinLevel.setValue(currentvalue + 1)
-        
+
     @inlineCallbacks
     def setvalue(self, value, ident):
         name = ident[0]
         chan = ident[1]
         value = int(value)
-        yield self.server.dacoutput(chan, value) 
+        yield self.server.dacoutput(chan, value)
         voltage = (0.10896*value - 13.89777)
         self.e[chan].setText(str(voltage))
         yield self.reg.set(name + ' dac', value)
 
     def closeEvent(self, x):
         self.reactor.stop()
-        
+
 if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.lib.clients import qt4reactor
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     dacWidget = dacclient(reactor)
     dacWidget.show()
     reactor.run()
-        
-        

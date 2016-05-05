@@ -214,10 +214,10 @@ class DDS_CONTROL(QtGui.QFrame):
 
     def closeEvent(self, x):
         self.reactor.stop()
-        
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    import common.lib.clients.qt4reactor as qt4reactor
+
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     trapdriveWidget = DDS_CONTROL(reactor)

@@ -134,22 +134,22 @@ class queued_combined(QtGui.QWidget):
         layout.addWidget(self.cancel_all, 0, 2, 1, 1 )
         layout.addWidget(self.ql, 1, 0, 3, 3 )
         self.setLayout(layout)
-    
+
     def connect_layout(self):
         self.cancel_all.pressed.connect(self.ql.cancel_all)
-    
+
     def add(self, ident, name, order):
         self.ql.add(ident, name, order)
-    
+
     def remove(self, ident):
         self.ql.remove(ident)
-    
+
     def closeEvent(self, x):
         self.reactor.stop()
 
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.lib.clients import qt4reactor
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = queued_combined(reactor)

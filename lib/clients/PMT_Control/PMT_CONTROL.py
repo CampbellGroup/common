@@ -99,38 +99,38 @@ class pmtWidget(QtGui.QWidget):
             yield self.server.stoprecording()
             self.lcdNumber.display('OFF')
         self.setText(self.pushButton)
-    
+
     @inlineCallbacks
     def onNewSet(self, x):
         newset = yield self.server.start_new_dataset()
         self.lineEdit.setText(newset)
-    
+
     @inlineCallbacks
     def onNewMode(self, mode):
         text = str(self.comboBox.itemText(mode))
         yield self.server.set_mode(text)
-        
+
     def setText(self, obj):
         state = obj.isChecked()
         if state:
             obj.setText('ON')
         else:
             obj.setText('OFF')
-    
+
     def onNewData(self,count):
         self.lcdNumber.display(count)
-    
+
     @inlineCallbacks
     def onNewDuration(self, value):
         value = self.T.Value(value, 's')
         yield self.server.set_time_length(value)
-    
-    def closeEvent(self, x):
-        self.reactor.stop()   
 
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.lib.clients import qt4reactor
+    def closeEvent(self, x):
+        self.reactor.stop()
+
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     pmtWidget = pmtWidget(reactor)

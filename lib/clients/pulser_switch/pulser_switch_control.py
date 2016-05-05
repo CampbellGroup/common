@@ -180,15 +180,15 @@ class switchWidget(QtGui.QFrame):
 
     def closeEvent(self, x):
         self.reactor.stop()
-    
+
     @inlineCallbacks
     def disable(self):
         self.setDisabled(True)
         yield None
-            
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.lib.clients import qt4reactor
+
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     triggerWidget = switchWidget(reactor)
