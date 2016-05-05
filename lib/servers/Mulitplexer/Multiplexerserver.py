@@ -72,7 +72,8 @@ class MultiplexerServer(LabradServer):
         self.AmplitudeAvg = ctypes.c_long(4)
 
         self.set_dll_variables()
-
+        self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
+        
         self.measureChan()
 
         self.listeners = set()
@@ -110,6 +111,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.GetSwitcherSignalStates.restype = ctypes.c_long
         self.wmdll.GetChannelsCount.restype = ctypes.c_long
         self.wmdll.GetPIDSetting.restype = ctypes.c_long
+        self.wmdll.GetWLMVersion.restype = ctypes.c_long
 
         self.wmdll.SetDeviationMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignalNum.restype = ctypes.c_double
@@ -118,7 +120,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetSwitcherSignalStates.restype = ctypes.c_long
         self.wmdll.SetSwitcherMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignal.restype = ctypes.c_long
-        self.wmdll.SetPIDSetting.restype = ctypes.c_long
+        self.wmdll.SetPIDSetting.restype = ctypes.c_long      
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -292,6 +294,8 @@ class MultiplexerServer(LabradServer):
         course_c = ctypes.create_string_buffer(1024)
         yield self.wmdll.GetPIDCourseNum(port_c, ctypes.pointer(course_c))
         course = float(course_c.value)
+        if self.WavemeterVersion == 1312:
+            returnValue("Version of WLM does not support individual locking")
         if course <= 0:
             returnValue("Set PID Course to a valid number")
         else:
@@ -382,6 +386,8 @@ class MultiplexerServer(LabradServer):
         """ Checks if the wm channel is assigned to the DAC port, equivalent to
         that wm channel being locked. 0 means no channel assigned which is
         equivalent to unlocked."""
+        if self.WavemeterVersion == 1312:
+            returnValue(0)
         port_c = ctypes.c_long(dacPort)
         wmChannel = ctypes.c_long()
         yield self.wmdll.GetPIDSetting(self.DeviationChannel, port_c,
@@ -445,8 +451,14 @@ class MultiplexerServer(LabradServer):
         system time, which changes when changing wm settings."""
         port_c = ctypes.c_long(dacPort)
         dt = ctypes.c_long()
+        
+        if self.WavemeterVersion == 1312:
+            dummyarg = self.l
+        else:
+            dummyarg = self.d
+            
         yield self.wmdll.GetPIDSetting(self.PIDConstdt, port_c,
-                                       ctypes.pointer(dt), self.d)
+                                       ctypes.pointer(dt), dummyarg)
 
         returnValue(dt.value)
 
@@ -457,9 +469,15 @@ class MultiplexerServer(LabradServer):
         port_c = ctypes.c_long(dacPort)
         sFactor = ctypes.c_double()
         sExponent = ctypes.c_long()
+        
+        if self.WavemeterVersion == 1312:
+            dummyarg = self.l
+        else:
+            dummyarg = self.d
+            
         yield self.wmdll.GetPIDSetting(self.DeviationSensitivityDimension,
                                        port_c, ctypes.pointer(sExponent),
-                                       self.d)
+                                       dummyarg)
 
         yield self.wmdll.GetPIDSetting(self.DeviationSensitivityFactor, port_c,
                                        self.l, ctypes.pointer(sFactor))
@@ -471,8 +489,14 @@ class MultiplexerServer(LabradServer):
         """Gets the polarity for a given DAC port. Allowed values are +/- 1."""
         port_c = ctypes.c_long(dacPort)
         polarity = ctypes.c_long()
+        
+        if self.WavemeterVersion == 1312:
+            dummyarg = self.l
+        else:
+            dummyarg = self.d
+            
         yield self.wmdll.GetPIDSetting(self.DeviationPolarity, port_c,
-                                       ctypes.pointer(polarity), self.d)
+                                       ctypes.pointer(polarity), dummyarg)
 
         returnValue(polarity.value)
 
@@ -485,10 +509,6 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-#                if self.get_channel_lock(self, chan + 1):
-#                    value = self.calcPID(chan)
-#                    print value
-#                    self.set_dac_voltage(chan + 1, value)
 
 
 if __name__ == "__main__":
