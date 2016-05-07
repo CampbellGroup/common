@@ -2,7 +2,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 from common.lib.clients.qtui.QCustomPowerMeter import MQProgressBar
 from common.lib.clients.qtui.QCustomSlideIndicator import SlideIndicator
-from common.lib.clients.qtui.QCustomTextChaningButton import \
+from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton as _TextChangingButton
 
 class StretchedLabel(QtGui.QLabel):
