@@ -1,7 +1,7 @@
 import sys
 from PyQt4 import QtGui, QtCore
 from common.lib.clients.qtui.q_custom_text_changing_button import \
-    TextChangingButton as _TextChangingButton
+    TextChangingButton
 
 
 class QCustomFreqPower(QtGui.QFrame):
@@ -40,7 +40,7 @@ class QCustomFreqPower(QtGui.QFrame):
         layout.addWidget(self.spinFreq,     2, 0)
         layout.addWidget(self.spinPower,    2, 1)
         if switchable:
-            self.buttonSwitch = _TextChangingButton(("I", "O"))
+            self.buttonSwitch = TextChangingButton(("I", "O"))
             layout.addWidget(self.buttonSwitch, 2, 2)
         self.setLayout(layout)
 
