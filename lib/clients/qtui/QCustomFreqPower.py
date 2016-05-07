@@ -1,34 +1,15 @@
 import sys
 from PyQt4 import QtGui, QtCore
+from common.lib.clients.qtui.q_custom_text_changing_button import \
+    TextChangingButton as _TextChangingButton
 
-class TextChangingButton(QtGui.QPushButton):
-    """Button that changes its text to ON or OFF and colors when it's pressed""" 
-    def __init__(self, parent = None):
-        super(TextChangingButton, self).__init__(parent)
-        self.setCheckable(True)
-        self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        #connect signal for appearance changing
-        self.toggled.connect(self.setAppearance)
-        self.setAppearance(self.isDown())
-    
-    def setAppearance(self, down):
-        if down:
-            self.setText('I')
-            self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
-        else:
-            self.setText('O')
-            self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-    
-    def sizeHint(self):
-        return QtCore.QSize(37, 26)
 
 class QCustomFreqPower(QtGui.QFrame):
     def __init__(self, title, switchable = True, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(title, switchable)
-    
+
     def makeLayout(self, title, switchable):
         layout = QtGui.QGridLayout()
         #labels
@@ -59,26 +40,26 @@ class QCustomFreqPower(QtGui.QFrame):
         layout.addWidget(self.spinFreq,     2, 0)
         layout.addWidget(self.spinPower,    2, 1)
         if switchable:
-            self.buttonSwitch = TextChangingButton()
+            self.buttonSwitch = _TextChangingButton(("I", "O"))
             layout.addWidget(self.buttonSwitch, 2, 2)
         self.setLayout(layout)
-    
+
     def setPowerRange(self, powerrange):
         self.spinPower.setRange(*powerrange)
-    
+
     def setFreqRange(self, freqrange):
         self.spinFreq.setRange(*freqrange)
-        
+
     def setPowerNoSignal(self, power):
         self.spinPower.blockSignals(True)
         self.spinPower.setValue(power)
         self.spinPower.blockSignals(False)
-        
+
     def setFreqNoSignal(self, freq):
         self.spinFreq.blockSignals(True)
         self.spinFreq.setValue(freq)
         self.spinFreq.blockSignals(False)
-    
+
     def setStateNoSignal(self, state):
         self.buttonSwitch.blockSignals(True)
         self.buttonSwitch.setChecked(state)
