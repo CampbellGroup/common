@@ -45,7 +45,7 @@ class TextChangingButton(QtGui.QPushButton):
             off_text = self.button_text + "   Off"
         elif type(self.button_text) == tuple:
             on_text = self.button_text[0]
-            off_text = self.button_text[0]
+            off_text = self.button_text[1]
         elif self.button_text is None:
             on_text = "On"
             off_text = "Off"
