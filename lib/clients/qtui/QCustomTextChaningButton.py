@@ -4,21 +4,23 @@ from PyQt4 import QtGui, QtCore
 class TextChangingButton(QtGui.QPushButton):
     """Button that changes its text to ON or OFF and colors when it's pressed.
     """
-    def __init__(self, labels=None, addtext=None, parent=None):
+    def __init__(self, button_text, parent=None):
         """
         NOTE: when both labels and addtext are not None, labels take
         precedence.
 
         Parameters
         ----------
-        labels: 2-tuple, the first entry corresponds to text when the button is
-            "ON", and the second entry corresponds to text when the button is
+        button_text: could be a 2-tuple of string, a string, or None.
+            When it's a 2-tuple, the first entry corresponds to text when the
+            button is "ON", and the second entry corresponds to text when the
+            button is "OFF".
+            When it's a string, it is the text that gets added before "ON" or
             "OFF".
-        addtext: str, text gets added before "ON" or "OFF" if it's not None.
+            When it's None, then the text gets displayed are "On" or "Off".
         """
         super(TextChangingButton, self).__init__(parent)
-        self.labels = labels
-        self.addtext = addtext
+        self.button_text = button_text
         self.setCheckable(True)
         self.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=10))
         self.setSizePolicy(QtGui.QSizePolicy.Minimum,
@@ -38,15 +40,18 @@ class TextChangingButton(QtGui.QPushButton):
 
     def _set_button_texts(self):
         """Return button texts when they are on or off."""
-        if self.labels is not None:
-            on_text = self.labels[0]
-            off_text = self.labels[0]
-        elif self.addtext is not None:
-            on_text = self.add_text + "   On"
-            off_text = self.add_text + "   Off"
-        else:
+        if type(self.button_text) == str:
+            on_text = self.button_text + "   On"
+            off_text = self.button_text + "   Off"
+        elif type(self.button_text) == tuple:
+            on_text = self.button_text[0]
+            off_text = self.button_text[0]
+        elif self.button_text is None:
             on_text = "On"
             off_text = "Off"
+        else:
+            error_msg = "Text gets displayed on a button needs to be a string"
+            raise TypeError(error_msg)
         return on_text, off_text
 
     def sizeHint(self):
