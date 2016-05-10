@@ -349,9 +349,9 @@ class script_scanner_gui(QtGui.QWidget):
     def closeEvent(self, event):
         self.reactor.stop()
 
-if __name__=="__main__":
-    a = QtGui.QApplication( ["Script Scanner"] )
-    from common.lib.clients import qt4reactor
+if __name__ == "__main__":
+    a = QtGui.QApplication(["Script Scanner"])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     gui = script_scanner_gui(reactor)

@@ -60,10 +60,9 @@ class DataVaultReciever(QtGui.QWidget):
         self.reactor.stop()
 
 
-if __name__=="__main__":
-    #join Qt and twisted event loops
-    a = QtGui.QApplication( [] )
-    import common.lib.qt4reactor as qt4reactor
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     widget = DataVaultReciever(reactor)

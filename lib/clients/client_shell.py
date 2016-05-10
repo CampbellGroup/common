@@ -57,40 +57,37 @@ class client_shell(QtGui.QWidget):
         widget.setChecked(False) #Sets initial value to off
         widget.toggled.connect(self.toggle) #connects button to an as yet uncreated function "toggle"
         layout.addWidget(widget, 3,4) #adds widget to the layout at position row=3, column = 4
-        '''    
-        
+        '''
+
         self.setLayout(layout)#sets the final layout with added widgets
-        
+
     '''
     Here we would add relevant functions that we connected widgets to or other needed functions, remember all functions that use the
     asynchronous commands such as yield require an @inlineCallbacks decorator before the function,
-    
+
     def function1(self):
         print 'do something'
-        
-    @inlineCallbacks    
+
+    @inlineCallbacks
     def function2(self):
-        yield print 'do something asynchronous' 
+        yield print 'do something asynchronous'
     '''
-        
+
     def closeEvent(self, x):
         '''
         This function is run upon the GUI being closed all cleanup should be done here such as stopping the reactor
         '''
         self.reactor.stop()#stops the reactor
-        
-if __name__=="__main__":
+
+if __name__ == "__main__":
     '''
     This is the function that gets run first if the client python file is run directly, however if this client is imported by another function
     this function will not be run
     '''
-    a = QtGui.QApplication( [] ) #Creates a GUI structure and can take sys arguments
-    from common.lib.clients import qt4reactor #imports the PyQt4 reactor that must be integrated with twisted reactor (this must happen here)
+    a = QtGui.QApplication([]) #Creates a GUI structure and can take sys arguments
+    import qt4reactor #imports the PyQt4 reactor that must be integrated with twisted reactor (this must happen here)
     qt4reactor.install()#installs the pyqt4 reactor
     from twisted.internet import reactor# imports the twisted reactor
     client_shellWidget = client_shell(reactor) #instantiates a widget with the just imported reactor
     client_shellWidget.show()#shows the widget
     reactor.run()#runs the integrated reactor
-        
-        
-        

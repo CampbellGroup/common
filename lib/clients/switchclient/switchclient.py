@@ -88,16 +88,13 @@ class switchclient(QtGui.QWidget):
 
     def closeEvent(self, x):
         self.reactor.stop()
-        
-        
-        
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
-    from common.lib.clients import qt4reactor
+
+
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
     switchWidget = switchclient(reactor)
     switchWidget.show()
     reactor.run()
-        
-        
