@@ -70,7 +70,9 @@ class wavemeterclient(QtGui.QWidget):
         """Checks screen size to make sure window fits in the screen. """
         desktop = QtGui.QDesktopWidget()
         screensize = desktop.availableGeometry()
-        if (screensize[0] or screensize[1]) <= 1080:
+        width = screensize.width()
+        height = screensize.height()
+        if (width or height) <= 1080:
             self.showMaximized()
 
     @inlineCallbacks
