@@ -67,6 +67,11 @@ class wavemeterclient(QtGui.QWidget):
         self._check_window_size()
 
     def _check_window_size(self):
+        """Checks from the config file if the window should be resized.
+
+        If the config file does not have the attribute "resize_window", nothing
+        is going to happen so no conflict will be caused.
+        """
         if hasattr(multiplexer_config, "resize_window"):
             if multiplexer_config.resize_window is True:
                 self.showMaximized()
