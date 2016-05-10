@@ -72,7 +72,7 @@ class wavemeterclient(QtGui.QWidget):
         screensize = desktop.availableGeometry()
         width = screensize.width()
         height = screensize.height()
-        if (width or height) <= 1080:
+        if (width <=1080 or height <= 1080):
             self.showMaximized()
 
     @inlineCallbacks
