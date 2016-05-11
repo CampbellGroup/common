@@ -332,11 +332,8 @@ class Session(object):
                 tag = tag[1:]
             else:
                 filter = include
-            #print filter.__name__ + ':', tag
-            #print 'before:', dirs, datasets
             dirs = filter(dirs, tag, self.session_tags)
             datasets = filter(datasets, tag, self.dataset_tags)
-            #print 'after:', dirs, datasets
         return dirs, datasets
 
     def listDatasets(self):
@@ -368,7 +365,6 @@ class Session(object):
         self.counter += 1
         self.modified = datetime.now()
         name = '%05d - %s' % (num, title)
-        print name, dtype, title
         dataset = Dataset(self, name, dtype, title, create=True)
         dataset.matrixrows = size[0]
         dataset.matrixcolumns = size[1]
@@ -985,7 +981,6 @@ class DataVault(LabradServer):
         dirs, datasets = sess.listContents(tagFilters)
         if includeTags:
             dirs, datasets = sess.getTags(dirs, datasets)
-        # print dirs, datasets
         return dirs, datasets
 
     @setting(7, path=['s{get current directory}',
