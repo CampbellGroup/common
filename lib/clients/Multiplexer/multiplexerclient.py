@@ -64,6 +64,17 @@ class wavemeterclient(QtGui.QWidget):
         self.d = {}
         self.wmChannels = {}
         self.connect()
+        self._check_window_size()
+
+    def _check_window_size(self):
+        """Checks screen size to make sure window fits in the screen. """
+        desktop = QtGui.QDesktopWidget()
+        screensize = desktop.availableGeometry()
+        width = screensize.width()
+        height = screensize.height()
+        min_pixel_size = 1080
+        if (width <= min_pixel_size or height <= min_pixel_size):
+            self.showMaximized()
 
     @inlineCallbacks
     def connect(self):
@@ -130,9 +141,9 @@ class wavemeterclient(QtGui.QWidget):
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPID)
-            
+
             if displayPID:
-                try: 
+                try:
                     rails = self.chaninfo[chan][6]
                     widget.PIDindicator.set_rails(rails)
                 except:
@@ -269,7 +280,7 @@ class wavemeterclient(QtGui.QWidget):
         if wmChannel in self.d:
             #self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
             self.d[wmChannel].powermeter.setValue(value)#('Interferometer Amp\n' + str(value))
-    
+
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
 
