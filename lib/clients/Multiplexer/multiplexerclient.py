@@ -1,7 +1,9 @@
 from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
 from common.lib.clients.qtui.multiplexerPID import QCustomPID
+from common.lib.clients.qtui.q_custom_text_changing_button import \
+    TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 try:
     from config.multiplexerclient_config import multiplexer_config
 except:
@@ -21,34 +23,6 @@ SIGNALID7 = 148323
 SIGNALID8 = 238883
 
 #this is the signal for the updated frequencys
-
-class TextChangingButton(QtGui.QPushButton):
-    """Button that changes its text to ON or OFF and colors when it's pressed"""
-    def __init__(self, addtext = None, parent = None):
-        super(TextChangingButton, self).__init__(parent)
-        self.setCheckable(True)
-        self.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        self.setFixedHeight(30)
-        #connect signal for appearance changing
-        self.addtext = addtext
-        if self.addtext == None:
-            self.addtext = ''
-        else:
-            self.addtext = self.addtext + '   '
-        self.toggled.connect(self.setAppearance)
-        self.setAppearance(self.isDown())
-
-    def setAppearance(self, down, addtext = None):
-        if down:
-            self.setText(self.addtext + 'On')
-            self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
-        else:
-            self.setText(self.addtext + 'Off')
-            self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-    def sizeHint(self):
-        return QtCore.QSize(37, 26)
-
 
 class wavemeterclient(QtGui.QWidget):
 
