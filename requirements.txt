@@ -1,0 +1,4 @@
+ok
+pyserial
+pyvisa
+qt4reactor
