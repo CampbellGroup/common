@@ -18,7 +18,7 @@ class Test_DDS_BOX_Server(TestCase):
         """
         Connect to labrad
         """
-        self.cxn = labrad.connect() # host='localhost')
+        self.cxn = labrad.connect()  # host='localhost')
 
         self._check_serial_server()
         # Setup default values for the camera
