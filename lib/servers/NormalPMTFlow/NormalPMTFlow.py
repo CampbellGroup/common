@@ -140,7 +140,6 @@ class NormalPMTFlow( LabradServer):
         yield self.addParameters(self.startTime)
         try:
             self.grapher = yield self.client.grapher
-            print 'success'
             self.grapher.plot(ds, 'pmt',False)
         except AttributeError:
             self.grapher = None
