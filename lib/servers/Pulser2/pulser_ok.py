@@ -34,7 +34,7 @@ from api import api
 from linetrigger import LineTrigger
 import numpy
 
-class Pulser(LabradServer, DDS, LineTrigger):
+class Pulser(DDS, LineTrigger):
     
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
