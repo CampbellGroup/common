@@ -7,9 +7,6 @@ import treedict as _td
 
 
 class Test_experiment_info(_ut.TestCase):
-    '''
-    holds informaton about the experiment
-    '''
 
     def setUp(self):
         self.experiment_info = _ei.experiment_info()
