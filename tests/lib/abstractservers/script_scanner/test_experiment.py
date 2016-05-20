@@ -46,3 +46,18 @@ class Test_experiment(_ut.TestCase):
 
     def test_reload_all_parameters(self):
         self.experiment.reload_all_parameters()
+
+
+class Test_experiment_Exceptions(_ut.TestCase):
+
+    def setUp(self):
+        self.experiment = _exp.experiment()
+        self.experiment.execute(ident='test_experiment')
+
+    def tearDown(self):
+        self.experiment = None
+        del self.experiment
+
+    def test_set_parameters_exception(self):
+        self.assertRaises(Exception, self.experiment.set_parameters,
+                          parameter_dict=None)
