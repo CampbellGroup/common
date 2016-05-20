@@ -61,3 +61,18 @@ class Test_experiment_Exceptions(_ut.TestCase):
     def test_set_parameters_exception(self):
         self.assertRaises(Exception, self.experiment.set_parameters,
                           parameter_dict=None)
+
+    def test__connect_without_scriptscanner(self):
+        self.experiment._connect()
+        self.experiment.cxn.servers.pop('ScriptScanner', None)
+        self.assertRaises(Exception, self.experiment._connect)
+
+    def test__connect_without_parametervault(self):
+        self.experiment._connect()
+        self.experiment.cxn.servers.pop('ParameterVault', None)
+        self.assertRaises(Exception, self.experiment._connect)
+
+    def test_cxn_servers_attribute_type(self):
+        self.experiment._connect()
+        servers = self.experiment.cxn.servers
+        self.assertIsInstance(servers, dict)
