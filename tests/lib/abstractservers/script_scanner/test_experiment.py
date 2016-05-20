@@ -37,3 +37,6 @@ class Test_experiment(_ut.TestCase):
 
     def test_pause_or_stop(self):
         self.experiment.pause_or_stop()
+
+    def test_set_progress_limits(self):
+        self.experiment.set_progress_limits(min_progress=0., max_progress=100.)
