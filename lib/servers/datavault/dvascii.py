@@ -16,7 +16,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Data Vault
-version = 2.4.1
+version = 2.5
 description =
 instancename = Data Vault
 
