@@ -43,3 +43,6 @@ class Test_experiment(_ut.TestCase):
 
     def test_make_experiment(self):
         self.experiment.make_experiment(subexprt_cls=_exp.experiment)
+
+    def test_reload_all_parameters(self):
+        self.experiment.reload_all_parameters()
