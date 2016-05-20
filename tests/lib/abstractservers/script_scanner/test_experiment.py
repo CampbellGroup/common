@@ -12,13 +12,16 @@ class Test_experiment(_ut.TestCase):
 
     def setUp(self):
         self.experiment = _exp.experiment()
+        self.experiment.execute(ident='test_experiment')
 
     def tearDown(self):
         self.experiment = None
         del self.experiment
 
-    def test_execute(self):
-        self.experiment.execute(ident='test_experiment')
+    def test_ident_attribute(self):
+        expected_ident = 'test_experiment'
+        ident = self.experiment.ident
+        self.assertEqual(ident, expected_ident)
 
     def test_required_parameters_default(self):
         self.assertEqual(self.experiment.required_parameters, [])
@@ -31,3 +34,15 @@ class Test_experiment(_ut.TestCase):
 
     def test__connect(self):
         self.experiment._connect()
+
+    def test_pause_or_stop(self):
+        self.experiment.pause_or_stop()
+
+    def test_set_progress_limits(self):
+        self.experiment.set_progress_limits(min_progress=0., max_progress=100.)
+
+    def test_make_experiment(self):
+        self.experiment.make_experiment(subexprt_cls=_exp.experiment)
+
+    def test_reload_all_parameters(self):
+        self.experiment.reload_all_parameters()
