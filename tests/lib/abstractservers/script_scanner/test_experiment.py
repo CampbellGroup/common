@@ -40,3 +40,6 @@ class Test_experiment(_ut.TestCase):
 
     def test_set_progress_limits(self):
         self.experiment.set_progress_limits(min_progress=0., max_progress=100.)
+
+    def test_make_experiment(self):
+        self.experiment.make_experiment(subexprt_cls=_exp.experiment)
