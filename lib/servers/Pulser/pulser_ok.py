@@ -34,7 +34,7 @@ except:
     from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
 
-class Pulser(LabradServer, DDS, LineTrigger):
+class Pulser(DDS, LineTrigger):
 
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
