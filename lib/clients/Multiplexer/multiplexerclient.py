@@ -10,8 +10,7 @@ except:
     from common.lib.config.multiplexerclient_config import multiplexer_config
 
 import socket
-
-
+import os
 
 SIGNALID1 = 445566
 SIGNALID2 = 143533
@@ -26,15 +25,17 @@ SIGNALID8 = 238883
 
 class wavemeterclient(QtGui.QWidget):
 
-    def __init__(self, reactor, parent = None):
+    def __init__(self, reactor, parent=None):
         """initializels the GUI creates the reactor
             and empty dictionary for channel widgets to
             be stored for iteration. also grabs chan info
             from multiplexer_config
         """
         super(wavemeterclient, self).__init__()
+        self.password = os.environ['LABRADPASSWORD']
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
+        self.name = socket.gethostname() + ' Wave Meter Client'
         self.d = {}
         self.wmChannels = {}
         self.connect()
@@ -59,7 +60,9 @@ class wavemeterclient(QtGui.QWidget):
         self.chaninfo = multiplexer_config.info
         self.wavemeterIP = multiplexer_config.ip
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(self.wavemeterIP, name = socket.gethostname() + ' Wave Meter Client')
+        self.cxn = yield connectAsync(self.wavemeterIP,
+                                      name=self.name,
+                                      password=self.password)
 
         self.server = yield self.cxn.multiplexerserver
         yield self.server.signal__frequency_changed(SIGNALID1)
