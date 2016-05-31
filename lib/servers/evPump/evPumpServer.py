@@ -76,7 +76,7 @@ class eVPump(SerialDeviceServer):
 
     @setting(1, 'toggle_laser', value='b')
     def toggle_laser(self, c, value):
-        if value:
+        if value is True:
             yield self.ser.write_line('ON')
         else:
             yield self.ser.write_line('OFF')
