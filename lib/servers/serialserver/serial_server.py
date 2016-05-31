@@ -16,10 +16,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Serial Server cg
-version = 1.3
+name = Serial Server
+version = 1.4
 description =
-instancename = %LABRADNODE% Serial Server cg
+instancename = %LABRADNODE% Serial Server
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -56,7 +56,7 @@ class NoPortsAvailableError(Error):
 
 class SerialServer(LabradServer):
     """Provides access to a computer's serial (COM) ports."""
-    name = '%LABRADNODE% Serial Server cg'
+    name = '%LABRADNODE% Serial Server'
 
     def initServer(self):
         print 'Searching for COM ports:'
