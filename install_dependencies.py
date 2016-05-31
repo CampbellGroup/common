@@ -102,8 +102,10 @@ def set_environmental_variables():
 def _set_windows_environmental_variables():
     _set_win_envar("LABRAD_TLS", "off")
     _set_win_envar("LABRAD_TLS_PORT", "7643")
-    # The default labrad host server should be "localhost"
-    _set_win_envar("LABRADHOST", "10.97.112.6")
+    # You may need to change the default labrad host manually after
+    # installation. For example, for molecules it really should be
+    # "10.97.112.6".
+    _set_win_envar("LABRADHOST", "localhost")
     computer_name = platform.node()
     _set_win_envar("LABRADNODE", computer_name.lower())
     _set_win_envar("LABRADPASSWORD", "lab")
