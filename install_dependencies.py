@@ -3,6 +3,9 @@ Install dependent packages for common repo.
 
 Also add LabRAD system environmental variables.
 
+The functions used to hoist to admin status is found in the following link:
+http://stackoverflow.com/questions/19672352/how-to-run-python-script-with-elevated-privilege-on-windows
+
 Packages installed in this script:
 
 pylabrad
@@ -19,6 +22,7 @@ import types
 import pip
 import subprocess
 import platform
+
 
 def is_user_admin():
     if os.name == 'nt':
