@@ -3,7 +3,7 @@ Install dependent packages for common repo.
 
 Also add LabRAD system environmental variables.
 
-The functions used to hoist to admin status is found in the following link:
+The functions used to hoist the admin status are found here:
 http://stackoverflow.com/questions/19672352/how-to-run-python-script-with-elevated-privilege-on-windows
 
 Packages installed in this script:
