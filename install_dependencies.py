@@ -1,5 +1,5 @@
 """
-Install dependent packages for Molecules repo.
+Install dependent packages for common repo.
 
 Also add LabRAD system environmental variables.
 
