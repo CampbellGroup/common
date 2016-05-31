@@ -8,3 +8,5 @@ To install dependent modules, start a Terminal and run ```install_dependencies.p
 ```bash
 >>> python install_dependencies.py
 ```
+
+Please note that you might have to change the LABRADHOST environmental variable after installation. For instructions on how to do this, look up on CampbellGroup wiki.
