@@ -3,7 +3,7 @@ common
 
 Shared campbell lab code.
 
-To install dependent modules, simply double click on ```install_dependencies.py```. Alternatively, you can run it in a terminal:
+To install dependent modules, double click on ```install_dependencies.py```. Alternatively, you can run it in a terminal:
 
 ```bash
 >>> python install_dependencies.py
