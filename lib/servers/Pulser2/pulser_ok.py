@@ -1,9 +1,9 @@
-#Created on Feb 22, 2012
-#@author: Michael Ramm, Haeffner Lab
+# Created on Feb 22, 2012
+# @author: Michael Ramm, Haeffner Lab
 '''
 ### BEGIN NODE INFO
 [info]
-name = Pulser2
+name = Pulser
 version = 2.0
 description =
 instancename = Pulser
@@ -36,7 +36,7 @@ import numpy
 
 class Pulser(DDS, LineTrigger):
 
-    name = 'Pulser 2'
+    name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
 
     @inlineCallbacks
