@@ -1,4 +1,7 @@
 ok
+pylabrad
+pyqtgraph
 pyserial
 pyvisa
 qt4reactor
+service_identity
