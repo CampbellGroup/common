@@ -97,9 +97,14 @@ class ParameterVault(LabradServer):
             raise Exception("Can't save, not one of checkable types")
 
     def check_parameter(self, name, value):
+        """
+        Parameters
+        ----------
+        name:
+        value:
+        """
         t, item = value
 
-#        print name, t, t  == 'bool'
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
             return item[2]
