@@ -101,8 +101,12 @@ class ParameterVault(LabradServer):
         """
         Parameters
         ----------
-        key:
+        key: str, parameter name
         value:
+
+        Returns
+        -------
+        parameter "item" if parameter's value passes checks.
         """
         param_type, item = value
 
