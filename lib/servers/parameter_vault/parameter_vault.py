@@ -97,7 +97,7 @@ class ParameterVault(LabradServer):
         else:
             raise Exception("Can't save, not one of checkable types")
 
-    def check_parameter(self, key, value):
+    def _check_parameter(self, key, value):
         """
         Parameters
         ----------
@@ -172,7 +172,7 @@ class ParameterVault(LabradServer):
             raise Exception(str(key) + "  Parameter Not Found")
         value = self.parameters[key]
         if checked:
-            value = self.check_parameter(key, value)
+            value = self._check_parameter(key, value)
         return value
 
     @setting(2, "Get Parameter Names", collection='s', returns='*s')
