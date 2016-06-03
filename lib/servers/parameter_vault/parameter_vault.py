@@ -96,14 +96,14 @@ class ParameterVault(LabradServer):
         else:
             raise Exception("Can't save, not one of checkable types")
 
-    def check_parameter(self, key, result):
+    def check_parameter(self, key, value):
         """
         Parameters
         ----------
         key:
-        result:
+        value:
         """
-        t, item = result
+        t, item = value
 
         if t == 'parameter' or t == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(key)
@@ -128,7 +128,7 @@ class ParameterVault(LabradServer):
             return item[0]
 
         else:  # parameter type not known
-            return result
+            return value
 
     @setting(0, "Set Parameter", collection='s', parameter_name='s', value='?',
              full_info='b', returns='')
@@ -152,10 +152,10 @@ class ParameterVault(LabradServer):
         key = (collection, parameter_name)
         if key not in self.parameters.keys():
             raise Exception(str(key) + "  Parameter Not Found")
-        result = self.parameters[key]
+        value = self.parameters[key]
         if checked:
-            result = self.check_parameter(key, result)
-        return result
+            value = self.check_parameter(key, value)
+        return value
 
     @setting(2, "Get Parameter Names", collection='s', returns='*s')
     def getParameterNames(self, c, collection):
