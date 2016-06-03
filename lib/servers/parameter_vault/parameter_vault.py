@@ -122,22 +122,6 @@ class ParameterVault(LabradServer):
             assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(name)
             return item[0]
 
-        elif t == 'event':
-            e_value   = item[0]
-            e_channel = item[1]
-            e_time    = item[2]
-            e_minim, e_maxim = item[4]
-
-            print "minim=", e_minim
-            print "item[2]=", item[2]
-            print "maxim=", e_maxim
-            assert e_channel in item[3], "Inorrect selection made in {}".format(name)
-            print "item[1]=", item[1]
-            print "item[3]=", item[3]
-            assert e_minim <= e_time <= e_maxim, "Parameter {} Out of Bound".format(name)
-            print "item[0]=", item[0]
-            return (e_value, e_channel, e_time)
-
         else:  # parameter type not known
             return value
 
