@@ -105,26 +105,33 @@ class ParameterVault(LabradServer):
         """
         t, item = value
 
+        # Error strings
+        parameter_bound = "Parameter {} Out of Bound"
+        bad_selection = "Inorrect selection made in {}"
+
         if t == 'parameter' or t == 'duration_bandwidth':
-            assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(key)
+            assert item[0] <= item[2] <= item[1], parameter_bound.format(key)
             return item[2]
 
-        elif t == 'string' or t == 'bool' or t == 'sideband_selection' or t == 'spectrum_sensitivity':
+        elif t == 'string' or t == 'bool' or t == 'sideband_selection':
+            return item
+
+        elif t == 'spectrum_sensitivity':
             return item
 
         elif t == 'scan':
             minim, maxim = item[0]
             start, stop, steps = item[1]
-            assert minim <= start <= maxim, "Parameter {} Out of Bound".format(key)
-            assert minim <= stop <= maxim, "Parameter {} Out of Bound".format(key)
+            assert minim <= start <= maxim, parameter_bound.format(key)
+            assert minim <= stop <= maxim, parameter_bound.format(key)
             return (start, stop, steps)
 
         elif t == 'selection_simple':
-            assert item[0] in item[1], "Inorrect selection made in {}".format(key)
+            assert item[0] in item[1], bad_selection.format(key)
             return item[0]
 
         elif t == 'line_selection':
-            assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(key)
+            assert item[0] in dict(item[1]).keys(), bad_selection.format(key)
             return item[0]
 
         else:  # parameter type not known
