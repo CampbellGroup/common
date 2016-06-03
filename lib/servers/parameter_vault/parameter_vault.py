@@ -90,7 +90,8 @@ class ParameterVault(LabradServer):
     def _save_full(self, key, value):
         t, item = self.parameters[key]
         if t == 'parameter':
-            assert item[0] <= value <= item[1], "Parameter {} Out of Bound".format(key[1])
+            parameter_bound = "Parameter {} Out of Bound"
+            assert item[0] <= value <= item[1], parameter_bound.format(key[1])
             item[2] = value
             return (t, item)
         else:
