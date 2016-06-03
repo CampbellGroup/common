@@ -96,17 +96,17 @@ class ParameterVault(LabradServer):
         else:
             raise Exception("Can't save, not one of checkable types")
 
-    def check_parameter(self, name, value):
+    def check_parameter(self, key, result):
         """
         Parameters
         ----------
-        name:
-        value:
+        key:
+        result:
         """
-        t, item = value
+        t, item = result
 
         if t == 'parameter' or t == 'duration_bandwidth':
-            assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(name)
+            assert item[0] <= item[2] <= item[1], "Parameter {} Out of Bound".format(key)
             return item[2]
 
         elif t == 'string' or t == 'bool' or t == 'sideband_selection' or t == 'spectrum_sensitivity':
@@ -115,20 +115,20 @@ class ParameterVault(LabradServer):
         elif t == 'scan':
             minim, maxim = item[0]
             start, stop, steps = item[1]
-            assert minim <= start <= maxim, "Parameter {} Out of Bound".format(name)
-            assert minim <= stop <= maxim, "Parameter {} Out of Bound".format(name)
+            assert minim <= start <= maxim, "Parameter {} Out of Bound".format(key)
+            assert minim <= stop <= maxim, "Parameter {} Out of Bound".format(key)
             return (start, stop, steps)
 
         elif t == 'selection_simple':
-            assert item[0] in item[1], "Inorrect selection made in {}".format(name)
+            assert item[0] in item[1], "Inorrect selection made in {}".format(key)
             return item[0]
 
         elif t == 'line_selection':
-            assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(name)
+            assert item[0] in dict(item[1]).keys(), "Inorrect selection made in {}".format(key)
             return item[0]
 
         else:  # parameter type not known
-            return value
+            return result
 
     @setting(0, "Set Parameter", collection='s', parameter_name='s', value='?',
              full_info='b', returns='')
