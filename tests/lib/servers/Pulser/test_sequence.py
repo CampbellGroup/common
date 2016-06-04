@@ -42,3 +42,8 @@ class TestSequence(_ut.TestCase):
         self.sequence.addPulse(channel=12, start=0.0, duration=2.0)
         count = self.sequence.switches
         self.assertEqual(expected_count, count)
+
+    def test_addPulse_raises_exception_with_two_pulse_conflicts(self):
+        self.sequence.addPulse(channel=12, start=1.0, duration=2.0)
+        self.assertRaises(Exception, self.sequence.addPulse,
+                          channel=12, start=1.0, duration=2.0)
