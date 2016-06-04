@@ -11,7 +11,7 @@ from decimal import Decimal
 class TestSequence(_ut.TestCase):
 
     def setUp(self):
-        self.sequence = _sequence.Sequence()
+        self.sequence = _sequence.Sequence(parent=None)
         self._set_sequence_with_common_hardware_configuration()
 
     def tearDown(self):
@@ -36,3 +36,9 @@ class TestSequence(_ut.TestCase):
         self.sequence.advanceDDS = advance_dds
         reset_dds = config.channelDict['ResetDDS'].channelnumber
         self.sequence.resetDDS = reset_dds
+
+    def test_addPulse_switches_count(self):
+        expected_count = 2
+        self.sequence.addPulse(channel=12, start=0.0, duration=2.0)
+        count = self.sequence.switches
+        self.assertEqual(expected_count, count)
