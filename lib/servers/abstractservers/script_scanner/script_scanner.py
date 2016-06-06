@@ -137,7 +137,7 @@ class ScriptScanner(ScriptSignalsServer):
         return status.get_progress()
 
     @setting(10, 'new_experiment', script_name='s', returns='w')
-    def new_script(self, c, script_name):
+    def new_experiment(self, c, script_name):
         '''
         Queue an experiment for launching.  Returns the scan ID of the queued
         experiment from a scheduler instance.
