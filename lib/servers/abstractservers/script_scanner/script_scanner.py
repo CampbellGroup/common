@@ -84,7 +84,9 @@ class ScriptScanner(ScriptSignalsServer):
                     name = cls.name
                     parameters = cls.all_required_parameters()
                 except AttributeError:
-                    print 'Name is not provided for class {0} in module {1}'.format(class_name, module)
+                    name_not_provided = 'Name is not provided for class {0} in'
+                    name_not_provided += ' module {1}'
+                    print name_not_provided.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
 
@@ -133,7 +135,9 @@ class ScriptScanner(ScriptSignalsServer):
         '''
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception ("Trying to get progress of script with ID {0} but it was not running".format(script_ID))
+            try_progress = "Trying to get progress of script with ID {0} but"
+            try_progress += "it was not running"
+            raise Exception(try_progress.format(script_ID))
         return status.get_progress()
 
     @setting(10, 'new_experiment', script_name='s', returns='w')
@@ -240,14 +244,18 @@ class ScriptScanner(ScriptSignalsServer):
     def pause_script(self, c, script_ID, should_pause):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to pause script with ID {0} but it was not running".format(script_ID))
+            try_pause = "Trying to pause script with ID {0} but it was not"
+            try_pause += " running"
+            raise Exception(try_pause.format(script_ID))
         status.set_pausing(should_pause)
 
     @setting(21, "stop_script", script_ID='w')
     def stop_script(self, c, script_ID):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to stop script with ID {0} but it was not running".format(script_ID))
+            try_stop = "Trying to stop script with ID {0} but it was not"
+            try_stop += " running"
+            raise Exception(try_stop.format(script_ID))
         status.set_stopping()
 
     @setting(30, "register_external_launch", name='s', returns='w')
@@ -265,21 +273,27 @@ class ScriptScanner(ScriptSignalsServer):
     def script_set_progress(self, c, script_ID, progress):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to set progress of script with ID {0} but it was not running".format(script_ID))
+            try_set = "Trying to set progress of script with ID {0} but it was"
+            try_set += " not running"
+            raise Exception(try_set.format(script_ID))
         status.set_percentage(progress)
 
     @setting(32, "launch_confirmed", script_ID='w')
     def launch_confirmed(self, c, script_ID):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to confirm launch of script with ID {0} but it was not running".format(script_ID))
+            try_confirm = "Trying to confirm launch of script with ID {0} but "
+            try_confirm += "it was not running"
+            raise Exception(try_confirm.format(script_ID))
         status.launch_confirmed()
 
     @setting(33, "finish_confirmed", script_ID='w')
     def finish_confirmed(self, c, script_ID):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to confirm Finish of script with ID {0} but it was not running".format(script_ID))
+            try_confirm = "Trying to confirm Finish of script with ID {0} but "
+            try_confirm += "it was not running"
+            raise Exception(.format(script_ID))
         status.finish_confirmed()
         self.scheduler.remove_if_external(script_ID)
 
@@ -287,7 +301,9 @@ class ScriptScanner(ScriptSignalsServer):
     def stop_confiromed(self, c, script_ID):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to confirm Stop of script with ID {0} but it was not running".format(script_ID))
+            try_confirm = "Trying to confirm Stop of script with ID {0} but it"
+            try_confirm += " was not running"
+            raise Exception(.format(script_ID))
         status.stop_confirmed()
 
     @setting(35, "pause_or_stop", script_ID='w', returns='b')
@@ -298,7 +314,9 @@ class ScriptScanner(ScriptSignalsServer):
         '''
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to confirm Pause/Stop of script with ID {0} but it was not running".format(script_ID))
+            try_confirm = "Trying to confirm Pause/Stop of script with ID {0} "
+            try_confirm += "but it was not running"
+            raise Exception(try_confirm.format(script_ID))
         yield status.pause()
         returnValue(status.should_stop)
 
@@ -306,7 +324,9 @@ class ScriptScanner(ScriptSignalsServer):
     def error_finish_confirmed(self, c, script_ID, error_message):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
-            raise Exception("Trying to confirm error finish of script with ID {0} but it was not running".format(script_ID))
+            try_confirm = "Trying to confirm error finish of script with ID "
+            try_confirm += "{0} but it was not running"
+            raise Exception(try_confirm.format(script_ID))
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(script_ID)
 
