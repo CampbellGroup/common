@@ -50,6 +50,13 @@ class script_class_parameters(object):
 
 
 class ScriptScanner(ScriptSignalsServer):
+    """
+    Attributes
+    ----------
+    scheduler: scheduler instance.
+    script_parameters: dict, experiment names are keys, values are
+        script_class_parameters instances.
+    """
 
     name = 'ScriptScanner'
 
@@ -293,7 +300,7 @@ class ScriptScanner(ScriptSignalsServer):
         if status is None:
             try_confirm = "Trying to confirm Finish of script with ID {0} but "
             try_confirm += "it was not running"
-            raise Exception(.format(script_ID))
+            raise Exception(try_confirm.format(script_ID))
         status.finish_confirmed()
         self.scheduler.remove_if_external(script_ID)
 
@@ -303,7 +310,7 @@ class ScriptScanner(ScriptSignalsServer):
         if status is None:
             try_confirm = "Trying to confirm Stop of script with ID {0} but it"
             try_confirm += " was not running"
-            raise Exception(.format(script_ID))
+            raise Exception(try_confirm.format(script_ID))
         status.stop_confirmed()
 
     @setting(35, "pause_or_stop", script_ID='w', returns='b')
