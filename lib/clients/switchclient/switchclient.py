@@ -31,10 +31,9 @@ class switchclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         if self.cxn is None:
-            self.cxn = connection("Switch Client")
-            yield self.cxn.connect()
-        self.server = yield self.cxn.get_server('arduinottl')
-        self.reg = yield self.cxn.get_server('registry')
+            self.cxn = yield connectAsync(name="Switch Client")
+        self.server = yield self.cxn.arduinottl
+        self.reg = yield self.cxn.registry
 
         try:
             yield self.reg.cd('settings')
