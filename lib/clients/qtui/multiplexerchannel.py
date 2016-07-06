@@ -5,6 +5,7 @@ from common.lib.clients.qtui.QCustomSlideIndicator import SlideIndicator
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton as _TextChangingButton
 
+
 class StretchedLabel(QtGui.QLabel):
     def __init__(self, *args, **kwargs):
         QtGui.QLabel.__init__(self, *args, **kwargs)
@@ -13,7 +14,7 @@ class StretchedLabel(QtGui.QLabel):
     def resizeEvent(self, evt):
 
         font = self.font()
-        font.setPixelSize(self.width() * 0.14 - 14 )
+        font.setPixelSize(self.width() * 0.14 - 14)
         self.setFont(font)
 
 
@@ -24,7 +25,7 @@ class TextChangingButton(_TextChangingButton):
 
 
 class QCustomWavemeterChannel(QtGui.QFrame):
-    def __init__(self, chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage = None, parent=None):
+    def __init__(self, chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage=None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage)
@@ -32,53 +33,54 @@ class QCustomWavemeterChannel(QtGui.QFrame):
     def makeLayout(self, name, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage):
         layout = QtGui.QGridLayout()
 
+        shell_font = 'MS Shell Dlg 2'
         chanName = QtGui.QLabel(name)
-        chanName.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        chanName.setFont(QtGui.QFont(shell_font, pointSize=16))
         chanName.setAlignment(QtCore.Qt.AlignCenter)
 
         configtitle = QtGui.QLabel('WLM Connections:')
         configtitle.setAlignment(QtCore.Qt.AlignBottom)
-        configtitle.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
+        configtitle.setFont(QtGui.QFont(shell_font, pointSize=13))
 
         configLabel = QtGui.QLabel("Channel " + str(wmChannel) + '        ' + "DAC Port " + str(DACPort))
-        configLabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=8))
+        configLabel.setFont(QtGui.QFont(shell_font, pointSize=8))
         configLabel.setAlignment(QtCore.Qt.AlignCenter)
 
-
         self.PIDvoltage = QtGui.QLabel('DAC Voltage (mV)  -.-')
-        self.PIDvoltage.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=12))
+        self.PIDvoltage.setFont(QtGui.QFont(shell_font, pointSize=12))
 
         if displayPIDvoltage:
-            self.PIDindicator = SlideIndicator([-10.0,10.0])
+            self.PIDindicator = SlideIndicator([-10.0, 10.0])
 
         self.powermeter = MQProgressBar()
         self.powermeter.setOrientation(QtCore.Qt.Vertical)
-        self.powermeter.setMeterColor("orange","red")
+        self.powermeter.setMeterColor("orange", "red")
         self.powermeter.setMeterBorder("orange")
 
-        if displayPIDvoltage == True:
+        if displayPIDvoltage is True:
             layout.addWidget(self.PIDvoltage,   6,2,1,1)
             layout.addWidget(self.PIDindicator, 5,2,1,1)
-        if stretchedlabel == True:
+        if stretchedlabel is True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
             self.currentfrequency = QtGui.QLabel(frequency)
 
-        self.currentfrequency.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=60))
+
+        self.currentfrequency.setFont(QtGui.QFont(shell_font, pointSize=60))
         self.currentfrequency.setAlignment(QtCore.Qt.AlignCenter)
         self.currentfrequency.setMinimumWidth(600)
 
         frequencylabel = QtGui.QLabel('Set Frequency')
         frequencylabel.setAlignment(QtCore.Qt.AlignBottom)
-        frequencylabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
+        frequencylabel.setFont(QtGui.QFont(shell_font, pointSize=13))
 
         exposurelabel = QtGui.QLabel('Set Exposure (ms)')
         exposurelabel.setAlignment(QtCore.Qt.AlignBottom)
-        exposurelabel.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
+        exposurelabel.setFont(QtGui.QFont(shell_font, pointSize=13))
 
         self.setPID = QtGui.QPushButton('Set PID')
         self.setPID.setMaximumHeight(30)
-        self.setPID.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=10))
+        self.setPID.setFont(QtGui.QFont(shell_font, pointSize=10))
 
         self.measSwitch = TextChangingButton('WLM Measure')
 
@@ -87,14 +89,14 @@ class QCustomWavemeterChannel(QtGui.QFrame):
 
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
-        self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        self.spinFreq.setFont(QtGui.QFont(shell_font, pointSize=16))
         self.spinFreq.setDecimals(6)
         self.spinFreq.setSingleStep(0.000001)
-        self.spinFreq.setRange(100.0,1000.0)
+        self.spinFreq.setRange(100.0, 1000.0)
         self.spinFreq.setKeyboardTracking(False)
 
         self.spinExp = QtGui.QDoubleSpinBox()
-        self.spinExp.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        self.spinExp.setFont(QtGui.QFont(shell_font, pointSize=16))
         self.spinExp.setDecimals(0)
         self.spinExp.setSingleStep(1)
         self.spinExp.setRange(0, 5000.0)
@@ -124,8 +126,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinFreq.setRange(freqrange)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    icon = QCustomWavemeterChannel('Repumper',1, 4, 'Under Exposed', False, True)
+    icon = QCustomWavemeterChannel('Repumper', 1, 4, 'Under Exposed', False, True)
     icon.show()
     app.exec_()
