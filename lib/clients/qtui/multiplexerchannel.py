@@ -97,7 +97,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         self.spinExp.setDecimals(0)
         self.spinExp.setSingleStep(1)
-        self.spinExp.setRange(0, 2000.0)
+        self.spinExp.setRange(0, 5000.0)
         self.spinExp.setKeyboardTracking(False)
 
         layout.addWidget(self.spinFreq,         6, 0)
