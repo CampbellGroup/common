@@ -99,7 +99,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setFont(QtGui.QFont(shell_font, pointSize=16))
         self.spinExp.setDecimals(0)
         self.spinExp.setSingleStep(1)
-        self.spinExp.setRange(0, 5000.0)
+        # 10 seconds is the max exposure time on the wavemeter.
+        self.spinExp.setRange(0, 10000.0)
         self.spinExp.setKeyboardTracking(False)
 
         layout.addWidget(self.spinFreq,         6, 0)
