@@ -3,10 +3,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = eVPump
+name = ev_pump
 version = 1.0
 description =
-instancename = eVPump
+instancename = ev_pump
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
@@ -30,14 +30,14 @@ UPDATEPOW = 114327
 UPDATETMP = 153422
 UPDATESTAT = 356575
 
-SERVERNAME = 'eVPump'
+SERVERNAME = 'ev_pump'
 TIMEOUT = 1.0
 BAUDRATE = 115200
 
 
 class eVPump(SerialDeviceServer):
     name = SERVERNAME
-    regKey = 'eVPump'
+    regKey = 'evpump'
     port = None
     serNode = getNodeName()
     timeout = T.Value(TIMEOUT, 's')
@@ -213,14 +213,15 @@ class eVPump(SerialDeviceServer):
     @inlineCallbacks
     def measure_pump(self):
         reactor.callLater(.1, self.measure_pump)
-        yield self._get_power()
-        yield self._get_current()
-        yield self._get_temperature()
-        yield self._get_system_status()
-        self.currentchanged(self.current)
-        self.powerchanged(self.power)
-        self.temperaturechanged(self.temperature)
-        self.statuschanged(self.status)
+        if self.ser:
+            yield self._get_power()
+            yield self._get_current()
+            yield self._get_temperature()
+            yield self._get_system_status()
+            self.currentchanged(self.current)
+            self.powerchanged(self.power)
+            self.temperaturechanged(self.temperature)
+            self.statuschanged(self.status)
 
 if __name__ == "__main__":
     from labrad import util
