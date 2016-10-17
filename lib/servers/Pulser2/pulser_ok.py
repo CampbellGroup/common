@@ -41,7 +41,7 @@ class Pulser(DDS, LineTrigger):
 
     @inlineCallbacks
     def initServer(self):
-        self.api  = api()
+        self.api = api()
         self.channelDict = hardwareConfiguration.channelDict
         self.collectionTime = hardwareConfiguration.collectionTime
         self.collectionMode = hardwareConfiguration.collectionMode

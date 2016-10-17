@@ -1,28 +1,30 @@
 from PyQt4 import QtGui, uic
 from twisted.internet.defer import inlineCallbacks
+from common.lib.clients.connection import connection
 import os
 
 SIGNALID = 874193
+
 
 class pmtWidget(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         super(pmtWidget, self).__init__()
         self.reactor = reactor
-	self.cxn = cxn
-        basepath =  os.path.dirname(__file__)
+        basepath = os.path.dirname(__file__)
         path = os.path.join(basepath, "pmtfrontend.ui")
-        uic.loadUi(path,self)
+        uic.loadUi(path, self)
+        self.cxn = cxn
         self.connect()
-        
+
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
         from labrad import types as T
         self.T = T
         if self.cxn is None:
-            self.cxn = connection("PMT client")
+            self.cxn = connection(name='PMT Client')
             yield self.cxn.connect()
-	self.server = yield self.cxn.get_server('normalpmtflow')
+        self.server = yield self.cxn.get_server('normalpmtflow')
         yield self.initializeContent()
         yield self.setupListeners()
         #connect functions

@@ -27,12 +27,13 @@ import time
 
 SIGNALID = 331483
 
-class NormalPMTFlow( LabradServer):
-    
+
+class NormalPMTFlow(LabradServer):
+
     name = 'NormalPMTFlow'
     onNewCount = Signal(SIGNALID, 'signal: new count', 'v')
     onNewSetting = Signal(SIGNALID+1, 'signal: new setting', '(ss)')
-    
+
     @inlineCallbacks
     def initServer(self):
         self.saveFolder = ['','PMT Counts']
@@ -52,50 +53,52 @@ class NormalPMTFlow( LabradServer):
         yield self.connect_data_vault()
         yield self.connect_pulser()
         yield self.setupListeners()
-    
+
     @inlineCallbacks
     def setupListeners(self):
         yield self.client.manager.subscribe_to_named_message('Server Connect', 9898989, True)
         yield self.client.manager.subscribe_to_named_message('Server Disconnect', 9898989+1, True)
         yield self.client.manager.addListener(listener = self.followServerConnect, source = None, ID = 9898989)
         yield self.client.manager.addListener(listener = self.followServerDisconnect, source = None, ID = 9898989+1)
-    
+
     @inlineCallbacks
     def followServerConnect(self, cntx, serverName):
         serverName = serverName[1]
         if serverName == 'Pulser':
+            yield self.client.refresh()
             yield self.connect_pulser()
         elif serverName == 'Data Vault':
+            yield self.client.refresh()
             yield self.connect_data_vault()
-    
+
     @inlineCallbacks
     def followServerDisconnect(self, cntx, serverName):
         serverName = serverName[1]
         if serverName == 'Pulser':
             yield self.disconnect_pulser()
         elif serverName == 'Data Vault':
-            yield self.disconnect_data_vault()  
-       
+            yield self.disconnect_data_vault()
+
     @inlineCallbacks
     def connect_data_vault(self):
         try:
             #reconnect to data vault and navigate to the directory
             self.dv = yield self.client.data_vault
-            yield self.dv.cd(self.saveFolder, True)    
+            yield self.dv.cd(self.saveFolder, True)
             if self.openDataSet is not None:
-                self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)        
+                self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
                 self.onNewSetting(('dataset', self.openDataSet))
             print 'Connected: Data Vault'
         except AttributeError:
             self.dv = None
             print 'Not Connected: Data Vault'
-    
+
     @inlineCallbacks
     def disconnect_data_vault(self):
         print 'Not Connected: Data Vault'
         self.dv = None
         yield None
-    
+
     @inlineCallbacks
     def connect_pulser(self):
         try:
@@ -109,7 +112,7 @@ class NormalPMTFlow( LabradServer):
         except AttributeError:
             self.pulser = None
             print 'Not Connected: Pulser'
-    
+
     @inlineCallbacks
     def disconnect_pulser(self):
         print 'Not Connected: Pulser'
@@ -118,19 +121,19 @@ class NormalPMTFlow( LabradServer):
             yield self.recording.stop()
             self.onNewSetting(('state', 'off'))
             self.recordingInterrupted = True
-            
+
     def initContext(self, c):
         """Initialize a new context object."""
         self.listeners.add(c.ID)
 
     def expireContext(self, c):
         self.listeners.remove(c.ID)
-  
-    def getOtherListeners(self,c):
+
+    def getOtherListeners(self, c):
         notified = self.listeners.copy()
         notified.remove(c.ID)
-        return notified  
-       
+        return notified
+
     @inlineCallbacks
     def makeNewDataSet(self, folder, name):
         yield self.dv.cd(folder, True)
@@ -216,7 +219,7 @@ class NormalPMTFlow( LabradServer):
             self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
         self.recording.start(self.collection_period['s']/2.0)
         returnValue(newSet)
-        
+
     @setting(5, returns = '')
     def stopRecording(self,c):
         """

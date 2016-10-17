@@ -1,5 +1,6 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
+from common.lib.clients.connection import connection
 from PyQt4 import QtGui
 #from common.lib.configuration_files.switch_client_config import switch_config
 try:
@@ -7,9 +8,8 @@ try:
 except:
     from common.lib.config.switch_client_config import switch_config
 
+
 class switchclient(QtGui.QWidget):
-
-
 
     def __init__(self, reactor, cxn=None):
         """initializels the GUI creates the reactor
@@ -32,7 +32,7 @@ class switchclient(QtGui.QWidget):
         """
         from labrad.wrappers import connectAsync
         if self.cxn is None:
-            self.cxn = connection("Switch Client")
+            self.cxn = connection(name="Switch Client")
             yield self.cxn.connect()
         self.server = yield self.cxn.get_server('arduinottl')
         self.reg = yield self.cxn.get_server('registry')
