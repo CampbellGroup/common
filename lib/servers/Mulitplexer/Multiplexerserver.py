@@ -73,7 +73,7 @@ class MultiplexerServer(LabradServer):
 
         self.set_dll_variables()
         self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
-        
+
         self.measureChan()
 
         self.listeners = set()
@@ -120,7 +120,8 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetSwitcherSignalStates.restype = ctypes.c_long
         self.wmdll.SetSwitcherMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignal.restype = ctypes.c_long
-        self.wmdll.SetPIDSetting.restype = ctypes.c_long      
+        self.wmdll.SetPIDSetting.restype = ctypes.c_long
+        self.wmdll.SetActiveChannel.restype = ctypes.c_long
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -145,6 +146,11 @@ class MultiplexerServer(LabradServer):
         returnValue(status)
 
     # Set functions
+
+    @setting(93, "set_active_channel", chan='w')
+    def set_active_channel(self, c, chan):
+        chan_c = ctypes.c_long(chan)
+        yield self.wmdll.SetActiveChannel(ctypes.c_long(1), self.l, chan_c, self.l)
 
     @setting(10, "set_exposure_time", chan='i', ms='i')
     def set_exposure_time(self, c, chan, ms):

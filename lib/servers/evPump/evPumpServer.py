@@ -3,10 +3,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = eVPump
+name = evpump
 version = 1.0
 description =
-instancename = eVPump
+instancename = evpump
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
@@ -15,33 +15,79 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-from common.lib.servers.serialdeviceserver import SerialDeviceServer, setting,\
-    inlineCallbacks, SerialDeviceError, SerialConnectionError
 
-from twisted.internet import reactor
-from labrad.server import Signal
-from labrad import types as T
-from twisted.internet.defer import returnValue
-from labrad.support import getNodeName
+from labrad.types import Value
+from labrad.devices import DeviceServer, DeviceWrapper
+from labrad.server import setting, Signal
+from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.task import LoopingCall
 from labrad.units import WithUnit as U
+
+TIMEOUT = Value(5, 's')  # serial read timeout
 
 UPDATECURR = 150327
 UPDATEPOW = 114327
 UPDATETMP = 153422
 UPDATESTAT = 356575
 
-SERVERNAME = 'eVPump'
-TIMEOUT = 1.0
-BAUDRATE = 115200
+
+class evPumpDevice(DeviceWrapper):
+
+    @inlineCallbacks
+    def connect(self, server, port):
+        """Connect to a evPump device."""
+        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        self.server = server
+        self.ctx = server.context()
+        self.port = port
+        p = self.packet()
+        p.open(port)
+        p.baudrate(115200)
+        p.read()  # clear out the read buffer
+        p.timeout(TIMEOUT)
+        yield p.send()
+
+        self.timeInterval = 0.2
+        self.loop = LoopingCall(self.main_loop)
+        self.loopDone = self.loop.start(self.timeInterval, now=True)
+
+    def packet(self):
+        """Create a packet in our private context."""
+        return self.server.packet(context=self.ctx)
+
+    def shutdown(self):
+        """Disconnect from the serial port when we shut down."""
+        return self.packet().close().send()
+
+    @inlineCallbacks
+    def write(self, code):
+        """Write a data value to the heat switch."""
+        yield self.packet().write_line(code).send()
+
+    @inlineCallbacks
+    def query(self, code):
+        """ Write, then read. """
+        p = self.packet()
+        p.write_line(code)
+        p.read_line()
+        ans = yield p.send()
+        returnValue(ans.read_line)
+
+    @inlineCallbacks
+    def main_loop(self):
+        temp = yield self.query('?T')
+        status = yield self.query('?F')
+        current = yield self.query('?C')
+        power = yield self.query('?P')
+        __server__.update_signals(temp, status, current, power)
 
 
-class eVPump(SerialDeviceServer):
-    name = SERVERNAME
-    regKey = 'eVPump'
-    port = None
-    serNode = getNodeName()
-    timeout = T.Value(TIMEOUT, 's')
-    temperature = None
+class eVPump(DeviceServer):
+    deviceName = 'evPump'
+    name = 'evpump'
+    deviceWrapper = evPumpDevice
+
+    temperature = 0
     power = None
     current = None
     status = None
@@ -53,110 +99,126 @@ class eVPump(SerialDeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        if not self.regKey or not self.serNode:
-            error_message = 'Must define regKey and serNode attributes'
-            raise SerialDeviceError(error_message)
-        port = yield self.getPortFromReg(self.regKey)
-        self.port = port
-        print port
-        try:
-            serStr = yield self.findSerial(self.serNode)
-            self.initSerial(serStr, port, baudrate=BAUDRATE)
-        except SerialConnectionError, e:
-            self.ser = None
-            if e.code == 0:
-                print 'Could not find serial server for node %s' % self.serNode
-                print 'Please start correct serial server'
-            elif e.code == 1:
-                print 'Error opening serial connection'
-                print 'Check set up and restart serial server'
-            else:
-                raise
-        self.measure_pump()
+        print 'loading config info...',
+        self.reg = self.client.registry()
+        yield self.loadConfigInfo()
+        yield DeviceServer.initServer(self)
 
-    @setting(1, 'toggle_laser', value='b')
+    @inlineCallbacks
+    def loadConfigInfo(self):
+        """Load configuration information from the registry."""
+        reg = self.reg
+        yield reg.cd(['', 'Servers', 'evPump', 'Links'], True)
+        dirs, keys = yield reg.dir()
+        p = reg.packet()
+        for k in keys:
+            p.get(k, key=k)
+        ans = yield p.send()
+        self.serialLinks = dict((k, ans[k]) for k in keys)
+
+    @inlineCallbacks
+    def findDevices(self):
+        """Find available devices from list stored in the registry."""
+        devs = []
+        for name, (serServer, port) in self.serialLinks.items():
+            if serServer not in self.client.servers:
+                continue
+            server = self.client[serServer]
+            ports = yield server.list_serial_ports()
+            if port not in ports:
+                continue
+            devName = '%s - %s' % (serServer, port)
+            devs += [(devName, (server, port))]
+        returnValue(devs)
+
+    @setting(100, 'toggle_laser', value='b')
     def toggle_laser(self, c, value):
+        dev = self.selectDevice(c)
         if value is True:
-            yield self.ser.write_line('ON')
+            yield dev.write('ON')
         else:
-            yield self.ser.write_line('OFF')
+            yield dev.write('OFF')
 
-    @setting(2, 'toggle_shutter', value='b')
+    @setting(200, 'toggle_shutter', value='b')
     def toggle_shutter(self, c, value):
+        dev = self.selectDevice(c)
         if value:
-            yield self.ser.write_line('SHT:1')
+            yield dev.write('SHT:1')
         else:
-            yield self.ser.write_line('SHT:0')
+            yield dev.write('SHT:0')
 
-    @setting(3, 'set_power', value='v[W]')
+    @setting(300, 'set_power', value='v[W]')
     def set_power(self, c, value):
+        dev = self.selectDevice(c)
         value = str(value['W'])
-        yield self.ser.write_line('P:' + value)
+        yield dev.write('P:' + value)
 
-    @setting(4, 'get_power', returns='v[W]')
+    @setting(400, 'get_power', returns='v[W]')
     def get_power(self, c):
         yield None
         returnValue(self.power)
 
-    @setting(5, 'set_current', value='v[A]')
+    @setting(500, 'set_current', value='v[A]')
     def set_current(self, c, value):
+        dev = self.selectDevice(c)
         value = str(value['A'])
-        yield self.ser.write_line('C1:' + value)
+        yield dev.write('C1:' + value)
 
-    @setting(6, 'get_current', returns='v[A]')
+    @setting(600, 'get_current', returns='v[A]')
     def get_current(self, c):
         yield None
         returnValue(self.current)
 
-    @setting(7, 'diode_status', returns='b')
+    @setting(700, 'diode_status', returns='b')
     def diode_status(self, c):
-        yield self.ser.write_line('?D')
-        value = yield self.ser.read_line()
+        dev = self.selectDevice(c)
+        value = yield dev.query('?D')
         value = bool(float(value))
         returnValue(value)
 
-    @setting(8, 'system_status', returns='s')
+    @setting(800, 'system_status', returns='s')
     def system_status(self, c):
         yield None
         returnValue(self.status)
 
-    @setting(9, 'get_power_setpoint', returns='v[W]')
+    @setting(900, 'get_power_setpoint', returns='v[W]')
     def get_power_setpoint(self, c):
-        yield self.ser.write_line('?PSET')
-        value = yield self.ser.read_line()
+        dev = self.selectDevice(c)
+        value = yield dev.query('?PSET')
         value = U(float(value), 'W')
         returnValue(value)
 
-    @setting(15, 'get_current_setpoint', returns='v[A]')
+    @setting(101, 'get_current_setpoint', returns='v[A]')
     def get_current_setpoint(self, c):
-        yield self.ser.write_line('?CS1')
-        value = yield self.ser.read_line()
+        dev = self.selectDevice(c)
+        value = yield dev.query('?CS1')
         if value:
             value = U(float(value), 'A')
         else:
             value = U(0.0, 'A')
         returnValue(value)
 
-    @setting(10, 'get_shutter_status', returns='b')
+    @setting(102, 'get_shutter_status', returns='b')
     def get_shutter_status(self, c):
-        yield self.ser.write_line('?SHT')
-        value = yield self.ser.read_line()
+        dev = self.selectDevice(c)
+        value = yield dev.query('?SHT')
         value = bool(float(value))
         returnValue(value)
 
-    @setting(11, 'set_control_mode', mode='s')
+    @setting(103, 'set_control_mode', mode='s')
     def set_control_mode(self, c, mode):
+        dev = self.selectDevice(c)
         if mode == 'current':
-            yield self.ser.write_line('M:0')
+            yield dev.write('M:0')
         elif mode == 'power':
-            yield self.ser.write_line('M:1')
+            yield dev.write('M:1')
         else:
             yield None
 
-    @setting(12, 'get_control_mode', returns='s')
+    @setting(104, 'get_control_mode', returns='s')
     def get_control_mode(self, c):
-        yield self.ser.write_line('?M')
-        value = yield self.ser.read_line()
+        dev = self.selectDevice(c)
+        value = yield dev.query('?M')
         if value == '0':
             value = 'current'
         elif value == '1':
@@ -165,63 +227,45 @@ class eVPump(SerialDeviceServer):
             value = None
         returnValue(value)
 
-    @setting(13, 'get_temperature', returns='v[degC]')
+    @setting(105, 'get_temperature', returns='v[degC]')
     def get_temperature(self, c):
         yield None
         returnValue(self.temperature)
 
-    @setting(14, 'get_diode_current_limit', returns='v[A]')
+    @setting(106, 'get_diode_current_limit', returns='v[A]')
     def get_diode_current_limit(self, c):
-        yield self.ser.write_line('?DCL')
-        value = yield self.ser.read_line()
+        dev = self.selectDevice(c)
+        value = yield dev.query('?DCL')
         value = float(value)
         value = U(value, 'A')
         returnValue(value)
 
-    @inlineCallbacks
-    def _get_power(self):
-        yield self.ser.write_line('?P')
-        power = yield self.ser.read_line()
-        try:
-            self.power = U(float(power), 'W')
-        except:
-            self.power = None
+    def update_signals(self, temp, status, current, power):
 
-    @inlineCallbacks
-    def _get_current(self):
-        yield self.ser.write_line('?C')
-        current = yield self.ser.read_line()
-        try:
-            self.current = U(float(current), 'A')
-        except:
-            self.current = None
+        self.status = status
 
-    @inlineCallbacks
-    def _get_temperature(self):
-        yield self.ser.write_line('?T')
-        temp = yield self.ser.read_line()
         try:
             self.temperature = U(float(temp), 'degC')
         except:
             self.temperature = None
 
-    @inlineCallbacks
-    def _get_system_status(self):
-        yield self.ser.write_line('?F')
-        self.status = yield self.ser.read_line()
+        try:
+            self.power = U(float(power), 'W')
+        except:
+            self.power = None
 
-    @inlineCallbacks
-    def measure_pump(self):
-        reactor.callLater(.1, self.measure_pump)
-        yield self._get_power()
-        yield self._get_current()
-        yield self._get_temperature()
-        yield self._get_system_status()
+        try:
+            self.current = U(float(current), 'A')
+        except:
+            self.current = None
+
         self.currentchanged(self.current)
         self.powerchanged(self.power)
         self.temperaturechanged(self.temperature)
         self.statuschanged(self.status)
 
+__server__ = eVPump()
+
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(eVPump())
+    util.runServer(__server__)

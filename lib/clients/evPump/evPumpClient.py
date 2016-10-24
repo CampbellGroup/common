@@ -35,7 +35,7 @@ class eVPumpClient(QtGui.QWidget):
         if self.cxn is None:
             self.cxn = connection(name='eV Pump Client')
             yield self.cxn.connect()
-        self.server = yield self.cxn.get_server('eVPump')
+        self.server = yield self.cxn.get_server('evpump')
 
         yield self.server.signal__current_changed(SIGNALID1)
         yield self.server.signal__power_changed(SIGNALID2)
@@ -200,6 +200,7 @@ class eVPumpClient(QtGui.QWidget):
         self.powerprogbar.setFormat(str(power['W']) + 'W')
 
     def update_temperature(self, c, temperature):
+        print temperature
         self.tempdisplay.display(str(temperature['degC']))
 
     def update_system_status(self, c, sys_status):

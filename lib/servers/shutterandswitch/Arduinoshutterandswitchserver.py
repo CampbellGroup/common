@@ -3,7 +3,7 @@
 [info]
 name = ArduinoTTL
 version = 1.0
-description = 
+description =
 instancename = ArduinoTTL
 
 [startup]
@@ -16,68 +16,106 @@ timeout = 20
 ### END NODE INFO
 """
 
+from labrad.types import Value
+from labrad.devices import DeviceServer, DeviceWrapper
+from labrad.server import setting
+from twisted.internet.defer import inlineCallbacks, returnValue
 
-'''
-Created on May 17, 2014
+TIMEOUT = Value(1.0, 's')
 
-@author: anthonyransford
 
-'''
+class TTLDevice(DeviceWrapper):
 
-from common.lib.servers.serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
-from labrad.types import Error
-from twisted.internet import reactor
-from labrad.server import Signal
-from labrad import types as T
-from twisted.internet.task import LoopingCall
-from twisted.internet.defer import returnValue
-from labrad.support import getNodeName
-import time
-
-SERVERNAME = 'ArduinoTTL'
-TIMEOUT = 1.0
-BAUDRATE = 57600
-
-class ArduinoTTL( SerialDeviceServer ):
-    name = SERVERNAME
-    regKey = 'arduinoTTL'
-    port = None
-    serNode = getNodeName()
-    timeout = T.Value(TIMEOUT,'s')
-    
-    
     @inlineCallbacks
-    def initServer( self ):
-        if not self.regKey or not self.serNode: raise SerialDeviceError( 'Must define regKey and serNode attributes' )
-        port = yield self.getPortFromReg( self.regKey )
+    def connect(self, server, port):
+        """Connect to a TTL device."""
+        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        self.server = server
+        self.ctx = server.context()
         self.port = port
-        try:
-            serStr = yield self.findSerial( self.serNode )
-            self.initSerial( serStr, port, baudrate = BAUDRATE )
-        except SerialConnectionError, e:
-            self.ser = None
-            if e.code == 0:
-                print 'Could not find serial server for node: %s' % self.serNode
-                print 'Please start correct serial server'
-            elif e.code == 1:
-                print 'Error opening serial connection'
-                print 'Check set up and restart serial server'
-            else: raise
-    
-    @setting(1, 'TTL Output', chan = 'i', state = 'b')
+        p = self.packet()
+        p.open(port)
+        p.baudrate(57600)
+        p.read()  # clear out the read buffer
+        p.timeout(TIMEOUT)
+        yield p.send()
+
+    def packet(self):
+        """Create a packet in our private context."""
+        return self.server.packet(context=self.ctx)
+
+    def shutdown(self):
+        """Disconnect from the serial port when we shut down."""
+        return self.packet().close().send()
+
+    @inlineCallbacks
+    def write(self, code):
+        """Write a data value to the heat switch."""
+        yield self.packet().write_line(code).send()
+
+    @inlineCallbacks
+    def query(self, code):
+        """ Write, then read. """
+        p = self.packet()
+        p.write_line(code)
+        p.read_line()
+        ans = yield p.send()
+        returnValue(ans.read_line)
+
+
+class ArduinoTTL(DeviceServer):
+    name = 'ArduinoTTL'
+    deviceName = 'ArduinoTTL'
+    deviceWrapper = TTLDevice
+
+    @inlineCallbacks
+    def initServer(self):
+        print 'loading config info...',
+        self.reg = self.client.registry()
+        yield self.loadConfigInfo()
+        yield DeviceServer.initServer(self)
+
+    @inlineCallbacks
+    def loadConfigInfo(self):
+        """Load configuration information from the registry."""
+        reg = self.reg
+        yield reg.cd(['', 'Servers', 'ArduinoTTL', 'Links'], True)
+        dirs, keys = yield reg.dir()
+        p = reg.packet()
+        for k in keys:
+            p.get(k, key=k)
+        ans = yield p.send()
+        self.serialLinks = dict((k, ans[k]) for k in keys)
+
+    @inlineCallbacks
+    def findDevices(self):
+        """Find available devices from list stored in the registry."""
+        devs = []
+        for name, (serServer, port) in self.serialLinks.items():
+            if serServer not in self.client.servers:
+                continue
+            server = self.client[serServer]
+            ports = yield server.list_serial_ports()
+            if port not in ports:
+                continue
+            devName = '%s - %s' % (serServer, port)
+            devs += [(devName, (server, port))]
+        returnValue(devs)
+
+    @setting(100, 'TTL Output', chan='i', state='b')
     def ttlOutput(self, c, chan, state):
+        dev = self.selectDevice(c)
         output = (chan << 2) | (state + 2)
-        yield self.ser.write(chr(output))
-        
-    @setting(2, 'TTL Read', chan = 'i', returns = 'b')
+        yield dev.write(chr(output))
+
+    @setting(200, 'TTL Read', chan='i', returns='b')
     def ttlInput(self, c, chan):
-        output = (chan << 2) 
-        yield self.ser.flushinput()
-        yield self.ser.write(chr(output))
-        status  = yield self.ser.read()
+        dev = self.selectDevice(c)
+        output = (chan << 2)
+        status = yield dev.query(chr(output))
         status = status.encode('hex')
 
-        try: 
+        try:
             status = int(status)
             if status == 1:
                 print 'status is 1'
@@ -85,12 +123,12 @@ class ArduinoTTL( SerialDeviceServer ):
             elif status == 0:
                 print 'status is 0'
                 returnValue(False)
-            else: print status, 'invalid TTL', returnValue(False)
-        except ValueError: 
-            print  status, 'Error Reading'
+            else:
+                print status, 'invalid TTL', returnValue(False)
+        except ValueError:
+            print status, 'Error Reading'
             returnValue(False)
-                
-    
+
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( ArduinoTTL() )
+    util.runServer(ArduinoTTL())

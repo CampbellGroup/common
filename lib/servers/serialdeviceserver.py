@@ -252,7 +252,7 @@ class SerialDeviceServer( LabradServer ):
     def serverConnected( self, ID, name ):
         """Check to see if we can connect to serial server now"""
         if self.ser is None and None not in ( self.port, self.serNode ) and self._matchSerial( self.serNode, name ):
-            self.initSerial( name, self.port, self.timeout )
+            self.initSerial( name, self.port)
             print 'Serial server connected after we connected'
 
     def serverDisconnected( self, ID, name ):
