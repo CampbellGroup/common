@@ -1,9 +1,11 @@
+from config.andor_config import andor_config as config
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 import numpy as np
 import pyqtgraph as pg
 import datetime as datetime
+from datetime import datetime
 
 
 class AndorVideo(QtGui.QWidget):
@@ -17,6 +19,7 @@ class AndorVideo(QtGui.QWidget):
         self.connect_layout()
 
         self.save_images_state = False
+        self.image_path = config.image_path
 
 #        emrange= yield self.server.getemrange(None)
 #        self.emccdSpinBox.setMinimum(emrange[0])
@@ -206,6 +209,12 @@ class AndorVideo(QtGui.QWidget):
 
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
+        if self.save_images_state == True:
+            dt = datetime.now()
+            time_stamp = str(dt.year)+str(dt.month)+str(dt.day)+str(dt.hour)\
+            +str(dt.minute)+str(dt.second)+str(dt.microsecond)+'.csv'
+            np.savetxt(self.image_path+time_stamp,image_data)
+    
     @inlineCallbacks
     def start_live_display(self):
         self.live_button.setChecked(True)

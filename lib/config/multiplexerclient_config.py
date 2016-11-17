@@ -16,4 +16,4 @@ class multiplexer_config(object):
             'Laser 7': (7, '751.526150', (5,3), True, False, 7, [-10,10]),
             'Laser 8': (8, '384.230000', (5,4), True, False, 8, [-10,10])
             }
-    ip = 'localhost'
+    ip = '10.97.112.2'
