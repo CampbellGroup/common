@@ -200,7 +200,6 @@ class eVPumpClient(QtGui.QWidget):
         self.powerprogbar.setFormat(str(power['W']) + 'W')
 
     def update_temperature(self, c, temperature):
-        print temperature
         self.tempdisplay.display(str(temperature['degC']))
 
     def update_system_status(self, c, sys_status):
