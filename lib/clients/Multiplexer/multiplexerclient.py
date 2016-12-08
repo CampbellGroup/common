@@ -60,7 +60,6 @@ class wavemeterclient(QtGui.QWidget):
         self.chaninfo = multiplexer_config.info
         self.wavemeterIP = multiplexer_config.ip
         from labrad.wrappers import connectAsync
-        print self.wavemeterIP
         self.cxn = yield connectAsync(self.wavemeterIP,
                                       name=self.name,
                                       password=self.password)
