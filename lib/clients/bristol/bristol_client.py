@@ -2,7 +2,7 @@ from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui
 import os
-import RGBconverter as RGB
+from common.lib.clients.qtui import RGBconverter as RGB
 SIGNALID1 = 125366
 SIGNALID2 = 525466
 
