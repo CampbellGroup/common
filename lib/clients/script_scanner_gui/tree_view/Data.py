@@ -16,7 +16,7 @@ class Node(object):
     def insertChild(self, position, child):
         if position < 0 or position > len(self._children):
             return False
-        
+
         self._children.insert(position, child)
         child._parent = self
         return True
