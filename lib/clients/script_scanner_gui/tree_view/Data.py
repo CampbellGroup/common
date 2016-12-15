@@ -338,10 +338,18 @@ class ScanNode(Node):
 
     def filter_text(self):
         return self.parent().name() + self.name()
-    
+
     def string_format(self):
-        return 'Scan {0} {3} to {1} {3} in {2} steps'.format(self._scan_start, self._scan_stop, self._scan_points, self._units)
-        
+        if self._units:
+            return 'Scan {0} {3} to {1} {3} in {2} steps'.format(self._scan_start,
+                                                                 self._scan_stop,
+                                                                 self._scan_points,
+                                                                 self._units)
+        else:
+            return 'Scan {0} to {1} in {2} steps'.format(self._scan_start,
+                                                         self._scan_stop,
+                                                         self._scan_points)
+
     def setData(self, column, value):
         value = value.toPyObject()
         if column == 3:
