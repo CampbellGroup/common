@@ -18,7 +18,6 @@ class pmtWidget(QtGui.QWidget):
 
     @inlineCallbacks
     def connect(self):
-        from labrad.wrappers import connectAsync
         from labrad import types as T
         self.T = T
         if self.cxn is None:
@@ -27,19 +26,21 @@ class pmtWidget(QtGui.QWidget):
         self.server = yield self.cxn.get_server('normalpmtflow')
         yield self.initializeContent()
         yield self.setupListeners()
-        #connect functions
+        # connect functions
         self.pushButton.toggled.connect(self.on_toggled)
         self.newSet.clicked.connect(self.onNewSet)
         self.doubleSpinBox.valueChanged.connect(self.onNewDuration)
         self.comboBox.currentIndexChanged.connect(self.onNewMode)
-    
+
     @inlineCallbacks
     def setupListeners(self):
         yield self.server.signal__new_count(SIGNALID)
         yield self.server.signal__new_setting(SIGNALID + 1)
-        yield self.server.addListener(listener = self.followSignal, source = None, ID = SIGNALID)
-        yield self.server.addListener(listener = self.followSetting, source = None, ID = SIGNALID + 1)
-    
+        yield self.server.addListener(listener=self.followSignal,
+                                      source=None, ID=SIGNALID)
+        yield self.server.addListener(listener=self.followSetting,
+                                      source=None, ID=SIGNALID + 1)
+
     @inlineCallbacks
     def initializeContent(self):
         dataset = yield self.server.currentdataset()
@@ -51,7 +52,7 @@ class pmtWidget(QtGui.QWidget):
         try:
             ran = yield self.server.get_time_length_range()
         except Exception:
-            #not able to obtain
+            # not able to obtain
             pass
         else:
             self.doubleSpinBox.setRange(*ran)
@@ -59,15 +60,15 @@ class pmtWidget(QtGui.QWidget):
         index = self.comboBox.findText(mode)
         self.comboBox.setCurrentIndex(index)
         self.lcdNumber.display('OFF')
-        
+
         self.doubleSpinBox.setValue(duration['s'])
-    
-    def followSignal(self,signal,value):
-        #print signal,value
+
+    def followSignal(self, signal, value):
+        # print signal,value
         self.lcdNumber.display(value)
-    
+
     def followSetting(self, signal, message):
-        setting,val = message
+        setting, val = message
         if setting == "mode":
             index = self.comboBox.findText(val)
             self.comboBox.blockSignals(True)
@@ -79,7 +80,7 @@ class pmtWidget(QtGui.QWidget):
             self.lineEdit.blockSignals(False)
         if setting == 'state':
             self.pushButton.blockSignals(True)
-            if val =='on':
+            if val == 'on':
                 self.pushButton.setChecked(True)
             else:
                 self.pushButton.setChecked(False)
@@ -90,7 +91,7 @@ class pmtWidget(QtGui.QWidget):
             self.doubleSpinBox.blockSignals(True)
             self.doubleSpinBox.setValue(float(val))
             self.doubleSpinBox.blockSignals(False)
-            
+
     @inlineCallbacks
     def on_toggled(self, state):
         if state:
@@ -119,7 +120,7 @@ class pmtWidget(QtGui.QWidget):
         else:
             obj.setText('OFF')
 
-    def onNewData(self,count):
+    def onNewData(self, count):
         self.lcdNumber.display(count)
 
     @inlineCallbacks
