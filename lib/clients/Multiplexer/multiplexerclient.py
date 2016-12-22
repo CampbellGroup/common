@@ -126,7 +126,7 @@ class wavemeterclient(QtGui.QWidget):
                 except:
                     rails = [-10.0,10.0]
                     widget.PIDindicator.set_rails(rails)
-            import RGBconverter as RGB
+            from common.lib.clients.qtui import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8/(float(hint)*1e3))
             color = RGB.wav2RGB(color)
