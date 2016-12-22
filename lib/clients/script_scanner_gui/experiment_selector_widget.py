@@ -80,7 +80,8 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
     def set_suffix(self, suffix):
         for widget in [self.uiMin, self.uiMax, self.uiStart, self.uiStop, self.uiCenter, self.uiSpan,
                        self.uiSetResolution, self.uiActualResolution]:
-            widget.setSuffix(suffix)
+            if suffix:
+                widget.setSuffix(suffix)
 
     def set_minimum(self, value):
         for widget in [self.uiStart, self.uiStop, self.uiCenter]:

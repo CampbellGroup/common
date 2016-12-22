@@ -65,7 +65,8 @@ class switchclient(QtGui.QWidget):
             widget = QCustomSwitchChannel(chan,('Closed','Open'))
             if chan + 'shutter' in self.settings:
                 value = yield self.reg.get(chan + 'shutter')
-                widget.TTLswitch.setChecked(value)
+                print value
+                widget.TTLswitch.setChecked(bool(value))
             else:
                 widget.TTLswitch.setChecked(False)
 
@@ -79,11 +80,11 @@ class switchclient(QtGui.QWidget):
 
     @inlineCallbacks
     def changeState(self, state, port, chan, inverted):
+        if chan + 'shutter' in self.settings:
+            yield self.reg.set(chan + 'shutter', state)
         if inverted:
             state = not state
         yield self.server.ttl_output(port, state)
-        if chan + 'shutter' in self.settings:
-            yield self.reg.set(chan + 'shutter', state)
 
     def closeEvent(self, x):
         self.reactor.stop()
