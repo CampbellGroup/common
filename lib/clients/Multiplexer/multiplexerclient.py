@@ -98,7 +98,9 @@ class wavemeterclient(QtGui.QWidget):
         layout.addWidget(qBox, 0, 0)
 
         self.lockSwitch = TextChangingButton('Lock Wave Meter')
+        self.lockSwitch.setMaximumHeight(50)
         self.startSwitch = TextChangingButton('Wavemeter')
+        self.startSwitch.setMaximumHeight(50)
         initstartvalue = yield self.server.get_wlm_output()
         initlockvalue = yield self.server.get_lock_state()
         self.lockSwitch.setChecked(initlockvalue)
