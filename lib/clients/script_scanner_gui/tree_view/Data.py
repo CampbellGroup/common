@@ -16,7 +16,7 @@ class Node(object):
     def insertChild(self, position, child):
         if position < 0 or position > len(self._children):
             return False
-        
+
         self._children.insert(position, child)
         child._parent = self
         return True
@@ -276,31 +276,46 @@ class StringNode(Node):
             self._value = value
 
 class ScanNode(Node):
-    
+
     columns = 8
-    
+
     def __init__(self, name, info, parent=None):
         super(ScanNode, self).__init__(name, parent)
         self._collection = parent.name()
         self.set_full_info(info)
-    
+
     def set_full_info(self, info):
         limit_info, scan_info = info
-        self._units = limit_info[0].units
-        self._min = limit_info[0][self._units]
-        self._max = limit_info[1][self._units]
-        self._scan_start = scan_info[0][self._units]
-        self._scan_stop = scan_info[1][self._units]
+        try:
+            self._units = limit_info[0].units
+        except:
+            self._units = None
+        if self._units:
+            self._min = limit_info[0][self._units]
+            self._max = limit_info[1][self._units]
+            self._scan_start = scan_info[0][self._units]
+            self._scan_stop = scan_info[1][self._units]
+        else:
+            self._min = limit_info[0]
+            self._max = limit_info[1]
+            self._scan_start = scan_info[0]
+            self._scan_stop = scan_info[1]
         self._scan_points = scan_info[2]
-    
+
     def path(self):
         return (self._collection, self.name())
-    
+
     def full_parameter(self):
         WithUnit = self.WithUnit
-        return ('scan', ([WithUnit(self._min, self._units), WithUnit(self._max, self._units) ],
-                         (WithUnit(self._scan_start, self._units), WithUnit(self._scan_stop, self._units), self._scan_points)
-                         ))    
+        if self._units:
+            return ('scan', ([WithUnit(self._min, self._units), WithUnit(self._max, self._units)],
+                    (WithUnit(self._scan_start, self._units), WithUnit(self._scan_stop, self._units), self._scan_points)
+                    ))
+        else:
+            return ('scan', ([self._min, self._max],
+                    (self._scan_start, self._scan_stop, self._scan_points)
+                         ))
+
     def data(self, column):
         if column < 1:
             return super(ScanNode, self).data(column)
@@ -323,10 +338,18 @@ class ScanNode(Node):
 
     def filter_text(self):
         return self.parent().name() + self.name()
-    
+
     def string_format(self):
-        return 'Scan {0} {3} to {1} {3} in {2} steps'.format(self._scan_start, self._scan_stop, self._scan_points, self._units)
-        
+        if self._units:
+            return 'Scan {0} {3} to {1} {3} in {2} steps'.format(self._scan_start,
+                                                                 self._scan_stop,
+                                                                 self._scan_points,
+                                                                 self._units)
+        else:
+            return 'Scan {0} to {1} in {2} steps'.format(self._scan_start,
+                                                         self._scan_stop,
+                                                         self._scan_points)
+
     def setData(self, column, value):
         value = value.toPyObject()
         if column == 3:

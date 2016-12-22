@@ -139,6 +139,9 @@ class eVPumpClient(QtGui.QWidget):
         initOn = yield self.server.diode_status()
         self.laserswitch.TTLswitch.setChecked(initOn)
 
+        initShutter = yield self.server.get_shutter_status()
+        self.shutterswitch.TTLswitch.setChecked(initShutter)
+
         self.setLayout(layout)
 
     @inlineCallbacks
