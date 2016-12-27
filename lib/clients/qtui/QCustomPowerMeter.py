@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore
 import sys
 
 class MQProgressBar(QtGui.QProgressBar):
@@ -45,4 +45,3 @@ if __name__ == '__main__':
     mypb.setValue(3000.0)
     mypb.show()
     sys.exit(app.exec_())
-    

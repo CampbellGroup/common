@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui
+from pyqtgraph.Qt import QtGui
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 

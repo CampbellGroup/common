@@ -1,13 +1,12 @@
 import sys
-from PyQt4 import QtGui
-from PyQt4 import QtCore
+from pyqtgraph.Qt import QtGui, QtCore
 
 class SliderSpin(QtGui.QFrame):
     def __init__(self, title, unit, initrange, absrange , parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.constructLayout(title, unit, initrange, absrange)
         self.connectWidgets()
-    
+
     def constructLayout(self, titleName, unitName, initrange, absrange):
         #setting qframe properties
         self.setFrameShape(QtGui.QFrame.StyledPanel)
@@ -49,13 +48,13 @@ class SliderSpin(QtGui.QFrame):
         layout.addWidget(self.minrange, 2, 0)
         layout.addWidget(self.maxrange, 2, 2)
         self.setLayout(layout)
-    
+
     def connectWidgets(self):
         self.minrange.valueChanged.connect(self.setRange)
         self.maxrange.valueChanged.connect(self.setRange)
         self.slider.valueChanged.connect(self.spin.setValue)
         self.spin.valueChanged.connect(self.slider.setValue)
-           
+
     def setRange(self):
         minrange = self.minrange.value()
         maxrange = self.maxrange.value()
@@ -68,7 +67,7 @@ class SliderSpin(QtGui.QFrame):
         self.spin.setValue(value)
         self.slider.setValue(value)
         self.spin.blockSignals(False)
-        self.slider.blockSignals(False)        
+        self.slider.blockSignals(False)
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)

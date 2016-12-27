@@ -1,5 +1,5 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore
 
 class QCustomPID(QtGui.QFrame):
     def __init__(self, DACPort, parent=None):

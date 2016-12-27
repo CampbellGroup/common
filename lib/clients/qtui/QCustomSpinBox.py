@@ -1,7 +1,6 @@
 import sys
 import os
-from PyQt4 import QtGui
-from PyQt4 import QtCore,uic
+from pyqtgraph.Qt import QtGui, QtCore, uic
 
 class QCustomSpinBox(QtGui.QWidget):
     onNewValues = QtCore.pyqtSignal()
@@ -22,10 +21,10 @@ class QCustomSpinBox(QtGui.QWidget):
         self.spinLevel.setValue(level)
         self.level = level
         self.connectAll()
-        
+
     def setStepSize(self, step):
         self.spinLevel.setSingleStep(step)
-    
+
     def spinLevelChanged(self, newlevel):
         oldlevel = self.level
         withinRange = self.checkRange(newlevel)
@@ -37,7 +36,7 @@ class QCustomSpinBox(QtGui.QWidget):
         else:
             suggestedLevel = self.suggestLevel(newlevel)
             self.spinLevel.setValue(suggestedLevel)
-    
+
     def suggestLevel(self, level):
         #if spin box value selected too high, goes to the highest possible value
         if level < self.levelRange[0]:
@@ -45,13 +44,13 @@ class QCustomSpinBox(QtGui.QWidget):
         if level > self.levelRange[1]:
             suggestion = self.levelRange[1]
         return suggestion
-    
+
     def checkRange(self,val):
         if self.levelRange[0] <= val <= self.levelRange[1]:
             return True
         else:
             return False
-    
+
     def checkBounds(self, val):
         if val < self.levelRange[0]:
             output = self.levelRange[0]
@@ -63,19 +62,19 @@ class QCustomSpinBox(QtGui.QWidget):
 
     def disconnectAll(self):
         self.spinLevel.blockSignals(True)
-    
+
     def connectAll(self):
         self.spinLevel.blockSignals(False)
-        
+
     def setValueNoSignal(self, value):
         self.spinLevel.blockSignals(True)
         self.spinLevel.setValue(value)
         self.spinLevel.blockSignals(False)
-        
+
 if __name__=='__main__':
     app = QtGui.QApplication(sys.argv)
     icon = QCustomSpinBox('Control',(-10.0,10.0))
     icon.show()
     app.exec_()
 
- 
+

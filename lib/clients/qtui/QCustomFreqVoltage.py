@@ -1,12 +1,13 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore
+
 
 class QCustomFreqVoltage(QtGui.QFrame):
     def __init__(self, title, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(title)
-    
+
     def makeLayout(self, title):
         layout = QtGui.QGridLayout()
         #labels
@@ -34,23 +35,23 @@ class QCustomFreqVoltage(QtGui.QFrame):
         layout.addWidget(self.spinFreq,     2, 0)
         layout.addWidget(self.spinVoltage,    2, 1)
         self.setLayout(layout)
-    
+
     def setVoltageRange(self, voltagerange):
         self.spinVoltage.setRange(*voltagerange)
-    
+
     def setFreqRange(self, freqrange):
         self.spinFreq.setRange(*freqrange)
-        
+
     def setVoltageNoSignal(self, voltage):
         self.spinVoltage.blockSignals(True)
         self.spinVoltage.setValue(voltage)
         self.spinVoltage.blockSignals(False)
-        
+
     def setFreqNoSignal(self, freq):
         self.spinFreq.blockSignals(True)
         self.spinFreq.setValue(freq)
         self.spinFreq.blockSignals(False)
-    
+
 
 if __name__=="__main__":
     app = QtGui.QApplication(sys.argv)
