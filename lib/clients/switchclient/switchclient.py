@@ -1,7 +1,7 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
-from PyQt4 import QtGui
+from pyqtgraph.Qt import QtGui
 #from common.lib.configuration_files.switch_client_config import switch_config
 try:
     from config.switch_client_config import switch_config
@@ -65,7 +65,7 @@ class switchclient(QtGui.QWidget):
             widget = QCustomSwitchChannel(chan,('Closed','Open'))
             if chan + 'shutter' in self.settings:
                 value = yield self.reg.get(chan + 'shutter')
-                print value
+                print(value)
                 widget.TTLswitch.setChecked(bool(value))
             else:
                 widget.TTLswitch.setChecked(False)
@@ -92,8 +92,16 @@ class switchclient(QtGui.QWidget):
 
 if __name__ == "__main__":
     a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
+    try:
+        import qt4reactor as qtreactor
+    except ImportError:
+        try:
+            import qt5reactor as qtreactor
+        except:
+            msg = "Error loading qtreactor. Check either qt4reactor or "
+            msg += "qt5reactor is in the python path."
+            raise ImportError(msg)
+    qtreactor.install()
     from twisted.internet import reactor
     switchWidget = switchclient(reactor)
     switchWidget.show()
