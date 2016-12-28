@@ -74,7 +74,6 @@ class switchclient(QtGui.QWidget):
             subLayout.addWidget(self.d[port], position[0], position[1])
 
         self.setLayout(layout)
-        yield None
 
     @inlineCallbacks
     def changeState(self, state, port, chan, inverted):
