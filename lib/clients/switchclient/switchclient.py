@@ -25,8 +25,8 @@ class switchclient(QtGui.QWidget):
 
     @inlineCallbacks
     def connect(self):
-        """Creates an Asynchronous connection to the wavemeter computer and
-        connects incoming signals to relavent functions
+        """Creates a connection if no connection passed and
+        checked for saved switch settings
 
         """
         if self.cxn is None:
