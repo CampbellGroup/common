@@ -26,15 +26,17 @@ class bristol_client(QtGui.QWidget):
         """
 
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('10.97.112.46',
+        self.cxn = yield connectAsync(
                                       name='bristol client',
                                       password=self.password)
         self.server = yield self.cxn.bristol_521
 
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__amplitude_changed(SIGNALID2)
-        yield self.server.addListener(listener=self.updateFrequency, source=None, ID=SIGNALID1)
-        yield self.server.addListener(listener=self.updatePower, source=None, ID=SIGNALID2)
+        yield self.server.addListener(listener=self.updateFrequency,
+                                      source=None, ID=SIGNALID1)
+        yield self.server.addListener(listener=self.updatePower, source=None,
+                                      ID=SIGNALID2)
 
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
@@ -48,10 +50,10 @@ class bristol_client(QtGui.QWidget):
         self.powerlabel.setFont(QtGui.QFont(shell_font, pointSize=28))
         self.freqwidget.setFont(QtGui.QFont(shell_font, pointSize=35))
         self.powerwidget.setFont(QtGui.QFont(shell_font, pointSize=35))
-        layout.addWidget(self.freqlabel, 0,0)
-        layout.addWidget(self.powerlabel, 0,1)
-        layout.addWidget(self.freqwidget, 1,0)
-        layout.addWidget(self.powerwidget, 1,1)
+        layout.addWidget(self.freqlabel, 0, 0)
+        layout.addWidget(self.powerlabel, 0, 1)
+        layout.addWidget(self.freqwidget, 1, 0)
+        layout.addWidget(self.powerwidget, 1, 1)
         self.setLayout(layout)
 
     def updateFrequency(self, c, signal):

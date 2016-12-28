@@ -2,7 +2,6 @@ from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui
-#from common.lib.configuration_files.switch_client_config import switch_config
 try:
     from config.switch_client_config import switch_config
 except:
@@ -12,10 +11,10 @@ except:
 class switchclient(QtGui.QWidget):
 
     def __init__(self, reactor, cxn=None):
-        """initializels the GUI creates the reactor
+        """initializes the GUI creates the reactor
             and empty dictionary for channel widgets to
             be stored for iteration. also grabs chan info
-            from wlm_client_config file
+            from switch_config file
         """
         super(switchclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
@@ -26,11 +25,10 @@ class switchclient(QtGui.QWidget):
 
     @inlineCallbacks
     def connect(self):
-        """Creates an Asynchronous connection to the wavemeter computer and
-        connects incoming signals to relavent functions
+        """Creates a connection if no connection passed and
+        checked for saved switch settings
 
         """
-        from labrad.wrappers import connectAsync
         if self.cxn is None:
             self.cxn = connection(name="Switch Client")
             yield self.cxn.connect()
@@ -38,7 +36,7 @@ class switchclient(QtGui.QWidget):
         self.reg = yield self.cxn.get_server('registry')
 
         try:
-            yield self.reg.cd('settings')
+            yield self.reg.cd(['', 'settings'])
             self.settings = yield self.reg.dir()
             self.settings = self.settings[1]
         except:
@@ -58,25 +56,24 @@ class switchclient(QtGui.QWidget):
         layout.addWidget(qBox, 0, 0)
 
         for chan in self.chaninfo:
-            port     = self.chaninfo[chan][0]
+            port = self.chaninfo[chan][0]
             position = self.chaninfo[chan][1]
             inverted = self.chaninfo[chan][2]
 
-            widget = QCustomSwitchChannel(chan,('Closed','Open'))
+            widget = QCustomSwitchChannel(chan, ('Closed', 'Open'))
             if chan + 'shutter' in self.settings:
                 value = yield self.reg.get(chan + 'shutter')
-                print value
                 widget.TTLswitch.setChecked(bool(value))
             else:
                 widget.TTLswitch.setChecked(False)
 
-            widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port, chan = chan, inverted = inverted
-                                               : self.changeState(state, port, chan, inverted))
+            widget.TTLswitch.toggled.connect(lambda state=widget.TTLswitch.isDown(),
+                                             port=port, chan=chan, inverted=inverted:
+                                             self.changeState(state, port, chan, inverted))
             self.d[port] = widget
-            subLayout.addWidget(self.d[port])
+            subLayout.addWidget(self.d[port], position[0], position[1])
 
         self.setLayout(layout)
-        yield None
 
     @inlineCallbacks
     def changeState(self, state, port, chan, inverted):
