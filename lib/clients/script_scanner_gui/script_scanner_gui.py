@@ -1,16 +1,15 @@
 from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
-from common.lib.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
+
 
 class script_scanner_gui(QtGui.QWidget):
 
     SIGNALID = 319245
 
-    def __init__(self, reactor, cxn = None):
+    def __init__(self, reactor):
         super(script_scanner_gui, self).__init__()
-        self.cxn = cxn
         self.reactor = reactor
         self.setupWidgets()
         self.connect()
@@ -23,9 +22,8 @@ class script_scanner_gui(QtGui.QWidget):
         self.Error = Error
         self.subscribedScriptScanner = False
         self.subscribedParametersVault = False
-        if self.cxn is None:
-            self.cxn = connection()
-            yield self.cxn.connect()
+        from labrad.wrappers import connectAsync
+        self.cxn = yield connectAsync(name='Script Scanner')
         self.context = yield self.cxn.context()
         try:
             yield self.populateExperiments()
