@@ -1,5 +1,5 @@
 from PyQt4 import QtCore, uic
-from Data import Node, ParameterNode, CollectionNode, ScanNode, SidebandElectorNode, EventNode 
+from Data import Node
 from FilterModel import FilterModel
 from Models import ParametersTreeModel
 from PropertiesEditor import PropertiesEditor
