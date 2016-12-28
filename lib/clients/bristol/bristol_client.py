@@ -55,6 +55,7 @@ class bristol_client(QtGui.QWidget):
         self.setLayout(layout)
 
     def updateFrequency(self, c, signal):
+        print signal
         color = int(2.998e8/(float(signal)))
         color = self.RGB.wav2RGB(color)
         color = tuple(color)
