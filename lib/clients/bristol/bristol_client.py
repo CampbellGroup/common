@@ -26,7 +26,7 @@ class bristol_client(QtGui.QWidget):
         """
 
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync('10.97.112.46',
+        self.cxn = yield connectAsync(
                                       name='bristol client',
                                       password=self.password)
         self.server = yield self.cxn.bristol_521
