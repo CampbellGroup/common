@@ -56,22 +56,22 @@ class switchclient(QtGui.QWidget):
         layout.addWidget(qBox, 0, 0)
 
         for chan in self.chaninfo:
-            port     = self.chaninfo[chan][0]
+            port = self.chaninfo[chan][0]
             position = self.chaninfo[chan][1]
             inverted = self.chaninfo[chan][2]
 
-            widget = QCustomSwitchChannel(chan,('Closed','Open'))
+            widget = QCustomSwitchChannel(chan, ('Closed', 'Open'))
             if chan + 'shutter' in self.settings:
                 value = yield self.reg.get(chan + 'shutter')
-                print value
                 widget.TTLswitch.setChecked(bool(value))
             else:
                 widget.TTLswitch.setChecked(False)
 
-            widget.TTLswitch.toggled.connect(lambda state = widget.TTLswitch.isDown(), port = port, chan = chan, inverted = inverted
-                                               : self.changeState(state, port, chan, inverted))
+            widget.TTLswitch.toggled.connect(lambda state=widget.TTLswitch.isDown(),
+                                             port=port, chan=chan, inverted=inverted:
+                                             self.changeState(state, port, chan, inverted))
             self.d[port] = widget
-            subLayout.addWidget(self.d[port])
+            subLayout.addWidget(self.d[port], position[0], position[1])
 
         self.setLayout(layout)
         yield None
