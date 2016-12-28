@@ -33,7 +33,7 @@ class DDSclient(QtGui.QWidget):
         self.server = self.cxn.dds_device_server
         try:
             self.reg = self.cxn.registry
-            yield self.reg.cd('settings')
+            yield self.reg.cd(['', 'settings'])
             self.settings = yield self.reg.dir()
         except:
             self.settings = []
