@@ -29,7 +29,6 @@ class switchclient(QtGui.QWidget):
         connects incoming signals to relavent functions
 
         """
-        from labrad.wrappers import connectAsync
         if self.cxn is None:
             self.cxn = connection(name="Switch Client")
             yield self.cxn.connect()
