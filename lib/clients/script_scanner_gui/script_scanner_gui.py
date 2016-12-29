@@ -1,6 +1,7 @@
 from PyQt4 import QtGui
 from twisted.internet.defer import inlineCallbacks
 from scripting_widget import scripting_widget
+from common.lib.clients.connection import connection
 from tree_view.Controllers import ParametersEditor
 
 
@@ -8,8 +9,9 @@ class script_scanner_gui(QtGui.QWidget):
 
     SIGNALID = 319245
 
-    def __init__(self, reactor):
+    def __init__(self, reactor, cxn=None):
         super(script_scanner_gui, self).__init__()
+        self.cxn = cxn
         self.reactor = reactor
         self.setupWidgets()
         self.connect()
@@ -22,8 +24,9 @@ class script_scanner_gui(QtGui.QWidget):
         self.Error = Error
         self.subscribedScriptScanner = False
         self.subscribedParametersVault = False
-        from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(name='Script Scanner')
+        if self.cxn is None:
+            self.cxn = connection()
+            yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:
             yield self.populateExperiments()
@@ -36,14 +39,10 @@ class script_scanner_gui(QtGui.QWidget):
             raise
             print 'script_scanner_gui: servers not available'
             self.disable(True)
-        yield self.cxn.add_on_connect('ScriptScanner',
-                                      self.reinitialize_scriptscanner)
-        yield self.cxn.add_on_connect('ParameterVault',
-                                      self.reinitialize_parameter_vault)
-        yield self.cxn.add_on_disconnect('ScriptScanner',
-                                         self.disable)
-        yield self.cxn.add_on_disconnect('ParameterVault',
-                                         self.disable)
+        yield self.cxn.add_on_connect('ScriptScanner',self.reinitialize_scriptscanner)
+        yield self.cxn.add_on_connect('ParameterVault',self.reinitialize_parameter_vault)
+        yield self.cxn.add_on_disconnect('ScriptScanner',self.disable)
+        yield self.cxn.add_on_disconnect('ParameterVault',self.disable)
 
     @inlineCallbacks
     def reinitialize_scriptscanner(self):
