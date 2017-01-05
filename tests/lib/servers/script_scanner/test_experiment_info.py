@@ -2,7 +2,7 @@
 Test experiment_info.py.
 """
 import unittest as _ut
-import common.lib.servers.abstractservers.script_scanner.experiment_info as _ei
+import common.lib.servers.script_scanner.experiment_info as _ei
 import treedict as _td
 
 

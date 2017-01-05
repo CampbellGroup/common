@@ -5,7 +5,7 @@ import unittest as _ut
 import sys
 from common.tests.mocks.modules.mock_labrad import MockLabrad
 sys.modules['labrad'] = MockLabrad()
-import common.lib.servers.abstractservers.script_scanner.experiment as _exp
+import common.lib.servers.script_scanner.experiment as _exp
 
 
 class Test_experiment(_ut.TestCase):

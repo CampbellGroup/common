@@ -2,7 +2,7 @@
 Test experiment.py.
 """
 import unittest as _ut
-import common.lib.servers.abstractservers.script_scanner.scheduler as _sch
+import common.lib.servers.script_scanner.scheduler as _sch
 
 
 class Test_experiment(_ut.TestCase):
