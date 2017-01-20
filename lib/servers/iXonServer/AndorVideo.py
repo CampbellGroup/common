@@ -24,6 +24,8 @@ class AndorVideo(QtGui.QWidget):
         self.save_images_state = False
         self.image_path = andor_config.image_path
         self.image_rotation = andor_config.image_rotation
+        self.mirror_x = andor_config.mirror_x
+        self.mirror_y = andor_config.mirror_y
 
 #        emrange= yield self.server.getemrange(None)
 #        self.emccdSpinBox.setMinimum(emrange[0])
@@ -215,6 +217,10 @@ class AndorVideo(QtGui.QWidget):
             image_data = np.rot90(image_data, 2)
         elif self.image_rotation == 270:
             image_data = np.rot90(image_data, 3)
+        if self.mirror_x:
+            np.flipud(image_data)
+        if self.mirror_y:
+            np.fliplr(image_data)
 
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 

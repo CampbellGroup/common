@@ -1,5 +1,8 @@
 import ctypes as c
-from config.andor_config import andor_config as config
+try:
+    from config.andor_config import andor_config as config
+except:
+    from common.lib.config.andor_config import andor_config as config
 import os
 
 '''Adoped from https://code.google.com/p/pyandor/'''
