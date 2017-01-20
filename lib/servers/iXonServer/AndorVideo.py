@@ -23,6 +23,7 @@ class AndorVideo(QtGui.QWidget):
 
         self.save_images_state = False
         self.image_path = andor_config.image_path
+        self.image_rotation = andor_config.image_rotation
 
 #        emrange= yield self.server.getemrange(None)
 #        self.emccdSpinBox.setMinimum(emrange[0])
@@ -60,7 +61,6 @@ class AndorVideo(QtGui.QWidget):
         mingain, maxgain = self.emrange
         self.emccdSpinBox.setMinimum(mingain)#mingain)
         self.emccdSpinBox.setMaximum(maxgain)#maxgain)
-        print maxgain
         self.emccdSpinBox.setKeyboardTracking(False)
         layout.addWidget(emccd_label, 2, 4,)
         layout.addWidget(self.emccdSpinBox, 2, 5)
@@ -209,6 +209,12 @@ class AndorVideo(QtGui.QWidget):
     def live_update(self):
         data = yield self.server.getMostRecentImage(None)
         image_data = np.reshape(data, (self.pixels_y, self.pixels_x))
+        if self.image_rotation == 90:
+            image_data = np.rot90(image_data)
+        elif self.image_rotation == 180:
+            image_data = np.rot90(image_data, 2)
+        elif self.image_rotation == 270:
+            image_data = np.rot90(image_data, 3)
 
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 

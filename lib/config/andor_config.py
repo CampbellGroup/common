@@ -15,3 +15,4 @@ class andor_config(object):
     exposure_time = 0.12 # seconds
     binning = [1, 1] # numbers of pixels for horizontal and vertical binning
     image_path = 'C:\\Users\\QSimYb\\Desktop\\camera_images\\'
+    image_rotation = 90
