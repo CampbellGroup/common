@@ -211,18 +211,19 @@ class AndorVideo(QtGui.QWidget):
     def live_update(self):
         data = yield self.server.getMostRecentImage(None)
         image_data = np.reshape(data, (self.pixels_y, self.pixels_x))
+        image_data = image_data.transpose()
         if self.image_rotation == 90:
-            image_data = np.rot90(image_data)
+            image_data = np.rot90(image_data, -1)
         elif self.image_rotation == 180:
-            image_data = np.rot90(image_data, 2)
+            image_data = np.rot90(image_data, -2)
         elif self.image_rotation == 270:
-            image_data = np.rot90(image_data, 3)
+            image_data = np.rot90(image_data, -3)
         if self.mirror_x:
-            np.flipud(image_data)
+            image_data = np.fliplr(image_data)
         if self.mirror_y:
-            np.fliplr(image_data)
+            image_data = np.flipud(image_data)
 
-        self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
+        self.img_view.setImage(image_data, autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
             dt = datetime.now()
