@@ -1,0 +1,70 @@
+from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
+from twisted.internet.defer import inlineCallbacks
+from PyQt4 import QtGui
+
+
+class stepper_control(QtGui.QWidget):
+
+    def __init__(self, reactor):
+        super(stepper_control, self).__init__()
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.angle = 0.0
+        self.connect()
+
+    @inlineCallbacks
+    def connect(self):
+        """Creates an Asynchronous connection to stepper server and
+        connects incoming signals to relavent functions
+
+        """
+
+        from labrad.wrappers import connectAsync
+        self.cxn = yield connectAsync()
+        self.server = self.cxn.stepper_motor_server
+        self.initializeGUI()
+
+    def initializeGUI(self):
+        layout = QtGui.QGridLayout()
+
+        zerowidget = QtGui.QPushButton('Zero')
+        self.degreewidget = QCustomSpinBox('Angle', (-10000, 10000.0))
+        self.angle_label = QtGui.QLabel('0.0')
+        self.degreewidget.setStepSize(1.8)
+        self.degreewidget.spinLevel.setDecimals(3)
+
+        self.degreewidget.spinLevel.setValue(self.angle)
+
+        self.degreewidget.spinLevel.valueChanged.connect(self.change_angle)
+        zerowidget.clicked.connect(self.zero_scale)
+
+        layout.addWidget(zerowidget, 0, 0)
+        layout.addWidget(self.degreewidget, 0, 1)
+        layout.addWidget(self.angle_label, 0, 2)
+
+        self.setLayout(layout)
+
+    def zero_scale(self, state):
+        self.angle = 0.0
+        self.degreewidget.spinLevel.setValue(0.0)
+
+    @inlineCallbacks
+    def change_angle(self, angle):
+        difference = angle - self.angle
+        steps = difference/1.8
+        steps = int(steps)
+        self.angle = self.angle + 1.8*steps
+        self.angle_label.setText(str(self.angle))
+        self.degreewidget.spinLevel.setValue(angle)
+        yield self.server.move(steps)
+
+    def closeEvent(self, x):
+        self.reactor.stop()
+
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
+    import qt4reactor
+    qt4reactor.install()
+    from twisted.internet import reactor
+    stepper_control_Widget = stepper_control(reactor)
+    stepper_control_Widget.show()
+    reactor.run()
