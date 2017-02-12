@@ -2,6 +2,7 @@
 //int dirPin1 = 3;
 //int stepperPin1 = 2;
 
+int timeout = 10;
 int dirPin2 = 7;
 int stepperPin2 = 6;
 
@@ -10,6 +11,7 @@ boolean step_direction = false;
 
 void setup() {
   Serial.begin(115200);
+  Serial.setTimeout(timeout);
   //pinMode(dirPin1, OUTPUT);
   //pinMode(stepperPin1, OUTPUT);
   pinMode(dirPin2, OUTPUT);
