@@ -135,4 +135,4 @@ class ExampleSerialServer(DeviceServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(ExampleSerialServer)
+    util.runServer(ExampleSerialServer())

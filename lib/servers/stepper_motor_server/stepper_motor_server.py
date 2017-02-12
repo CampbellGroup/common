@@ -126,8 +126,7 @@ class stepperMotorServer(DeviceServer):
         """
         dev = self.selectDevice(c)
         value = yield dev.write(str(steps))
-        returnValue(value)
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(stepperMotorServer)
+    util.runServer(stepperMotorServer())
