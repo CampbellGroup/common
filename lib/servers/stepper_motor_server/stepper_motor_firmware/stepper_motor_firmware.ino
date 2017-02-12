@@ -9,7 +9,7 @@ String steps;
 boolean step_direction = false;
 
 void setup() {
-  Serial.begin(57600);
+  Serial.begin(115200);
   //pinMode(dirPin1, OUTPUT);
   //pinMode(stepperPin1, OUTPUT);
   pinMode(dirPin2, OUTPUT);

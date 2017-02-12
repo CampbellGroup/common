@@ -48,7 +48,7 @@ class dummyDevice(DeviceWrapper):
         # The following opens a communication on a com port specifying a baudrate and a timeout
         p = self.packet()
         p.open(port)
-        p.baudrate(115200)
+        p.baudrate(BAUDRATE)
         p.read()  # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
