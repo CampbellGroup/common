@@ -4,10 +4,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = stepper_motor_server
+name = itead_motor_server
 version = 1.0
 description = drives stepper motors
-instancename = stepper_motor_server
+instancename = itead_motor_server
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
