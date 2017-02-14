@@ -3,11 +3,12 @@ from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
 
 
-class stepper_control(QtGui.QWidget):
+class StepperControl(QtGui.QWidget):
 
     def __init__(self, reactor):
-        super(stepper_control, self).__init__()
+        super(StepperControl, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.degree_per_step = 1.8
         self.angle = 0.0
         self.connect()
 
@@ -65,6 +66,6 @@ if __name__ == "__main__":
     import qt4reactor
     qt4reactor.install()
     from twisted.internet import reactor
-    stepper_control_Widget = stepper_control(reactor)
+    stepper_control_Widget = StepperControl(reactor)
     stepper_control_Widget.show()
     reactor.run()

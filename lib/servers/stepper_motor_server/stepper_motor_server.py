@@ -26,7 +26,7 @@ TIMEOUT = Value(5, 's')  # serial read timeout
 BAUDRATE = 115200
 
 
-class stepperController(DeviceWrapper):
+class StepperController(DeviceWrapper):
 
     """
     arduino dual stepper devices
@@ -71,11 +71,11 @@ class stepperController(DeviceWrapper):
         returnValue(ans.read_line)
 
 
-class stepperMotorServer(DeviceServer):
+class StepperMotorServer(DeviceServer):
 
     deviceName = 'stepper_motor_server'
     name = 'stepper_motor_server'
-    deviceWrapper = stepperController
+    deviceWrapper = StepperController
 
     @inlineCallbacks
     def initServer(self):
@@ -129,4 +129,4 @@ class stepperMotorServer(DeviceServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(stepperMotorServer())
+    util.runServer(StepperMotorServer())
