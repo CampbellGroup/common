@@ -51,12 +51,12 @@ class StepperControl(QtGui.QWidget):
     @inlineCallbacks
     def change_angle(self, angle):
         difference = angle - self.angle
-        steps = difference/1.8
+        steps = difference/self.degree_per_step
         steps = int(steps)
-        self.angle = self.angle + 1.8*steps
+        self.angle = self.angle + self.degree_per_step*steps
         self.angle_label.setText(str(self.angle))
         self.degreewidget.spinLevel.setValue(angle)
-        yield self.server.move(steps)
+        yield self.server.move_steps(steps)
 
     def closeEvent(self, x):
         self.reactor.stop()

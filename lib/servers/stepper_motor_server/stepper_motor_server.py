@@ -118,8 +118,8 @@ class StepperMotorServer(DeviceServer):
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    @setting(101, 'move', steps='i')
-    def move(self, c, steps):
+    @setting(101, 'move_steps', steps='i')
+    def move_steps(self, c, steps):
         """
         moves stepper motor N steps, if positive the move CW else CCW
         each step currently corresponds to 1.8 degrees
