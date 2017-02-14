@@ -1,7 +1,7 @@
 import numpy as np
 from time import localtime, strftime
 from labrad.units import WithUnit
-from common.lib.servers.abstractservers.script_scanner.experiment import experiment
+from common.lib.servers.script_scanner.experiment import experiment
         
 class scan_experiment_1D_measure(experiment):
     '''

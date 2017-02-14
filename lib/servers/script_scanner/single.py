@@ -1,4 +1,4 @@
-from common.lib.servers.abstractservers.script_scanner.experiment import experiment
+from common.lib.servers.script_scanner.experiment import experiment
      
 class single(experiment):
     '''
