@@ -1,7 +1,7 @@
 import traceback
 import labrad
 from treedict import TreeDict
-from common.lib.servers.abstractservers.script_scanner.experiment_info import experiment_info
+from common.lib.servers.script_scanner.experiment_info import experiment_info
 
 
 class experiment(experiment_info):
