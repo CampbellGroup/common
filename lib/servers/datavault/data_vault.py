@@ -450,7 +450,7 @@ class Session(object):
 class Image:
     def __init__(self, session):
         '''
-        dataset is the dataset to which this should be attached
+        session.dir is the dataset number to which this image should be attached
         '''
         self.filename = os.path.join(session.dir, 'images.npy')
 
@@ -1164,7 +1164,7 @@ class DataVault(LabradServer):
     @setting(22, data='*i', image_size='*i', repetitions='i', returns = '')
     def save_image(self, c, data, image_size, repetitions):
         """
-        Save a CCD image with the currently open dataest.
+        Save a CCD image of the open dataest to a .npy file
         """
         session = self.getSession(c)
         x_pixels, y_pixels = image_size
