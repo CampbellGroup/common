@@ -447,7 +447,7 @@ class Session(object):
         dataTags = [(d, sorted(self.dataset_tags.get(d, []))) for d in datasets]
         return sessTags, dataTags
 
-class Image:
+class Image(object):
     def __init__(self, session):
         '''
         session.dir is the dataset number to which this image should be attached
@@ -935,7 +935,7 @@ class DataVault(LabradServer):
                 raw_input()
                 sys.exit()
         # create root session
-        # root = Session([''], self) # MK
+        # root = Session([''], self)
         self.root = Session([''], self)
 
     def initContext(self, c):
