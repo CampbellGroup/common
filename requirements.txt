@@ -3,5 +3,6 @@ pylabrad
 pyqtgraph
 pyserial
 pyvisa
+pywin32; sys_platform == 'win32'
 qt4reactor
 service_identity
