@@ -15,12 +15,12 @@ Please note that you might have to change the LABRADHOST environmental variable 
 To install the ok module, you need to go the software folder on the Campbell server and install the corresponding package.
 
 # Conventions
-New code should
-    * Be Python 2 & 3 compatible
-    * Follow pep8
-    * Default config files should be found in the config directory, with local users specifying configuration settings via an external "config" directory at the  same level as this repository.
-    * Minimize functional code in guis, i.e. have the GUIs import functions/objects that perform calculations whenever reasonable.
-    * Test code for all new (and old) but GUIs is highly encouraged.  
+New code should...
+    * Be Python 2 & 3 compatible  
+    * Follow pep8  
+    * Have default config files in the config directory, with local users specifying configuration settings via an external "config" directory at the  same level as this repository.    
+    * Minimize functional code in guis, i.e. have the GUIs import   functions/objects that perform calculations whenever reasonable.  
+    * Test code for all new (and old) but GUIs is highly encouraged.    
 
 
 # Contributing
@@ -33,20 +33,18 @@ New code should
 
 3. Development is done in the branch via a series of commits.
 
-4. When the feature is nearly complete or the bug is fixed, a pull request is filed by a user iPullRequest (usually iPullRequest is the same person as c0der).
-
-This notifies other users that some new code is ready for review. iPullRequests can and should call out specific users who are qualified to review the code. Those users review the code by reading the changes and running the new (and old) tests.
+4. When the feature is nearly complete or the bug is fixed, a pull request is filed by a user iPullRequest (usually iPullRequest is the same person as c0der).  This notifies other users that some new code is ready for review. iPullRequests can and should call out specific users who are qualified to review the code. Those users review the code by reading the changes and running the new (and old) tests.
 
 5. Users may add more commits to address outstanding issues with the code.
 
 6. Once user iDoReviews thinks the code is in good shape, they comment "LGTM" (looks good to me) in the pull request comments. iPullRequest can now merge the feature branch into master. Writing LGTM on a pull requests indicates that you are convinced the code works as expected and that you now share responsibility with the author for any problems arising from the change. **Only iPullRequests may actually do the merge**.  For larger or more critical changes, such as refactoring functional code, several reviewers should sign off LGTM on the pull request.
 
 7. Tests are highly encouraged for any new functionality. Here are a few guidelines:
-       * Tests should stand alone as much as possible.
-       * Tests should run from the terminal and not change the users environment, by for example opening windows that the user would have to manually close. For functions that generate plots, use plt.switch_backend('PDF') to switch off the generation of plot windows, which prevent tests from running while open.
-       * When in doubt, testing something is better than testing nothing.
+    * Tests should stand alone as much as possible.  
+    * Tests should run from the terminal and not change the users environment, by for example opening windows that the user would have to manually close. For functions that generate plots, use plt.switch_backend('PDF') to switch off the generation of plot windows, which prevent tests from running while open.  
+    * When in doubt, testing something is better than testing nothing.  
 
-        Finally, any changes should pass all existing tests. Run the test code with
+    * Any changes should pass all existing tests. Run the test code with  
         ```
         $ nosetests -w common\tests
         ```
@@ -54,8 +52,8 @@ This notifies other users that some new code is ready for review. iPullRequests 
 
 ### Commits
 
-    * Commits should focus on precisely one issue.
-    * Group pep8 changes to existing code into their own commits.
+    * Commits should focus on precisely one issue.  
+    * Group pep8 changes to existing code into their own commits.  
 
 #### Commit messages
 
