@@ -59,9 +59,9 @@ from the command line.
 
 Your commit message documents your changes for all time. Take pride in it. Commits should follow this format:
 
-Brief one sentence description of the change, using the active present tense.
-
-After one blank line, a paragraph describing the change in more detail. For small changes, this may not be needed if the brief description captures the essence of the change.
+* Brief one sentence description of the change, using the active present tense.
+* One blank line
+* A paragraph describing the change in more detail. For small changes, this may not be needed if the brief description captures the essence of the change.
 
 
 ### Small fixes
