@@ -37,18 +37,18 @@ New code should...
 
 5. Users may add more commits to address outstanding issues with the code.
 
-6. Once user iDoReviews thinks the code is in good shape, they comment "LGTM" (looks good to me) in the pull request comments. iPullRequest can now merge the feature branch into master. Writing LGTM on a pull requests indicates that you are convinced the code works as expected and that you now share responsibility with the author for any problems arising from the change. **Only iPullRequests may actually do the merge**.  For larger or more critical changes, such as refactoring functional code, several reviewers should sign off LGTM on the pull request.
+6. Once user iDoReviews thinks the code is in good shape, they comment "LGTM" (looks good to me) in the pull request comments. iPullRequest can now merge the feature branch into master. Writing LGTM on a pull requests indicates that you are convinced the code works as expected and that you now share responsibility with the author for any problems arising from the change. **Only iPullRequests may actually merge the pull request**.  For larger or more critical changes, such as refactoring functional code, several reviewers should sign off LGTM on the pull request.
 
-7. Tests are highly encouraged for any new functionality. Here are a few guidelines:
+7. Tests are highly encouraged for any new functionality.  
 * Tests should stand alone as much as possible.  
 * Tests should run from the terminal and not change the users environment, by for example opening windows that the user would have to manually close. For functions that generate plots, use plt.switch_backend('PDF') to switch off the generation of plot windows, which prevent tests from running while open.  
 * When in doubt, testing something is better than testing nothing.  
 
-* Any changes should pass all existing tests. Run the test code with  
-        ```
-        $ nosetests -w common\tests
-        ```
-        from the command line.
+* Any changes should pass all existing tests. Run the test code with    
+```
+$ nosetests -w common\tests
+```  
+from the command line.
 
 ### Commits
 
@@ -59,11 +59,10 @@ New code should...
 
 Your commit message documents your changes for all time. Take pride in it. Commits should follow this format:
 
-```
 Brief one sentence description of the change, using the active present tense.
 
-After one blank line, a paragraph describing the change in more detail, i.e. giving context of the changes and how they influence code use, why it was done this way, etc. For very small changes, this may not be needed if the brief description captures the essence of the change.
-```
+After one blank line, a paragraph describing the change in more detail. For small changes, this may not be needed if the brief description captures the essence of the change.
+
 
 ### Small fixes
 
