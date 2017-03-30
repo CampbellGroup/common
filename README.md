@@ -1,7 +1,7 @@
 common
 ======
 
-[![Build Status](https://secure.travis-ci.org/CambpellGroup/common.png)](http://travis-ci.org/CampbellGroup/common)
+[![Build Status](https://travis-ci.org/CampbellGroup/common.svg?branch=master)](http://travis-ci.org/CampbellGroup/common)
 
 
 
