@@ -1,6 +1,10 @@
 common
 ======
 
+[![Build Status](https://travis-ci.org/CampbellGroup/common.svg?branch=166_include_travis)](https://travis-ci.org/CampbellGroup/common)
+
+
+
 Shared campbell lab code.
 
 # Installation
