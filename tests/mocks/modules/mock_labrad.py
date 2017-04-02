@@ -4,7 +4,7 @@ pylabrad module mock with common repository servers.
 # We don't want to mock the units module
 import labrad.units as units
 
-from molecules.tests.mocks.lib.control.servers.mock_data_vault \
+from common.tests.mocks.lib.servers.datavault.mock_data_vault \
     import Mock_data_vault
 
 from common.tests.mocks.lib.servers.AD9910_DDS_Box.mock_dds_device_server \
@@ -13,7 +13,7 @@ from common.tests.mocks.lib.servers.AD9910_DDS_Box.mock_dds_device_server \
 from common.tests.mocks.lib.servers.mock_registry \
     import Mock_registry
 
-from common.tests.mocks.lib.servers.abstractservers.script_scanner.mock_script_scanner \
+from common.tests.mocks.lib.servers.script_scanner.mock_script_scanner \
     import Mock_script_scanner
 
 from common.tests.mocks.lib.servers.parameter_vault.mock_parameter_vault \
