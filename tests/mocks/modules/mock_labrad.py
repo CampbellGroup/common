@@ -13,7 +13,7 @@ from common.tests.mocks.lib.servers.AD9910_DDS_Box.mock_dds_device_server \
 from common.tests.mocks.lib.servers.mock_registry \
     import Mock_registry
 
-from common.tests.mocks.lib.servers.abstractservers.script_scanner.mock_script_scanner \
+from common.tests.mocks.lib.servers.script_scanner.mock_script_scanner \
     import Mock_script_scanner
 
 from common.tests.mocks.lib.servers.parameter_vault.mock_parameter_vault \
