@@ -1,6 +1,10 @@
 common
 ======
 
+[![Build Status](https://travis-ci.org/CampbellGroup/common.svg?branch=166_include_travis)](https://travis-ci.org/CampbellGroup/common)
+
+
+
 Shared campbell lab code.
 
 To install dependent modules, double click on ```install_dependencies.py```. Alternatively, you can run it in a terminal:
