@@ -4,5 +4,6 @@ pyqtgraph
 pyserial
 pyvisa
 pywin32; sys_platform == 'win32'
+treedict
 qt4reactor
 service_identity
