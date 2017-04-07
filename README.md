@@ -20,7 +20,14 @@ To install the ok module, you need to go the software folder on the Campbell ser
 
 # Conventions
 New code should...  
-* Be Python 2 & 3 compatible  
+* Be Python 2 & 3 compatible, using
+   ```python
+   print(str)
+   ````
+   and
+   ```python
+   except Exception as e:
+   ```
 * Follow pep8  
 * Have default config files in the config directory, with local users specifying configuration settings via an external "config" directory at the  same level as this repository.    
 * Minimize functional code in guis, i.e. have the GUIs import   functions/objects that perform calculations whenever reasonable.  
@@ -28,6 +35,7 @@ New code should...
 
 
 # Contributing
+Adapted from [pylabrad contribution guidelines](https://github.com/labrad/labrad/blob/master/contributing.md)
 
 ## Process
 
