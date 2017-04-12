@@ -29,7 +29,8 @@ New code should...
    except Exception as e:
    ```
 * Follow pep8  
-* Have default config files in the config directory, with local users specifying configuration settings via an external "config" directory at the  same level as this repository.    
+* Write code that obviates the need for configuration files.
+* If necessary, have default configuration files in the config directory, with local users specifying configuration settings via an external "config" directory at the  same level as this repository.    
 * Minimize functional code in guis, i.e. have the GUIs import   functions/objects that perform calculations whenever reasonable.  
 * Test code for all new (and old) but GUIs is highly encouraged.    
 
