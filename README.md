@@ -40,28 +40,33 @@ Adapted from [pylabrad contribution guidelines](https://github.com/labrad/labrad
 
 ## Process
 
-1. User iHaveIssues makes an issue in the issue tracker.  This issue explains what feature is to be added or what bug is to be fixed.
+1. User iHaveIssues posts an issue.  The issue explains the desired feature  or bug to be fixed.
 
-2. User c0der creates a new branch for development regarding this issue. The branch name is `XX-description-of-issue` where `XX` is the issue number and the remainder is a brief description of the issue.
+2. User c0der creates a new branch for development regarding the issue. The branch name is `XX-brief-description-of-issue` where `XX` is the issue number.
 
 3. Development is done in the branch via a series of commits.
 
-4. When the feature is nearly complete or the bug is fixed, a pull request is filed by a user iPullRequest (usually iPullRequest is the same person as c0der).  This notifies other users that some new code is ready for review. iPullRequests can and should call out specific users who are qualified to review the code. Those users review the code by reading the changes and running the new (and old) tests.
+4. When the feature is nearly complete or the bug is fixed, a pull request is filed by a user iPullRequest (usually iPullRequest is the same person as c0der).  This notifies other users that new code is ready for review. iPullRequests should ask for a code reviews from qualified users. Those users review the code by reading the changes and running the test code.
 
 5. Users may add more commits to address outstanding issues with the code.
 
-6. Once user iDoReviews thinks the code is in good shape, they comment "LGTM" (looks good to me) in the pull request comments. iPullRequest can now merge the feature branch into master. Writing LGTM on a pull requests indicates that you are convinced the code works as expected and that you now share responsibility with the author for any problems arising from the change. **Only iPullRequests may actually merge the pull request**.  For larger or more critical changes, such as refactoring functional code, several reviewers should sign off LGTM on the pull request.
+6. Once user iDoReviews thinks the code is in good shape, they comment "LGTM" (looks good to me) in the pull request comments.
+
+- **Writing LGTM on a pull requests indicates that you are convinced the code works as expected and that you now share responsibility with the author for any problems arising from the change.**  
+
+- iPullRequest can now merge the feature branch into master.  Only iPullRequests may actually merge the pull request.      
+
+- For larger or more critical changes, such as refactoring functional code, several reviewers should sign off LGTM on the pull request.
 
 7. Tests are highly encouraged for any new functionality.  
-* Tests should stand alone as much as possible.  
-* Tests should run from the terminal and not change the users environment, by for example opening windows that the user would have to manually close. For functions that generate plots, use plt.switch_backend('PDF') to switch off the generation of plot windows, which prevent tests from running while open.  
-* When in doubt, testing something is better than testing nothing.  
+- Tests should stand alone as much as possible.  
+- Tests should run from the terminal and not change the users environment, by for example opening windows that the user would have to manually close. For functions that generate plots, use plt.switch_backend('PDF') to switch off the generation of plot windows, which prevent tests from running while open.  
+- When in doubt, testing something is better than testing nothing.  
 
-* Any changes should pass all existing tests. Run the test code with    
+- Any changes should pass all existing tests. Run the test code from a terminal with    
 ```
 $ nosetests -w common\tests
 ```  
-from the command line.
 
 ### Commits
 
