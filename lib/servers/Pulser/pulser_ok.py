@@ -126,7 +126,7 @@ class Pulser(DDS, LineTrigger):
     def completeInfinite(self,c):
         if self.sequenceType != 'Infinite': raise Exception( "Not Running Infinite Sequence")
         yield self.inCommunication.acquire()
-        yield deferToThread(self.api.startSingle)
+        yield deferToThread(self.api.stopLooped)
         self.inCommunication.release()
 
     @setting(4, "Start Single", returns = '')
