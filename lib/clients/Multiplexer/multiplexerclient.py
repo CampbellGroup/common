@@ -339,8 +339,10 @@ class wavemeterclient(QtGui.QWidget):
 
     @inlineCallbacks
     def autoExposeChanged(self, state, wmChannel):
-        yield self.server.set_auto_expose(wmChannel, state)
-
+        if state >=1:
+            yield self.server.set_auto_expose(wmChannel, True)
+        else:
+            yield self.server.set_auto_expose(wmChannel, False)
 
     def closeEvent(self, x):
         self.reactor.stop()

@@ -66,9 +66,9 @@ class QCustomWavemeterChannel(QtGui.QFrame):
             self.currentfrequency = QtGui.QLabel(frequency)
 
 
-        self.currentfrequency.setFont(QtGui.QFont(shell_font, pointSize=60))
+        self.currentfrequency.setFont(QtGui.QFont(shell_font, pointSize=40))
         self.currentfrequency.setAlignment(QtCore.Qt.AlignCenter)
-        self.currentfrequency.setMinimumWidth(600)
+        self.currentfrequency.setMinimumWidth(300)
 
         frequencylabel = QtGui.QLabel('Set Frequency')
         frequencylabel.setAlignment(QtCore.Qt.AlignBottom)
@@ -85,7 +85,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.measSwitch = TextChangingButton('WLM Measure')
 
         self.lockChannel = TextChangingButton('Lock Channel')
-        self.lockChannel.setMinimumWidth(180)
+        self.lockChannel.setMinimumWidth(90)
 
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()

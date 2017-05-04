@@ -521,7 +521,10 @@ class MultiplexerServer(LabradServer):
         """ Get state of auto expose for a specified channel"""
         chan_c = ctypes.c_long(chan)
         state = yield self.wmdll.GetExposureModeNum(chan_c)
-        returnValue(bool(state))
+        if state >= 1:
+            returnValue(True)
+        else:
+            returnValue(False)
 
     def measureChan(self):
         # TODO: Improve this with a looping call
