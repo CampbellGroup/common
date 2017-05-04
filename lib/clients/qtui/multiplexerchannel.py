@@ -58,8 +58,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.powermeter.setMeterBorder("orange")
 
         if displayPIDvoltage is True:
-            layout.addWidget(self.PIDvoltage,   6,2,1,1)
-            layout.addWidget(self.PIDindicator, 5,2,1,1)
+            layout.addWidget(self.PIDvoltage,   6,4,1,1)
+            layout.addWidget(self.PIDindicator, 5,4,1,1)
         if stretchedlabel is True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
@@ -103,18 +103,23 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setRange(0, 10000.0)
         self.spinExp.setKeyboardTracking(False)
 
-        layout.addWidget(self.spinFreq,         6, 0)
-        layout.addWidget(self.spinExp,          6, 1)
-        layout.addWidget(self.measSwitch,       0, 2)
-        layout.addWidget(self.lockChannel,      1,2,1,1)
-        layout.addWidget(self.setPID,           2,2,1,1)
-        layout.addWidget(chanName,              0,0,1,2)
-        layout.addWidget(configtitle,           3,2,1,1)
-        layout.addWidget(configLabel,           4,2,1,1)
-        layout.addWidget(self.currentfrequency, 1, 0, 4, 2)
+        # Set Auto Exposure
+        self.autoExpose = QtGui.QCheckBox('Auto Expose')
+        self.autoExpose.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
+
+        layout.addWidget(self.spinFreq,         6, 0, 1, 2)
+        layout.addWidget(self.spinExp,          6, 2, 1, 1)
+        layout.addWidget(self.measSwitch,       0, 4)
+        layout.addWidget(self.lockChannel,      1,4,1,1)
+        layout.addWidget(self.setPID,           2,4,1,1)
+        layout.addWidget(chanName,              0,0,1,4)
+        layout.addWidget(configtitle,           3,4,1,1)
+        layout.addWidget(configLabel,           4,4,1,1)
+        layout.addWidget(self.currentfrequency, 1, 0, 4, 4)
         layout.addWidget(frequencylabel,        5, 0, 1, 1)
-        layout.addWidget(exposurelabel,         5, 1, 1, 1)
-        layout.addWidget(self.powermeter,       0,3,7,1)
+        layout.addWidget(exposurelabel,         5, 2, 1, 1)
+        layout.addWidget(self.powermeter,       0,5,7,1)
+        layout.addWidget(self.autoExpose,       6, 3, 1, 1)
 
         layout.minimumSize()
 

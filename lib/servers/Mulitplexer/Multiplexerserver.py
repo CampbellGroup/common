@@ -112,6 +112,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.GetChannelsCount.restype = ctypes.c_long
         self.wmdll.GetPIDSetting.restype = ctypes.c_long
         self.wmdll.GetWLMVersion.restype = ctypes.c_long
+        self.wmdll.GetExposureModeNum.restype = ctypes.c_long
 
         self.wmdll.SetDeviationMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignalNum.restype = ctypes.c_double
@@ -122,6 +123,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetDeviationSignal.restype = ctypes.c_long
         self.wmdll.SetPIDSetting.restype = ctypes.c_long
         self.wmdll.SetActiveChannel.restype = ctypes.c_long
+        self.wmdll.SetExposureModeNum.restype = ctypes.c_long
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -316,6 +318,13 @@ class MultiplexerServer(LabradServer):
 
             self.channellock((dacPort, waveMeterChannel, lock), notified)
 
+    @setting(43, "set_auto_expose", chan='i', state='b')
+    def set_auto_expose(self, c, chan, state):
+        """ Turns on and off the auto expose for a specified channel"""
+        chan_c = ctypes.c_long(chan)
+        state_c = ctypes.c_bool(state)
+        yield self.wmdll.SetExposureModeNum(chan_c, state_c)
+
     # Get Functions
 
     @setting(20, "get_amplitude", chan='w', returns='v')
@@ -331,6 +340,7 @@ class MultiplexerServer(LabradServer):
     def get_exposure(self, c, chan):
         chan_c = ctypes.c_long(chan)
         exp = yield self.wmdll.GetExposureNum(chan_c, 1, self.l)
+        self.updateexp((chan, exp))
         returnValue(exp)
 
     @setting(22, "get_frequency", chan='i', returns='v')
@@ -457,12 +467,12 @@ class MultiplexerServer(LabradServer):
         system time, which changes when changing wm settings."""
         port_c = ctypes.c_long(dacPort)
         dt = ctypes.c_long()
-        
+
         if self.WavemeterVersion == 1312:
             dummyarg = self.l
         else:
             dummyarg = self.d
-            
+
         yield self.wmdll.GetPIDSetting(self.PIDConstdt, port_c,
                                        ctypes.pointer(dt), dummyarg)
 
@@ -475,12 +485,12 @@ class MultiplexerServer(LabradServer):
         port_c = ctypes.c_long(dacPort)
         sFactor = ctypes.c_double()
         sExponent = ctypes.c_long()
-        
+
         if self.WavemeterVersion == 1312:
             dummyarg = self.l
         else:
             dummyarg = self.d
-            
+
         yield self.wmdll.GetPIDSetting(self.DeviationSensitivityDimension,
                                        port_c, ctypes.pointer(sExponent),
                                        dummyarg)
@@ -495,16 +505,23 @@ class MultiplexerServer(LabradServer):
         """Gets the polarity for a given DAC port. Allowed values are +/- 1."""
         port_c = ctypes.c_long(dacPort)
         polarity = ctypes.c_long()
-        
+
         if self.WavemeterVersion == 1312:
             dummyarg = self.l
         else:
             dummyarg = self.d
-            
+
         yield self.wmdll.GetPIDSetting(self.DeviationPolarity, port_c,
                                        ctypes.pointer(polarity), dummyarg)
 
         returnValue(polarity.value)
+
+    @setting(44, "get_auto_expose", chan='i', returns = 'b')
+    def get_auto_expose(self, c, chan):
+        """ Get state of auto expose for a specified channel"""
+        chan_c = ctypes.c_long(chan)
+        state = yield self.wmdll.GetExposureModeNum(chan_c)
+        returnValue(bool(state))
 
     def measureChan(self):
         # TODO: Improve this with a looping call
@@ -515,6 +532,8 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
+                self.get_exposure(self, chan + 1)
+
 
 
 if __name__ == "__main__":

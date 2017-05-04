@@ -155,6 +155,9 @@ class wavemeterclient(QtGui.QWidget):
             initmeas = initmeas
             widget.measSwitch.setChecked(bool(initmeas))
             widget.measSwitch.toggled.connect(lambda state = widget.measSwitch.isDown(), wmChannel = wmChannel  : self.changeState(state, wmChannel))
+            init_auto_expose = yield self.server.get_auto_expose(wmChannel)
+            widget.autoExpose.setCheckState(init_auto_expose)
+            widget.autoExpose.stateChanged.connect(lambda state = widget.autoExpose.isChecked(), wmChannel = wmChannel : self.autoExposeChanged(state, wmChannel))
 
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
@@ -333,6 +336,11 @@ class wavemeterclient(QtGui.QWidget):
             yield self.server.set_pid_polarity(dacPort,1)
         else:
             yield self.server.set_pid_polarity(dacPort,-1)
+
+    @inlineCallbacks
+    def autoExposeChanged(self, state, wmChannel):
+        yield self.server.set_auto_expose(wmChannel, state)
+
 
     def closeEvent(self, x):
         self.reactor.stop()
