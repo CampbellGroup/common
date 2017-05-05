@@ -21,6 +21,7 @@ from twisted.internet.defer import returnValue
 import ctypes
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
+from twisted.internet.task import LoopingCall
 
 FREQSIGNAL = 917223
 AMPSIGNAL = 874195
@@ -35,24 +36,33 @@ class BristolServer(LabradServer):
     name = 'Bristol 521'
 
     # Set up signals to be sent to listeners
-    freqchanged = Signal(FREQSIGNAL, 'signal: frequency changed', '(v)')
-    ampchanged = Signal(AMPSIGNAL, 'signal: amplitude changed', '(v)')
+    freqchanged = Signal(FREQSIGNAL, 'signal: frequency changed', 'v')
+    powerchanged = Signal(AMPSIGNAL, 'signal: amplitude changed', 'v')
 
     def initServer(self):
 
         # load wavemeter dll file for use of API functions
+        self.power = 0.0
+        self.wl = 0.0
+        self.listeners = set()
+        self.update_loop = LoopingCall(self.measure)
+        self.connected = self.connect_bristol()
+        print self.connected
+        if self.connected:
+            self.update_loop.start(0)
+
+
+    def connect_bristol(self):
         self.dll = ctypes.CDLL("CLDevIFace.dll")
         self.set_dll_variables()
         self.handle = self.dll.CLOpenUSBSerialDevice(ctypes.c_int(4))
         self.dll.CLSetLambdaUnits(self.handle, ctypes.c_uint(1))
         self.dll.CLSetPowerUnits(self.handle, ctypes.c_uint(0))
         if self.handle != -1:
-            print 'Connected'
-            self.measure()
+            connected = True
         else:
-            print 'Could not connect'            
-        self.listeners = set()
-
+            connected = False
+        return connected
 
     def set_dll_variables(self):
         """
@@ -77,20 +87,23 @@ class BristolServer(LabradServer):
     @setting(1, "get_wavelength", returns='v')
     def get_wavelength(self, c):
         yield None
-        returnValue(self.freqchanged)
+        returnValue(self.wl)
 
     @setting(2, "get_power", returns='v')
     def get_power(self, c):
         yield None
-        returnValue(self.powerchanged)
+        returnValue(self.power)
+
+    @setting(3, "get_status", returns ='w')
+    def get_status(self, c):
+        yield None
+        returnValue(self.connected)
 
     def measure(self):
-        # TODO: Improve this with a looping call
-        wl = self.dll.CLGetLambdaReading(self.handle)
-        power = self.dll.CLGetPowerReading(self.handle)
-        self.freqchanged = wl
-        self.powerchanged = power
-        reactor.callLater(0.1, self.measure)
+        self.wl = self.dll.CLGetLambdaReading(self.handle)
+        self.power = self.dll.CLGetPowerReading(self.handle)
+        self.freqchanged(self.wl)
+        self.powerchanged(self.power)
 
 
 
