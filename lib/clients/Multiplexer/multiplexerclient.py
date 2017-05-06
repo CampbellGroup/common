@@ -251,7 +251,7 @@ class wavemeterclient(QtGui.QWidget):
         chan = signal[0]
         value = signal[1]
         if chan in self.d :
-            self.d[chan].spinExp.setValue(value)
+            self.d[chan].current_exposure.setText(str(value)[0:3] + ' ms')
 
     def updateWLMOutput(self, c, signal):
         self.startSwitch.setChecked(signal)

@@ -160,7 +160,7 @@ class MultiplexerServer(LabradServer):
         ms_c = ctypes.c_long(ms)
         chan_c = ctypes.c_long(chan)
         yield self.wmdll.SetExposureNum(chan_c, 1,  ms_c)
-        self.updateexp((chan, ms), notified)
+
 
     @setting(11, "set_lock_state", state='b')
     def set_lock_state(self, c, state):
@@ -169,7 +169,7 @@ class MultiplexerServer(LabradServer):
         notified = self.getOtherListeners(c)
         state_c = ctypes.c_bool(state)
         yield self.wmdll.SetDeviationMode(state_c)
-        self.lockchanged(state, notified)
+
 
     @setting(12, "set_switcher_mode", mode='b')
     def set_switcher_mode(self, c, mode):
@@ -353,6 +353,7 @@ class MultiplexerServer(LabradServer):
     @setting(23, "get_lock_state", returns='b')
     def get_lock_state(self, c):
         state = yield self.wmdll.GetDeviationMode(0)
+        self.lockchanged(state)
         returnValue(state)
 
     @setting(24, "get_switcher_mode", returns='b')
@@ -535,7 +536,8 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-                self.get_exposure(self, chan + 1)
+                #self.get_exposure(self, chan + 1)
+                self.get_lock_state(self)
 
 
 

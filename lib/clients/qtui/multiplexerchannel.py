@@ -68,14 +68,20 @@ class QCustomWavemeterChannel(QtGui.QFrame):
 
         self.currentfrequency.setFont(QtGui.QFont(shell_font, pointSize=40))
         self.currentfrequency.setAlignment(QtCore.Qt.AlignCenter)
-        self.currentfrequency.setMinimumWidth(300)
+        self.currentfrequency.setMinimumWidth(200)
 
         frequencylabel = QtGui.QLabel('Set Frequency')
-        frequencylabel.setAlignment(QtCore.Qt.AlignBottom)
+        frequencylabel.setAlignment(QtCore.Qt.AlignCenter)
         frequencylabel.setFont(QtGui.QFont(shell_font, pointSize=13))
 
-        exposurelabel = QtGui.QLabel('Set Exposure (ms)')
-        exposurelabel.setAlignment(QtCore.Qt.AlignBottom)
+        self.current_exposure = QtGui.QLabel('0.0 ms')
+        self.current_exposure.setFont(QtGui.QFont(shell_font, pointSize=16))
+        self.current_exposure.setAlignment(QtCore.Qt.AlignCenter)
+        #self.current_exposre.setMinimumWidth(50)
+
+
+        exposurelabel = QtGui.QLabel('Exposure (ms)')
+        exposurelabel.setAlignment(QtCore.Qt.AlignCenter)
         exposurelabel.setFont(QtGui.QFont(shell_font, pointSize=13))
 
         self.setPID = QtGui.QPushButton('Set PID')
@@ -85,7 +91,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.measSwitch = TextChangingButton('WLM Measure')
 
         self.lockChannel = TextChangingButton('Lock Channel')
-        self.lockChannel.setMinimumWidth(90)
+        #self.lockChannel.setMinimumWidth(90)
 
         #editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
@@ -107,9 +113,9 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.autoExpose = QtGui.QCheckBox('Auto Expose')
         self.autoExpose.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=13))
 
-        layout.addWidget(self.spinFreq,         6, 0, 1, 2)
-        layout.addWidget(self.spinExp,          6, 2, 1, 1)
-        layout.addWidget(self.measSwitch,       0, 4)
+        layout.addWidget(self.spinFreq,         6, 0, 1, 1)
+        layout.addWidget(self.spinExp,          6, 1, 1, 1)
+        layout.addWidget(self.measSwitch,       0, 4, 1, 1)
         layout.addWidget(self.lockChannel,      1,4,1,1)
         layout.addWidget(self.setPID,           2,4,1,1)
         layout.addWidget(chanName,              0,0,1,4)
@@ -117,9 +123,10 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(configLabel,           4,4,1,1)
         layout.addWidget(self.currentfrequency, 1, 0, 4, 4)
         layout.addWidget(frequencylabel,        5, 0, 1, 1)
-        layout.addWidget(exposurelabel,         5, 2, 1, 1)
+        layout.addWidget(exposurelabel,         5, 1, 1, 2)
         layout.addWidget(self.powermeter,       0,5,7,1)
-        layout.addWidget(self.autoExpose,       6, 3, 1, 1)
+        layout.addWidget(self.autoExpose,       5, 3, 1, 1)
+        layout.addWidget(self.current_exposure, 6, 2, 1, 1)
 
         layout.minimumSize()
 
