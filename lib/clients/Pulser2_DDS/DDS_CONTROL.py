@@ -99,7 +99,6 @@ class DDS_CONTROL(QtGui.QFrame):
     
     def __init__(self, reactor, cxn = None):
         super(DDS_CONTROL, self).__init__()
-	print 'here'
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
