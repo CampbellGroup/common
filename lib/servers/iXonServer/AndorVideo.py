@@ -1,4 +1,5 @@
-from config.andor_config import andor_config as config
+import common.lib.servers.iXonServer.AndorConfig as config
+config = config.AndorConfig()
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
@@ -9,6 +10,7 @@ from datetime import datetime
 
 
 class AndorVideo(QtGui.QWidget):
+
     def __init__(self, server):
         super(AndorVideo, self).__init__()
         from labrad.units import WithUnit
@@ -214,7 +216,7 @@ class AndorVideo(QtGui.QWidget):
             time_stamp = str(dt.year)+str(dt.month)+str(dt.day)+str(dt.hour)\
             +str(dt.minute)+str(dt.second)+str(dt.microsecond)+'.csv'
             np.savetxt(self.image_path+time_stamp,image_data)
-    
+
     @inlineCallbacks
     def start_live_display(self):
         self.live_button.setChecked(True)

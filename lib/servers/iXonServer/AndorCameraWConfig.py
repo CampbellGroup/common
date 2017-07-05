@@ -1,9 +1,28 @@
+import sys
+sys.path.insert(0, '/code/common/lib/servers/iXonServer')
 import ctypes as c
-import common.lib.servers.iXonServer.AndorConfig as config
-config = config.AndorConfig()
+#import AndorConfig as config
+#from AndorConfig import AndorConfig as config
 import os
 
 '''Adoped from https://code.google.com/p/pyandor/'''
+
+class AndorConfig(object):
+    '''
+    path to atmcd32d.dll SDK library
+    '''
+    def __init__(self):
+        #self.path_to_dll = ('C:\\Program Files\\Andor SOLIS\\atmcd64d_legacy.dll')
+        #self.path_to_dll = ('C:\\Program Files\\Andor SOLIS\\ext-ms-win-gdi-deskop-|1-1-0.dll')
+        self.path_to_dll = ('C:\\Program Files\\Andor SOLIS\\atmcd64d_legacy.dll')  # corect dll file
+        #default parameters
+        self.set_temperature = -20 #degrees C
+        self.read_mode = 'Image'
+        self.acquisition_mode = 'Single Scan'
+        self.trigger_mode = 'Internal'
+        self.exposure_time = 0.100 #seconds
+        self.binning = [1, 1] #numbers of pixels for horizontal and vertical binning
+        self.image_path =  ('C:\\Users\\scientist\\Pictures')
 
 
 class AndorInfo(object):
@@ -44,9 +63,9 @@ class AndorCamera(object):
 
     def __init__(self):
         try:
-
+            self.config = AndorConfig()
             print 'Loading DLL'
-            self.dll = c.windll.LoadLibrary(config.path_to_dll)    #uncomment for andor_config import
+            self.dll = c.windll.LoadLibrary(self.config.path_to_dll)    #uncomment for andor_config import
             #self.dll = c.windll.LoadLibrary('C:\\Program Files\\Andor Solis\\atmcd64d_legacy.dll')
             print 'Initializing Camera'
             error = self.dll.Initialize(os.path.dirname(__file__))
@@ -59,14 +78,14 @@ class AndorCamera(object):
             self.get_emccd_gain()
             self.set_read_mode('Image')
             #self.set_read_mode(config.read_mode)           #uncomment for andor_config import
-            self.set_acquisition_mode(config.acquisition_mode)
-            self.set_trigger_mode(config.trigger_mode)
-            self.set_exposure_time(config.exposure_time)
+            self.set_acquisition_mode(self.config.acquisition_mode)
+            self.set_trigger_mode(self.config.trigger_mode)
+            self.set_exposure_time(self.config.exposure_time)
             #self.set_shutter_mode(config.shutter_mode)
             #set image to full size with the default binning
-            self.set_image(config.binning[0], config.binning[0], 1, self.info.width, 1, self.info.height)
+            self.set_image(self.config.binning[0], self.config.binning[0], 1, self.info.width, 1, self.info.height)
             self.set_cooler_on()
-            self.set_temperature(config.set_temperature)
+            self.set_temperature(self.config.set_temperature)
             self.get_cooler_state()
             self.get_temperature()
         except Exception as e:
