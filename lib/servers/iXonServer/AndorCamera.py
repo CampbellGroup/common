@@ -1,10 +1,9 @@
 import ctypes as c
-import common.lib.servers.iXonServer.AndorConfig as config
-config = config.AndorConfig()
 import os
+import andor_config as config
+config = config.AndorConfig()
 
 '''Adoped from https://code.google.com/p/pyandor/'''
-
 
 class AndorInfo(object):
 

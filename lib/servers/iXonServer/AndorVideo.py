@@ -1,4 +1,4 @@
-import common.lib.servers.iXonServer.AndorConfig as config
+import andor_config as config
 config = config.AndorConfig()
 from PyQt4 import QtGui, QtCore
 from twisted.internet.defer import inlineCallbacks
