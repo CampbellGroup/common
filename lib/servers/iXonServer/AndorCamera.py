@@ -45,8 +45,7 @@ class AndorCamera(object):
         try:
 
             print 'Loading DLL'
-            self.dll = c.windll.LoadLibrary(config.path_to_dll)    #uncomment for andor_config import
-            #self.dll = c.windll.LoadLibrary('C:\\Program Files\\Andor Solis\\atmcd64d_legacy.dll')
+            self.dll = c.windll.LoadLibrary(config.path_to_dll)
             print 'Initializing Camera'
             error = self.dll.Initialize(os.path.dirname(__file__))
             print 'Done Initializing, {}'.format(ERROR_CODE[error])
@@ -56,8 +55,7 @@ class AndorCamera(object):
             self.acquire_camera_serial_number()
             self.get_camera_em_gain_range()
             self.get_emccd_gain()
-            self.set_read_mode('Image')
-            #self.set_read_mode(config.read_mode)           #uncomment for andor_config import
+            self.set_read_mode(config.read_mode)
             self.set_acquisition_mode(config.acquisition_mode)
             self.set_trigger_mode(config.trigger_mode)
             self.set_exposure_time(config.exposure_time)

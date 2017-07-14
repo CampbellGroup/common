@@ -1,5 +1,4 @@
 #install qt4 reactor for the GUI
-#import server libraries
 from AndorVideo import AndorVideo
 from PyQt4 import QtGui
 a = QtGui.QApplication( [])
