@@ -482,7 +482,7 @@ class AndorServer(LabradServer):
         """Start the loop sending images to remote clients"""
         self.live_update_loop = LoopingCall(self.update_signal_loop) # loop to send images to remote clients
         self.last_image = None # the last retrived image
-        self.live_update_loop.start(0.5) # a reasonable interval considering the Network speed
+        self.live_update_loop.start(0.1) # a reasonable interval considering the Network speed, setting it shorter should not negatively influence the performance
 		
     @setting(202, returns = '')
     def stop_signal_loop(self, c):
@@ -495,7 +495,7 @@ class AndorServer(LabradServer):
 		# if there is a new image since the last update, send a signal to the clients
         if data != self.last_image:
             self.last_image = data
-            self.image_updated(data)
+            yield self.image_updated(data)
 
 if __name__ == "__main__":
     from labrad import util
