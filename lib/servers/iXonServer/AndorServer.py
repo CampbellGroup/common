@@ -7,8 +7,9 @@ qt4reactor.install()
 #import server libraries
 from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
+from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
-from labrad.server import LabradServer, setting
+from labrad.server import LabradServer, setting, Signal
 from AndorCamera import AndorCamera
 from labrad.units import WithUnit
 import numpy as np
@@ -31,18 +32,21 @@ timeout = 5
 ### END NODE INFO
 """
 
-
+IMAGE_UPDATED_SIGNAL = 142312
 
 class AndorServer(LabradServer):
     """ Contains methods that interact with the Andor CCD Cameras"""
 
     name = "Andor Server"
+    image_updated = Signal(IMAGE_UPDATED_SIGNAL, 'signal: image updated', '*i')
 
     def initServer(self):
         self.listeners = set()
         self.camera = AndorCamera()
         self.lock = DeferredLock()
         self.gui = AndorVideo(self)
+        self.live_update_loop = LoopingCall(self.live_update) # loop to send images to remote clients
+        self._data = None # the last retrived image
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -474,6 +478,24 @@ class AndorServer(LabradServer):
         except Exception:
             #not yet created
             pass
+			
+    @setting(201, "Start Loop", returns = '')
+    def startLoop(self, c):
+        """Start the loop sending images to remote clients"""
+        self.live_update_loop.start(0.1) # a reasonable interval considering the Network speed
+		
+    @setting(202, "Stop Loop", returns = '')
+    def stopLoop(self, c):
+        """Stop the loop sending images to remote clients"""
+        self.live_update_loop.stop()
+		
+    @inlineCallbacks
+    def live_update(self):
+        data = yield self.getMostRecentImage(None)
+		# if there is a new image since the last update, send a signal to the clients
+        if self._data == None or data != self._data:
+            self._data = data
+            self.image_updated(data)
 
 if __name__ == "__main__":
     from labrad import util
