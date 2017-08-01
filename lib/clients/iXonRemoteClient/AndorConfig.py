@@ -12,5 +12,5 @@ class AndorConfig(object):
         self.exposure_time = 0.100 #seconds
         self.binning = [1, 1] #numbers of pixels for horizontal and vertical binning
         self.image_path = ('C:\\Users\\scientist\\Pictures\\iXonImages\\')
-        self.camera_ip = "128.111.15.98"
+        self.camera_ip = "128.111.15.92"
 		

@@ -208,10 +208,8 @@ class AndorClient(QtGui.QWidget):
         self.emccdSpinBox.setValue(gain)
         self.emccdSpinBox.blockSignals(False)
 
-    @inlineCallbacks
     def image_updated(self, c, signal): # callback of image updated signal
-        data = yield signal
-        image_data = np.reshape(data, (self.pixels_y, self.pixels_x))
+        image_data = np.reshape(signal, (self.pixels_y, self.pixels_x))
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
@@ -231,11 +229,11 @@ class AndorClient(QtGui.QWidget):
             self.pixels_x = (self.stopx - self.startx + 1) / self.binx
             self.pixels_y = (self.stopy - self.starty + 1) / self.biny
             yield self.server.wait_for_acquisition()
-            yield self.server.start_loop() # start the server loop
+            yield self.server.start_signal_loop() # start the server loop
             self.is_live_update_running = True
         else:
             self.is_live_update_running = False
-            yield self.server.stop_loop() # stop the server loop
+            yield self.server.stop_signal_loop() # stop the server loop
             yield self.server.abort_acquisition()
             yield self.server.set_shutter_mode('Close')
     

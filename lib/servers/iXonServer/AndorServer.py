@@ -45,8 +45,6 @@ class AndorServer(LabradServer):
         self.camera = AndorCamera()
         self.lock = DeferredLock()
         self.gui = AndorVideo(self)
-        self.live_update_loop = LoopingCall(self.live_update) # loop to send images to remote clients
-        self._data = None # the last retrived image
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -479,22 +477,24 @@ class AndorServer(LabradServer):
             #not yet created
             pass
 			
-    @setting(201, "Start Loop", returns = '')
-    def startLoop(self, c):
+    @setting(201, returns = '')
+    def start_signal_loop(self, c):
         """Start the loop sending images to remote clients"""
-        self.live_update_loop.start(0.1) # a reasonable interval considering the Network speed
+        self.live_update_loop = LoopingCall(self.update_signal_loop) # loop to send images to remote clients
+        self.last_image = None # the last retrived image
+        self.live_update_loop.start(0.5) # a reasonable interval considering the Network speed
 		
-    @setting(202, "Stop Loop", returns = '')
-    def stopLoop(self, c):
+    @setting(202, returns = '')
+    def stop_signal_loop(self, c):
         """Stop the loop sending images to remote clients"""
         self.live_update_loop.stop()
 		
     @inlineCallbacks
-    def live_update(self):
+    def update_signal_loop(self):
         data = yield self.getMostRecentImage(None)
 		# if there is a new image since the last update, send a signal to the clients
-        if self._data == None or data != self._data:
-            self._data = data
+        if data != self.last_image:
+            self.last_image = data
             self.image_updated(data)
 
 if __name__ == "__main__":
