@@ -448,11 +448,11 @@ class Session(object):
         return sessTags, dataTags
 
 class Image(object):
-    def __init__(self, session):
+    def __init__(self, session, filename):
         '''
         session.dir is the dataset number to which this image should be attached
         '''
-        self.filename = os.path.join(session.dir, 'images.npy')
+        self.filename = os.path.join(session.dir, filename + '.npy')
 
     def add_data(self, data):
         fi = open(self.filename, 'ab')
@@ -1161,15 +1161,15 @@ class DataVault(LabradServer):
 
     ### Add in saving camera images as a .npy with the dataset
 
-    @setting(22, data='*i', image_size='*i', repetitions='i', returns = '')
-    def save_image(self, c, data, image_size, repetitions):
+    @setting(22, data='*i', image_size='*i', repetitions='i', filename='s', returns = '')
+    def save_image(self, c, data, image_size, repetitions, filename):
         """
         Save a CCD image of the open dataest to a .npy file
         """
         session = self.getSession(c)
         x_pixels, y_pixels = image_size
         data = numpy.reshape(data, (repetitions, y_pixels, x_pixels))
-        image = Image(session)
+        image = Image(session, filename)
         image.add_data(data)
 
     @setting(100, returns='(*(ss){independents}, *(sss){dependents})')
