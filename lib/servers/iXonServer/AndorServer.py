@@ -4,7 +4,6 @@ from PyQt4 import QtGui
 a = QtGui.QApplication( [])
 import qt4reactor
 qt4reactor.install()
-#import server libraries
 from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
 from twisted.internet import reactor

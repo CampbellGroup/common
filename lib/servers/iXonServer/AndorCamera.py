@@ -1,6 +1,7 @@
 import ctypes as c
-from config.andor_config import andor_config as config
 import os
+import andor_config as config
+config = config.AndorConfig()
 
 '''Adoped from https://code.google.com/p/pyandor/'''
 
@@ -29,6 +30,8 @@ class AndorInfo(object):
         self.shutter_mode           = None
 
 
+
+
 class AndorCamera(object):
     """
     Andor class which is meant to provide the Python version of the same
@@ -40,6 +43,7 @@ class AndorCamera(object):
 
     def __init__(self):
         try:
+
             print 'Loading DLL'
             self.dll = c.windll.LoadLibrary(config.path_to_dll)
             print 'Initializing Camera'
