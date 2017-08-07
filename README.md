@@ -31,7 +31,7 @@ New code should...
 * Follow pep8  
 * Write code that obviates the need for configuration files.
 * If necessary, have default configuration files in the config directory, with local users specifying configuration settings via an external "config" directory at the  same level as this repository.    
-* Minimize functional code in guis, i.e. have the GUIs import   functions/objects that perform calculations whenever reasonable.  
+* Minimize computrational code in guis, i.e. GUI's should be able to run stand-alone on any computer in this sense they should be "dumb" and able to be imported into code and buttons etc. attached to functions.
 * Test code for all new (and old) but GUIs is highly encouraged.    
 
 
