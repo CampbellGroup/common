@@ -61,7 +61,7 @@ class bristol_client(QtGui.QWidget):
         color = self.RGB.wav2RGB(color)
         color = tuple(color)
         self.freqwidget.setStyleSheet('color: rgb' + str(color))
-        self.freqwidget.setText(str(signal*1e-3)[0:10])
+        self.freqwidget.setText(str(signal*1e-3)[0:7])
 
     def updatePower(self, c, signal):
         self.powerwidget.setText(str(signal)[0:5])

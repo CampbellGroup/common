@@ -12,7 +12,12 @@ class pulse_sequence(object):
 	required_subsequences = []
 	replaced_parameters = {}
 	
-	def __init__(self, parameter_dict, start = WithUnit(0, 's')):
+	def __init__(self, parameter_dict, start = WithUnit(1.0, 'us')):
+		'''
+		The VHDL hardware will not accept a t = 0.0 initial start time.
+		The 1.0 microsecond is added for this reason and only affects the sequence with an initial 1 microsecond
+		offset
+		'''
 		if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
 		self.start = start
 		self.end = start
