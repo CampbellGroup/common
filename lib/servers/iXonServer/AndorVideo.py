@@ -211,7 +211,7 @@ class AndorVideo(QtGui.QWidget):
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
-            if image_data != self.saved_data:
+            if not np.array_equal(image_data, self.saved_data):
                 self.saved_data = image_data
                 dt = datetime.now()
                 time_stamp = str(dt.year).rjust(4,"0")+str(dt.month).rjust(2,"0")+str(dt.day).rjust(2,"0")+str(dt.hour).rjust(2,"0")\
