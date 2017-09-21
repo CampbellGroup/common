@@ -17,6 +17,7 @@ class AndorVideo(QtGui.QWidget):
         self.setup_layout()
         self.live_update_loop = LoopingCall(self.live_update)
         self.connect_layout()
+        self.saved_data = None
 
         self.save_images_state = False
         self.image_path = config.image_path
@@ -210,10 +211,12 @@ class AndorVideo(QtGui.QWidget):
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
-            dt = datetime.now()
-            time_stamp = str(dt.year)+str(dt.month)+str(dt.day)+str(dt.hour)\
-            +str(dt.minute)+str(dt.second)+str(dt.microsecond)+'.csv'
-            np.savetxt(self.image_path+time_stamp,image_data)
+            if not np.array_equal(image_data, self.saved_data):
+                self.saved_data = image_data
+                dt = datetime.now()
+                time_stamp = str(dt.year).rjust(4,"0")+str(dt.month).rjust(2,"0")+str(dt.day).rjust(2,"0")+str(dt.hour).rjust(2,"0")\
+                +str(dt.minute).rjust(2,"0")+str(dt.second).rjust(2,"0")+str(dt.microsecond/1000).rjust(3,"0")+'.csv'
+                np.savetxt(self.image_path+time_stamp,image_data)
     
     @inlineCallbacks
     def start_live_display(self):
