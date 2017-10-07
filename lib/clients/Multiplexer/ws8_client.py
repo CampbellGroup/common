@@ -155,6 +155,8 @@ class wavemeterclient(QtGui.QWidget):
                 self.d[chan].currentfrequency.setText('Under Exposed')
             elif freq == -4.0:
                 self.d[chan].currentfrequency.setText('Over Exposed')
+            elif freq == -17.0:
+                self.d[chan].currentfrequency.setText('Data Error')
             else:
                 self.d[chan].currentfrequency.setText(str(freq)[0:10])
 
