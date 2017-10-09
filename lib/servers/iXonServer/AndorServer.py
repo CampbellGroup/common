@@ -7,8 +7,9 @@ qt4reactor.install()
 #import server libraries
 from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread
+from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
-from labrad.server import LabradServer, setting
+from labrad.server import LabradServer, setting, Signal
 from AndorCamera import AndorCamera
 from labrad.units import WithUnit
 import numpy as np
@@ -31,12 +32,13 @@ timeout = 5
 ### END NODE INFO
 """
 
-
+IMAGE_UPDATED_SIGNAL = 142312
 
 class AndorServer(LabradServer):
     """ Contains methods that interact with the Andor CCD Cameras"""
 
     name = "Andor Server"
+    image_updated = Signal(IMAGE_UPDATED_SIGNAL, 'signal: image updated', '*i')
 
     def initServer(self):
         self.listeners = set()
@@ -474,6 +476,26 @@ class AndorServer(LabradServer):
         except Exception:
             #not yet created
             pass
+			
+    @setting(201, returns = '')
+    def start_signal_loop(self, c):
+        """Start the loop sending images to remote clients"""
+        self.live_update_loop = LoopingCall(self.update_signal_loop) # loop to send images to remote clients
+        self.last_image = None # the last retrived image
+        self.live_update_loop.start(0.1) # a reasonable interval considering the Network speed, setting it shorter should not negatively influence the performance
+		
+    @setting(202, returns = '')
+    def stop_signal_loop(self, c):
+        """Stop the loop sending images to remote clients"""
+        self.live_update_loop.stop()
+		
+    @inlineCallbacks
+    def update_signal_loop(self):
+        data = yield self.getMostRecentImage(None)
+		# if there is a new image since the last update, send a signal to the clients
+        if data != self.last_image:
+            self.last_image = data
+            yield self.image_updated(data)
 
 if __name__ == "__main__":
     from labrad import util
