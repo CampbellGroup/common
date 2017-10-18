@@ -89,7 +89,7 @@ class eVPumpClient(QtGui.QWidget):
                                                 pointSize=16))
         self.currentspinbox.setDecimals(3)
         self.currentspinbox.setSingleStep(0.001)
-        self.currentspinbox.setRange(0.0, 7.2)
+        self.currentspinbox.setRange(0.0, 7.8)
         self.currentspinbox.valueChanged.connect(self.change_current)
         self.currentspinbox.setKeyboardTracking(False)
 
