@@ -42,6 +42,7 @@ class BristolServer(LabradServer):
     def initServer(self):
 
         # load wavemeter dll file for use of API functions
+        self.com_port = 3
         self.power = 0.0
         self.wl = 0.0
         self.listeners = set()
@@ -55,7 +56,7 @@ class BristolServer(LabradServer):
     def connect_bristol(self):
         self.dll = ctypes.CDLL("CLDevIFace.dll")
         self.set_dll_variables()
-        self.handle = self.dll.CLOpenUSBSerialDevice(ctypes.c_int(4))
+        self.handle = self.dll.CLOpenUSBSerialDevice(ctypes.c_int(self.com_port))
         self.dll.CLSetLambdaUnits(self.handle, ctypes.c_uint(1))
         self.dll.CLSetPowerUnits(self.handle, ctypes.c_uint(0))
         if self.handle != -1:
