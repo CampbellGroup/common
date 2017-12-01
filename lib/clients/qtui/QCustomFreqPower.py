@@ -17,7 +17,7 @@ class QCustomFreqPower(QtGui.QFrame):
         title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
         title.setAlignment(QtCore.Qt.AlignCenter)
         freqlabel = QtGui.QLabel('Frequency (MHz)')
-        powerlabel = QtGui.QLabel('Power (dBM)')
+        powerlabel = QtGui.QLabel('Power (dBm)')
         if switchable:
             layout.addWidget(title,0, 0, 1, 3)
         else:
