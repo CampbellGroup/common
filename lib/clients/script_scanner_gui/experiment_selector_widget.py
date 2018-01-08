@@ -231,6 +231,7 @@ class schedule_dialog(QtGui.QDialog):
 
 class experiment_selector_widget(QtGui.QWidget):
 
+    on_refresh = QtCore.pyqtSignal(bool)
     on_run = QtCore.pyqtSignal(str)
     on_repeat = QtCore.pyqtSignal(str, int, bool)
     on_schedule = QtCore.pyqtSignal(str, float, str, bool)
@@ -264,12 +265,15 @@ class experiment_selector_widget(QtGui.QWidget):
         self.repeat_button = QtGui.QPushButton("Repeat")
         self.scan_button = QtGui.QPushButton("Scan")
         self.schedule_button = QtGui.QPushButton("Schedule")
+        self.refresh_button = QtGui.QPushButton()
+        self.refresh_button.setIcon(QtGui.QIcon.fromTheme('view-refresh'))
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addWidget(self.dropdown, 0, 1, 1, 3)
-        layout.addWidget(self.run_button, 1, 0, 1, 1)
-        layout.addWidget(self.repeat_button, 1, 1, 1, 1)
-        layout.addWidget(self.scan_button, 1, 2, 1, 1,)
-        layout.addWidget(self.schedule_button, 1, 3, 1, 1)
+        layout.addWidget(self.refresh_button, 0, 4, 1, 1)
+        layout.addWidget(self.run_button, 1, 1, 1, 1)
+        layout.addWidget(self.repeat_button, 1, 2, 1, 1)
+        layout.addWidget(self.scan_button, 1, 3, 1, 1,)
+        layout.addWidget(self.schedule_button, 1, 4, 1, 1)
         self.setLayout(layout)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
                            QtGui.QSizePolicy.Fixed)
@@ -282,6 +286,7 @@ class experiment_selector_widget(QtGui.QWidget):
 
     def connect_layout(self):
         self.run_button.pressed.connect(self.run_emit_selected)
+        self.refresh_button.pressed.connect(self.on_refresh_button)
         self.repeat_button.pressed.connect(self.on_repeat_button)
         self.schedule_button.pressed.connect(self.on_schedule_button)
         self.scan_button.pressed.connect(self.on_scan_button)
@@ -332,6 +337,9 @@ class experiment_selector_widget(QtGui.QWidget):
             units = dialog.uiStart.suffix()
             self.on_scan.emit(scan, measure, parameter,
                               start, stop, steps, units)
+
+    def on_refresh_button(self):
+        self.on_refresh.emit(True)
 
     def run_emit_selected(self):
         """

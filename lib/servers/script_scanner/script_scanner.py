@@ -20,9 +20,9 @@ from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
 from script_signals_server import ScriptSignalsServer
 try:
-    from config.scriptscanner_config import config
+    import config.scriptscanner_config as sc_config
 except:
-    from common.lib.config.scriptscanner_config import config
+    import common.lib.config.scriptscanner_config as sc_config
 import scan_methods
 from scheduler import scheduler
 import sys
@@ -73,6 +73,7 @@ class ScriptScanner(ScriptSignalsServer):
         '''
         loads script information from the configuration file
         '''
+        config = sc_config.config
         for import_path, class_name in config.scripts:
             try:
                 __import__(import_path)
@@ -336,6 +337,12 @@ class ScriptScanner(ScriptSignalsServer):
             raise Exception(try_confirm.format(script_ID))
         status.error_finish_confirmed(error_message)
         self.scheduler.remove_if_external(script_ID)
+
+    @setting(37, "reload_available_scripts")
+    def reload_available_scripts(self, c):
+        reload(sc_config)
+        self.script_parameters = {}
+        self.load_scripts()
 
     @inlineCallbacks
     def stopServer(self):
