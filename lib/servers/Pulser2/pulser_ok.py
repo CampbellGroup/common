@@ -63,6 +63,8 @@ class Pulser(DDS, LineTrigger):
         self.initializeSettings()
         yield self.initializeDDS()
         self.listeners = set()
+        
+        self.programmed_sequence = None
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
@@ -107,6 +109,7 @@ class Pulser(DDS, LineTrigger):
         #print "program sequence"
         sequence = c.get('sequence')
         if not sequence: raise Exception("Please create new sequence first")
+        self.programmed_sequence = sequence
         dds,ttl = sequence.progRepresentation()
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.programBoard, ttl)
@@ -210,22 +213,26 @@ class Pulser(DDS, LineTrigger):
         self.sequenceType = 'Number'
         self.inCommunication.release()
 
-    @setting(10, "Human Readable TTL", returns = '*2s')
-    def humanReadableTTL(self, c):
+    @setting(10, "Human Readable TTL", getProgrammed = 'b', returns = '*2s')
+    def humanReadableTTL(self, c, getProgrammed = None):
         """
         Returns a readable form of the programmed sequence for debugging
         """
         sequence = c.get('sequence')
+        if getProgrammed:
+            sequence = self.programmed_sequence
         if not sequence: raise Exception ("Please create new sequence first")
         ttl,dds = sequence.humanRepresentation()
         return ttl.tolist()
 
-    @setting(11, "Human Readable DDS", returns = '*(svv)')
-    def humanReadableDDS(self, c):
+    @setting(11, "Human Readable DDS", getProgrammed = 'b', returns = '*(svv)')
+    def humanReadableDDS(self, c, getProgrammed = None):
         """
         Returns a readable form of the programmed sequence for debugging
         """
         sequence = c.get('sequence')
+        if getProgrammed:
+            sequence = self.programmed_sequence
         if not sequence: raise Exception ("Please create new sequence first")
         ttl,dds = sequence.humanRepresentation()
         return dds
