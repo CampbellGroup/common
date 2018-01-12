@@ -1,4 +1,4 @@
-from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
+from common.lib.clients.qtui.multiplexerchannel_no_pid import QCustomWavemeterChannel
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 
@@ -82,11 +82,6 @@ class wavemeterclient(QtGui.QWidget):
 
     @inlineCallbacks
     def initializeGUI(self):
-        """
-        TODO:
-            modify QCustomWavemeterChannel to get rid of PID button
-        """
-
         layout = QtGui.QGridLayout()
 
         self.setWindowTitle('Multiplexed Wavemeter')
@@ -191,8 +186,6 @@ class wavemeterclient(QtGui.QWidget):
     @inlineCallbacks
     def setOutput(self, state):
         yield self.server.set_wlm_output(state)
-
-
 
     def closeEvent(self, x):
         self.reactor.stop()
