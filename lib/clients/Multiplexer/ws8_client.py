@@ -107,9 +107,7 @@ class wavemeterclient(QtGui.QWidget):
             hint = self.chaninfo[chan][1]
             position = self.chaninfo[chan][2]
             stretched = self.chaninfo[chan][3]
-            displayPID = self.chaninfo[chan][4]
-            dacPort = self.chaninfo[chan][5]
-            widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPID)
+            widget = QCustomWavemeterChannel(chan, wmChannel, hint, stretched)
 
             from common.lib.clients.qtui import RGBconverter as RGB
             RGB = RGB.RGBconverter()
