@@ -68,7 +68,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
 
         self.lockChannel = TextChangingButton('Lock Channel')
         self.lockChannel.setMinimumWidth(180)
-        self.lockChannel.setMaximumWidth(500)
+        self.lockChannel.setMaximumWidth(300)
 
         self.spinExp = QtGui.QDoubleSpinBox()
         self.spinExp.setFont(QtGui.QFont(shell_font, pointSize=16))
