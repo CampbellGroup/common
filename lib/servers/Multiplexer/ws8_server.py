@@ -4,7 +4,7 @@
 name = Multiplexer Server
 version = 0.9
 description =
-instancename = Multiplexer Server
+instancename = multiplexerserver
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -37,7 +37,7 @@ class MultiplexerServer(LabradServer):
     A DLL is required to run this server.  See initServer for the path location
     for the library.
     """
-    name = 'Multiplexerserver'
+    name = 'multiplexerserver'
 
     # Set up signals to be sent to listeners
     channel_text = 'signal: selected channels changed'
