@@ -104,7 +104,8 @@ class Pulser(DDS, LineTrigger):
     @setting(1, "Program Sequence", returns = '')
     def programSequence(self, c, sequence):
         """
-        Programs Pulser with the current sequence.
+        Programs Pulser with the current sequence. 
+        Saves the current sequence to self.programmed_sequence.
         """
         #print "program sequence"
         sequence = c.get('sequence')
@@ -216,7 +217,11 @@ class Pulser(DDS, LineTrigger):
     @setting(10, "Human Readable TTL", getProgrammed = 'b', returns = '*2s')
     def humanReadableTTL(self, c, getProgrammed = None):
         """
-        Returns a readable form of the programmed sequence for debugging
+        Args:
+        getProgrammed (bool): False/None(default) to get the sequence added by current context, 
+                              True to get the last programmed sequence
+        Returns:
+        a readable form of TTL sequence
         """
         sequence = c.get('sequence')
         if getProgrammed:
@@ -228,7 +233,11 @@ class Pulser(DDS, LineTrigger):
     @setting(11, "Human Readable DDS", getProgrammed = 'b', returns = '*(svv)')
     def humanReadableDDS(self, c, getProgrammed = None):
         """
-        Returns a readable form of the programmed sequence for debugging
+        Args:
+        getProgrammed (bool): False/None(default) to get the sequence added by current context, 
+                              True to get the last programmed sequence
+        Returns:
+        a readable form of DDS sequence
         """
         sequence = c.get('sequence')
         if getProgrammed:
