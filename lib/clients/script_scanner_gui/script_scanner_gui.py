@@ -219,6 +219,7 @@ class script_scanner_gui(QtGui.QWidget):
         # scripting widget
         self.scripting_widget.connect_layout()
         self.scripting_widget.on_run.connect(self.run_script)
+        self.scripting_widget.on_refresh.connect(self.refresh_script)
         self.scripting_widget.on_cancel_queued.connect(self.on_cancel_queued)
         self.scripting_widget.on_repeat.connect(self.repeat_script)
         self.scripting_widget.on_schedule.connect(self.schedule_script)
@@ -350,6 +351,17 @@ class script_scanner_gui(QtGui.QWidget):
             self.displayError(e.msg)
         except Exception as e:
             print e
+
+    @inlineCallbacks
+    def refresh_script(self, ident):
+        sc = yield self.cxn.get_server('ScriptScanner')
+        pv = yield self.cxn.get_server('ParameterVault')
+        ident = int(ident)
+        sc.reload_available_scripts()
+        pv.reload_parameters()
+        sc.refresh()
+        self.reinitialize_scriptscanner()
+        self.reinitialize_parameter_vault()
 
     @inlineCallbacks
     def run_script(self, script):
