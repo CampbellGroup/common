@@ -63,6 +63,8 @@ class Pulser(DDS, LineTrigger):
         self.initializeSettings()
         yield self.initializeDDS()
         self.listeners = set()
+        
+        self.programmed_sequence = None
 
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
@@ -102,11 +104,13 @@ class Pulser(DDS, LineTrigger):
     @setting(1, "Program Sequence", returns = '')
     def programSequence(self, c, sequence):
         """
-        Programs Pulser with the current sequence.
+        Programs Pulser with the current sequence. 
+        Saves the current sequence to self.programmed_sequence.
         """
         #print "program sequence"
         sequence = c.get('sequence')
         if not sequence: raise Exception("Please create new sequence first")
+        self.programmed_sequence = sequence
         dds,ttl = sequence.progRepresentation()
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.programBoard, ttl)
@@ -210,22 +214,34 @@ class Pulser(DDS, LineTrigger):
         self.sequenceType = 'Number'
         self.inCommunication.release()
 
-    @setting(10, "Human Readable TTL", returns = '*2s')
-    def humanReadableTTL(self, c):
+    @setting(10, "Human Readable TTL", getProgrammed = 'b', returns = '*2s')
+    def humanReadableTTL(self, c, getProgrammed = None):
         """
-        Returns a readable form of the programmed sequence for debugging
+        Args:
+        getProgrammed (bool): False/None(default) to get the sequence added by current context, 
+                              True to get the last programmed sequence
+        Returns:
+        a readable form of TTL sequence
         """
         sequence = c.get('sequence')
+        if getProgrammed:
+            sequence = self.programmed_sequence
         if not sequence: raise Exception ("Please create new sequence first")
         ttl,dds = sequence.humanRepresentation()
         return ttl.tolist()
 
-    @setting(11, "Human Readable DDS", returns = '*(svv)')
-    def humanReadableDDS(self, c):
+    @setting(11, "Human Readable DDS", getProgrammed = 'b', returns = '*(svv)')
+    def humanReadableDDS(self, c, getProgrammed = None):
         """
-        Returns a readable form of the programmed sequence for debugging
+        Args:
+        getProgrammed (bool): False/None(default) to get the sequence added by current context, 
+                              True to get the last programmed sequence
+        Returns:
+        a readable form of DDS sequence
         """
         sequence = c.get('sequence')
+        if getProgrammed:
+            sequence = self.programmed_sequence
         if not sequence: raise Exception ("Please create new sequence first")
         ttl,dds = sequence.humanRepresentation()
         return dds
