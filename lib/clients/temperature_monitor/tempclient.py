@@ -109,7 +109,7 @@ class TemperatureMonitor(QtGui.QWidget):
                     elif data2[kk, i] <= 40:
                         data2[kk, i] = float('NaN')
                 data3.append(data2[kk])
-        plt.ion()
+        #plt.ion()
         fig, ax = plt.subplots()
         data3 = np.array(data3)
         linewidth = 3
@@ -126,7 +126,7 @@ class TemperatureMonitor(QtGui.QWidget):
         ticker.FixedLocator(5)
         plt.xticks(rotation=30)
         ax.legend()
-#        plt.show()
+        plt.show()
     
 if __name__ == "__main__":
     a = QtGui.QApplication([])
