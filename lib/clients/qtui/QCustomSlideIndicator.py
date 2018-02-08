@@ -41,7 +41,7 @@ class SlideIndicator(QtGui.QWidget):
         pen = QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.SolidLine)
         qp.setPen(pen)
         if self.value is not None:
-            xpos = self.value/self.span * self.width() + self.width()/2
+            xpos = (self.value - self.minvalue)/self.span * self.width()
             qp.drawLine(xpos, self.height() - 15, xpos, self.height() -2)
             
     def set_rails(self, rails):
