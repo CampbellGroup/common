@@ -6,6 +6,7 @@ import numpy as np
 import pyqtgraph as pg
 import datetime as datetime
 from datetime import datetime
+import os
 
 
 class AndorVideo(QtGui.QWidget):
@@ -21,6 +22,17 @@ class AndorVideo(QtGui.QWidget):
 
         self.save_images_state = False
         self.image_path = config.image_path
+
+        try:
+            self.save_in_sub_dir = config.save_in_sub_dir
+        except Exception as e:
+            self.save_in_sub_dir = False
+            print("save_in_sub_dir not found in config")
+        try:
+            self.save_format = config.save_format
+        except Exception as e:
+            self.save_format = "tsv"
+            print("save_format not found in config")
 
 #        emrange= yield self.server.getemrange(None)
 #        self.emccdSpinBox.setMinimum(emrange[0])
@@ -213,10 +225,31 @@ class AndorVideo(QtGui.QWidget):
         if self.save_images_state == True:
             if not np.array_equal(image_data, self.saved_data):
                 self.saved_data = image_data
+                saved_data_in_int = self.saved_data.astype("int16")
                 dt = datetime.now()
                 time_stamp = str(dt.year).rjust(4,"0")+str(dt.month).rjust(2,"0")+str(dt.day).rjust(2,"0")+str(dt.hour).rjust(2,"0")\
-                +str(dt.minute).rjust(2,"0")+str(dt.second).rjust(2,"0")+str(dt.microsecond/1000).rjust(3,"0")+'.csv'
-                np.savetxt(self.image_path+time_stamp,image_data)
+                             +str(dt.minute).rjust(2,"0")+str(dt.second).rjust(2,"0")+str(int(dt.microsecond/1000)).rjust(3,"0")
+                if self.save_in_sub_dir:
+                    path = self.image_path
+                    folder = [str(dt.year).rjust(4,"0"), str(dt.month).rjust(2,"0"), str(dt.day).rjust(2,"0")]
+                    for sub_dir in folder:
+                        path = os.path.join(path, sub_dir)
+                        if not os.path.isdir(path):
+                            os.makedirs(path)
+
+                    path += os.path.join(path, time_stamp)
+                else:
+                    time_stamp = str(dt.year).rjust(4,"0")+str(dt.month).rjust(2,"0")+str(dt.day).rjust(2,"0")+str(dt.hour).rjust(2,"0")\
+                                 +str(dt.minute).rjust(2,"0")+str(dt.second).rjust(2,"0")+str(int(dt.microsecond/1000)).rjust(3,"0")
+                    path = os.path.join(self.image_path, time_stamp)
+                if self.save_format == "tsv":
+                    np.savetxt(path + ".tsv", saved_data_in_int)
+                elif self.save_format == "csv":
+                    np.savetxt(path = ".csv", saved_data_in_int, delimiter=",")
+                elif self.save_format == "bin":
+                    saved_data_in_int.tofile(path + ".dat") 
+                else:
+                    np.savetxt(path + ".tsv", saved_data_in_int)
     
     @inlineCallbacks
     def start_live_display(self):
