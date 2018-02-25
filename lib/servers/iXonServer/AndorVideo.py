@@ -33,6 +33,11 @@ class AndorVideo(QtGui.QWidget):
         except Exception as e:
             self.save_format = "tsv"
             print("save_format not found in config")
+        try:
+            self.save_header = config.save_header
+        except Exception as e:
+            self.save_header = False
+            print("save_header not found in config")
 
 #        emrange= yield self.server.getemrange(None)
 #        self.emccdSpinBox.setMinimum(emrange[0])
@@ -223,8 +228,18 @@ class AndorVideo(QtGui.QWidget):
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
-            self.save_image(image_data)
+            yield self.save_image(image_data)
+            
+    @inlineCallbacks
+    def get_image_header(self):
+        header = ""
+        shutter_time = yield self.server.getExposureTime(None)
+        header += "shutter_time " + str(shutter_time["V"]) + "\n"
+        em_gain = yield self.server.getEMCCDGain(None)
+        header += "em_gain " + str(em_gain) + "\n"
+        returnValue(header)
 
+    @inlineCallbacks
     def save_image(self, image_data):
         if not np.array_equal(image_data, self.saved_data):
             self.saved_data = image_data
@@ -235,14 +250,17 @@ class AndorVideo(QtGui.QWidget):
                 path = os.path.join(path, time_stamp)
             else:
                 path = os.path.join(self.image_path, time_stamp)
+            if self.save_header:
+                header = yield self.get_image_header()
             if self.save_format == "tsv":
-                np.savetxt(path + ".tsv", saved_data_in_int)
+                np.savetxt(path + ".tsv", saved_data_in_int, header=header)
             elif self.save_format == "csv":
-                np.savetxt(path = ".csv", saved_data_in_int, delimiter=",")
+                np.savetxt(path = ".csv", saved_data_in_int, delimiter=",", header=header)
             elif self.save_format == "bin":
-                saved_data_in_int.tofile(path + ".dat") 
+                saved_data_in_int.tofile(path + ".dat")
             else:
-                np.savetxt(path + ".tsv", saved_data_in_int)
+                np.savetxt(path + ".tsv", saved_data_in_int, header=header)
+        yield
                 
     def datetime_to_str_list(self):
         dt = datetime.now()
