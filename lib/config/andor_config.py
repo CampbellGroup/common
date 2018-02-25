@@ -13,4 +13,4 @@ class AndorConfig(object):
     image_path = ('C:\\Users\\scientist\\Pictures\\iXonImages\\')
     save_in_sub_dir = True
     save_format = "tsv"
-    save_metadata = True
+    save_header = True
