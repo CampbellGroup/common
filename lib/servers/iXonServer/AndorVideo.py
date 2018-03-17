@@ -268,9 +268,9 @@ class AndorVideo(QtGui.QWidget):
         return dt_str
     
     def str_datetime_to_path(self, str_datetime):
-        year = str_datetime[0] + ".dir"
-        month = str_datetime[1] + ".dir"
-        day = str_datetime[0] + "_" + str_datetime[1] + "_" + str_datetime[2] + ".dir"
+        year = str_datetime[0]
+        month = str_datetime[1]
+        day = year + "_" + month + "_" + str_datetime[2]
         return (year, month, day)
 
     def check_save_path_exists(self):
