@@ -1,6 +1,6 @@
 from config.andor_config import andor_config as config
 from PyQt4 import QtGui, QtCore
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 import numpy as np
 import pyqtgraph as pg
@@ -228,18 +228,16 @@ class AndorVideo(QtGui.QWidget):
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
-            yield self.save_image(image_data)
+            self.save_image(image_data)
             
-    @inlineCallbacks
     def get_image_header(self):
         header = ""
-        shutter_time = yield self.server.getExposureTime(None)
-        header += "shutter_time " + str(shutter_time["s"]) + "\n"
-        em_gain = yield self.server.getEMCCDGain(None)
+        shutter_time = self.exposureSpinBox.value()
+        header += "shutter_time " + str(shutter_time) + "\n"
+        em_gain = self.emccdSpinBox.value()
         header += "em_gain " + str(em_gain)
-        returnValue(header)
+        return header
 
-    @inlineCallbacks
     def save_image(self, image_data):
         if not np.array_equal(image_data, self.saved_data):
             self.saved_data = image_data
@@ -251,7 +249,7 @@ class AndorVideo(QtGui.QWidget):
             else:
                 path = os.path.join(self.image_path, time_stamp)
             if self.save_header:
-                header = yield self.get_image_header()
+                header = self.get_image_header()
             else:
                 header = ""
             if self.save_format == "tsv":
@@ -262,7 +260,6 @@ class AndorVideo(QtGui.QWidget):
                 saved_data_in_int.tofile(path + ".dat")
             else:
                 np.savetxt(path + ".tsv", saved_data_in_int, fmt='%i', header=header)
-        yield
 
     def datetime_to_str_list(self):
         dt = datetime.now()
