@@ -1,6 +1,6 @@
 from config.andor_config import andor_config as config
 from PyQt4 import QtGui, QtCore
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 import numpy as np
 import pyqtgraph as pg
@@ -234,9 +234,9 @@ class AndorVideo(QtGui.QWidget):
     def get_image_header(self):
         header = ""
         shutter_time = yield self.server.getExposureTime(None)
-        header += "shutter_time " + str(shutter_time["V"]) + "\n"
+        header += "shutter_time " + str(shutter_time["s"]) + "\n"
         em_gain = yield self.server.getEMCCDGain(None)
-        header += "em_gain " + str(em_gain) + "\n"
+        header += "em_gain " + str(em_gain)
         returnValue(header)
 
     @inlineCallbacks
@@ -252,26 +252,35 @@ class AndorVideo(QtGui.QWidget):
                 path = os.path.join(self.image_path, time_stamp)
             if self.save_header:
                 header = yield self.get_image_header()
+            else:
+                header = ""
             if self.save_format == "tsv":
-                np.savetxt(path + ".tsv", saved_data_in_int, header=header)
+                np.savetxt(path + ".tsv", saved_data_in_int, fmt='%i', header=header)
             elif self.save_format == "csv":
-                np.savetxt(path = ".csv", saved_data_in_int, delimiter=",", header=header)
+                np.savetxt(path + ".csv", saved_data_in_int, fmt='%i', delimiter=",", header=header)
             elif self.save_format == "bin":
                 saved_data_in_int.tofile(path + ".dat")
             else:
-                np.savetxt(path + ".tsv", saved_data_in_int, header=header)
+                np.savetxt(path + ".tsv", saved_data_in_int, fmt='%i', header=header)
         yield
-                
+
     def datetime_to_str_list(self):
         dt = datetime.now()
         dt_str = [str(dt.year).rjust(4,"0"), str(dt.month).rjust(2,"0"), str(dt.day).rjust(2,"0"), str(dt.hour).rjust(2,"0"),
                   str(dt.minute).rjust(2,"0"), str(dt.second).rjust(2,"0"), str(int(dt.microsecond/1000)).rjust(3,"0")]
         return dt_str
+    
+    def str_datetime_to_path(self, str_datetime):
+        year = str_datetime[0] + ".dir"
+        month = str_datetime[1] + ".dir"
+        day = str_datetime[0] + "_" + str_datetime[1] + "_" + str_datetime[2] + ".dir"
+        return (year, month, day)
 
     def check_save_path_exists(self):
-        folders = self.datetime_to_str_list()[0:3]
+        folders = self.str_datetime_to_path(self.datetime_to_str_list())
+        path = self.image_path
         for sub_dir in folders:
-            path = os.path.join(self.image_path, sub_dir)
+            path = os.path.join(path, sub_dir)
             if not os.path.isdir(path):
                 os.makedirs(path)
         return path
