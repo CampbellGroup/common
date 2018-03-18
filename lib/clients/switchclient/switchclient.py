@@ -37,9 +37,8 @@ class switchclient(QtGui.QWidget):
         self.server = yield self.cxn.get_server('arduinottl')
         self.reg = yield self.cxn.get_server('registry')
 
-        self.context = yield self.cxn.context()
-        yield server.signal__on_switch_changed(self.SIGNALID, context = self.context)
-        yield server.addListener(listener = self.signal_switch_changed, source = None, ID = self.SIGNALID, context = self.context)
+        yield self.server.signal__on_switch_changed(self.SIGNALID)
+        yield self.server.addListener(listener = self.signal_switch_changed, source = None, ID = self.SIGNALID)
 
         try:
             yield self.reg.cd(['', 'settings'])
@@ -98,6 +97,7 @@ class switchclient(QtGui.QWidget):
         if port in self.d.keys():
             if chan + 'shutter' in self.settings:
                 yield self.reg.set(chan + 'shutter', state)
+            inverted = self.chaninfo[chan][2]
             if inverted:
                 state = not state
             self.d[port].TTLswitch.setChecked(state)

@@ -18,7 +18,7 @@ timeout = 20
 
 from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
-from labrad.server import setting
+from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 TIMEOUT = Value(1.0, 's')
@@ -76,6 +76,7 @@ class ArduinoTTL(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
+        self.listeners = set()
 
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -104,12 +105,24 @@ class ArduinoTTL(DeviceServer):
             devs += [(devName, (server, port))]
         returnValue(devs)
 
+    def initContext(self, c):
+        self.listeners.add(c.ID)
+
+    def expireContext(self, c):
+        self.listeners.remove(c.ID)
+
+    def getOtherListeners(self, c):
+        notified = self.listeners.copy()
+        notified.remove(c.ID)
+        return notified
+
     @setting(100, 'TTL Output', chan='i', state='b')
     def ttlOutput(self, c, chan, state):
         dev = self.selectDevice(c)
         output = (chan << 2) | (state + 2)
         yield dev.write(chr(output))
-        self.notifyOtherListeners(c, (chan, state), self.on_switch_changed)
+        notified = self.getOtherListeners(c)
+        self.on_switch_changed((chan, state), notified)
 
     @setting(200, 'TTL Read', chan='i', returns='b')
     def ttlInput(self, c, chan):
