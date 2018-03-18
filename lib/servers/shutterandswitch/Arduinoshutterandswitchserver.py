@@ -145,6 +145,7 @@ class ArduinoTTL(DeviceServer):
             print status, 'Error Reading'
             returnValue(False)
 
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer(ArduinoTTL())

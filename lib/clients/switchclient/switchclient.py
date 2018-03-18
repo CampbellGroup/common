@@ -38,7 +38,8 @@ class switchclient(QtGui.QWidget):
         self.reg = yield self.cxn.get_server('registry')
 
         yield self.server.signal__on_switch_changed(self.SIGNALID)
-        yield self.server.addListener(listener = self.signal_switch_changed, source = None, ID = self.SIGNALID)
+        yield self.server.addListener(listener=self.signal_switch_changed,
+                                      source=None, ID=self.SIGNALID)
 
         try:
             yield self.reg.cd(['', 'settings'])
