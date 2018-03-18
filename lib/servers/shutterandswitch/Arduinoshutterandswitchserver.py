@@ -68,6 +68,8 @@ class ArduinoTTL(DeviceServer):
     deviceName = 'ArduinoTTL'
     deviceWrapper = TTLDevice
 
+    on_switch_changed = Signal(124973, 'signal: on_switch_changed', '(ib)')
+
     @inlineCallbacks
     def initServer(self):
         print 'loading config info...',
@@ -107,6 +109,7 @@ class ArduinoTTL(DeviceServer):
         dev = self.selectDevice(c)
         output = (chan << 2) | (state + 2)
         yield dev.write(chr(output))
+        self.notifyOtherListeners(c, (chan, state), self.on_switch_changed)
 
     @setting(200, 'TTL Read', chan='i', returns='b')
     def ttlInput(self, c, chan):
