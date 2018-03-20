@@ -9,6 +9,7 @@ except:
 
 
 class switchclient(QtGui.QWidget):
+    SIGNALID = 219749
 
     def __init__(self, reactor, cxn=None):
         """initializes the GUI creates the reactor
@@ -21,6 +22,7 @@ class switchclient(QtGui.QWidget):
         self.reactor = reactor
         self.cxn = cxn
         self.d = {}
+        self.chan_from_port = {}
         self.connect()
 
     @inlineCallbacks
@@ -34,6 +36,10 @@ class switchclient(QtGui.QWidget):
             yield self.cxn.connect()
         self.server = yield self.cxn.get_server('arduinottl')
         self.reg = yield self.cxn.get_server('registry')
+
+        yield self.server.signal__on_switch_changed(self.SIGNALID)
+        yield self.server.addListener(listener=self.signal_switch_changed,
+                                      source=None, ID=self.SIGNALID)
 
         try:
             yield self.reg.cd(['', 'settings'])
@@ -71,6 +77,7 @@ class switchclient(QtGui.QWidget):
                                              port=port, chan=chan, inverted=inverted:
                                              self.changeState(state, port, chan, inverted))
             self.d[port] = widget
+            self.chan_from_port[port] = chan
             subLayout.addWidget(self.d[port], position[0], position[1])
 
         self.setLayout(layout)
@@ -82,6 +89,19 @@ class switchclient(QtGui.QWidget):
         if inverted:
             state = not state
         yield self.server.ttl_output(port, state)
+
+    @inlineCallbacks
+    def signal_switch_changed(self, c, signal):
+        port = signal[0]
+        state = signal[1]
+        chan = self.chan_from_port[port]
+        if port in self.d.keys():
+            if chan + 'shutter' in self.settings:
+                yield self.reg.set(chan + 'shutter', state)
+            inverted = self.chaninfo[chan][2]
+            if inverted:
+                state = not state
+            self.d[port].TTLswitch.setChecked(state)
 
     def closeEvent(self, x):
         self.reactor.stop()
