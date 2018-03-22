@@ -11,3 +11,6 @@ class AndorConfig(object):
     exposure_time = 0.100 #seconds
     binning = [1, 1] #numbers of pixels for horizontal and vertical binning
     image_path = ('C:\\Users\\scientist\\Pictures\\iXonImages\\')
+    save_in_sub_dir = True
+    save_format = "tsv"
+    save_header = True

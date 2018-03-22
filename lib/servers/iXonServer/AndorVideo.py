@@ -6,6 +6,7 @@ import numpy as np
 import pyqtgraph as pg
 import datetime as datetime
 from datetime import datetime
+import os
 
 
 class AndorVideo(QtGui.QWidget):
@@ -21,6 +22,22 @@ class AndorVideo(QtGui.QWidget):
 
         self.save_images_state = False
         self.image_path = config.image_path
+
+        try:
+            self.save_in_sub_dir = config.save_in_sub_dir
+        except Exception as e:
+            self.save_in_sub_dir = False
+            print("save_in_sub_dir not found in config")
+        try:
+            self.save_format = config.save_format
+        except Exception as e:
+            self.save_format = "tsv"
+            print("save_format not found in config")
+        try:
+            self.save_header = config.save_header
+        except Exception as e:
+            self.save_header = False
+            print("save_header not found in config")
 
 #        emrange= yield self.server.getemrange(None)
 #        self.emccdSpinBox.setMinimum(emrange[0])
@@ -211,13 +228,60 @@ class AndorVideo(QtGui.QWidget):
         self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
 
         if self.save_images_state == True:
-            if not np.array_equal(image_data, self.saved_data):
-                self.saved_data = image_data
-                dt = datetime.now()
-                time_stamp = str(dt.year).rjust(4,"0")+str(dt.month).rjust(2,"0")+str(dt.day).rjust(2,"0")+str(dt.hour).rjust(2,"0")\
-                +str(dt.minute).rjust(2,"0")+str(dt.second).rjust(2,"0")+str(dt.microsecond/1000).rjust(3,"0")+'.csv'
-                np.savetxt(self.image_path+time_stamp,image_data)
+            self.save_image(image_data)
+            
+    def get_image_header(self):
+        header = ""
+        shutter_time = self.exposureSpinBox.value()
+        header += "shutter_time " + str(shutter_time) + "\n"
+        em_gain = self.emccdSpinBox.value()
+        header += "em_gain " + str(em_gain)
+        return header
+
+    def save_image(self, image_data):
+        if not np.array_equal(image_data, self.saved_data):
+            self.saved_data = image_data
+            saved_data_in_int = self.saved_data.astype("int16")
+            time_stamp = "-".join(self.datetime_to_str_list())
+            if self.save_in_sub_dir:
+                path = self.check_save_path_exists()
+                path = os.path.join(path, time_stamp)
+            else:
+                path = os.path.join(self.image_path, time_stamp)
+            if self.save_header:
+                header = self.get_image_header()
+            else:
+                header = ""
+            if self.save_format == "tsv":
+                np.savetxt(path + ".tsv", saved_data_in_int, fmt='%i', header=header)
+            elif self.save_format == "csv":
+                np.savetxt(path + ".csv", saved_data_in_int, fmt='%i', delimiter=",", header=header)
+            elif self.save_format == "bin":
+                saved_data_in_int.tofile(path + ".dat")
+            else:
+                np.savetxt(path + ".tsv", saved_data_in_int, fmt='%i', header=header)
+
+    def datetime_to_str_list(self):
+        dt = datetime.now()
+        dt_str = [str(dt.year).rjust(4,"0"), str(dt.month).rjust(2,"0"), str(dt.day).rjust(2,"0"), str(dt.hour).rjust(2,"0"),
+                  str(dt.minute).rjust(2,"0"), str(dt.second).rjust(2,"0"), str(int(dt.microsecond/1000)).rjust(3,"0")]
+        return dt_str
     
+    def str_datetime_to_path(self, str_datetime):
+        year = str_datetime[0]
+        month = str_datetime[1]
+        day = year + "_" + month + "_" + str_datetime[2]
+        return (year, month, day)
+
+    def check_save_path_exists(self):
+        folders = self.str_datetime_to_path(self.datetime_to_str_list())
+        path = self.image_path
+        for sub_dir in folders:
+            path = os.path.join(path, sub_dir)
+            if not os.path.isdir(path):
+                os.makedirs(path)
+        return path
+
     @inlineCallbacks
     def start_live_display(self):
         self.live_button.setChecked(True)
