@@ -108,35 +108,51 @@ class ScriptScanner(ScriptSignalsServer):
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
 
-    def _get_all_experiments_from_basepaths(self, basepaths):
+    def _get_all_experiments_from_basepaths(self, paths):
         modules = []
-        for path in basepaths:
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    if os.path.splitext(file)[1] == ".py" and file != "__init__.py":
-                        modules.append((os.path.splitext(file)[0], os.path.join(root, file)))
-
-        experiments = []
         import importlib
+        imported_module = importlib.import_module(paths[0])
+        self._list_submodules(modules, imported_module)
+
+        modules = list(set(modules))
+        experiments = []
         for module in modules:
             try:
-                imported_module = importlib.import_module(modules[1])
+                imported_module = importlib.import_module(module)
                 docstring = imported_module.__doc__
                 class_name = self._get_experiment_class_name_from_docstring(docstring)
                 if class_name is not None:
-                    experiments.append((modules[1], class_name))
+                    experiments.append((module, class_name))
+            except:
+                pass
         return experiments
+
+    def _list_submodules(self, list, package_name):
+        import pkgutil
+        for loader, module_name, is_pkg in pkgutil.walk_packages(package_name.__path__, package_name.__name__+'.'):
+            try:
+                list.append(module_name)
+                if is_pkg:
+                    module_name = __import__(module_name, fromlist='dummylist')
+                    self._list_submodules(list, module_name)
+            except:
+                pass
                 
     def _get_experiment_class_name_from_docstring(self, docstring):
         exp_info_start_str = "### BEGIN EXPERIMENT INFO"
         exp_info_end_str = "### END EXPERIMENT INFO"
         start = docstring.find(exp_info_start_str) + len(exp_info_start_str)
         end = docstring.find(exp_info_end_str)
-        cp = configparser.ConfigParser()
-        cp.read_string(docstring)
-        depreciated = cp["info"]["depreciated"]
-        if not depreciated:
-            return cp["info"]["name"]
+        if end > start:
+            import StringIO
+            buf = StringIO.StringIO(docstring)
+            cp = configparser.ConfigParser()
+            cp.readfp(buf)
+            depreciated = eval(cp.get("info", "depreciated"))
+            if not depreciated:
+                return cp.get("info", "name")
+            else:
+                return None
         else:
             return None
 
