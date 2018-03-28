@@ -26,6 +26,8 @@ except:
 import scan_methods
 from scheduler import scheduler
 import sys
+import os
+from six.moves import configparser
 
 
 class script_class_parameters(object):
@@ -74,6 +76,14 @@ class ScriptScanner(ScriptSignalsServer):
         loads script information from the configuration file
         '''
         config = sc_config.config
+
+        paths = config.paths
+        experiments_from_paths = self._get_all_experiments_from_basepaths(paths)
+        for experiment in experiments_from_paths:
+            config.scripts.append(experiment)
+
+        config.scripts = list(set(config.scripts))
+        
         for import_path, class_name in config.scripts:
             try:
                 __import__(import_path)
@@ -97,6 +107,38 @@ class ScriptScanner(ScriptSignalsServer):
                     print name_not_provided.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
+
+    def _get_all_experiments_from_basepaths(self, basepaths):
+        modules = []
+        for path in basepaths:
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    if os.path.splitext(file)[1] == ".py" and file != "__init__.py":
+                        modules.append((os.path.splitext(file)[0], os.path.join(root, file)))
+
+        experiments = []
+        import importlib
+        for module in modules:
+            try:
+                imported_module = importlib.import_module(modules[1])
+                docstring = imported_module.__doc__
+                class_name = self._get_experiment_class_name_from_docstring(docstring)
+                if class_name is not None:
+                    experiments.append((modules[1], class_name))
+        return experiments
+                
+    def _get_experiment_class_name_from_docstring(self, docstring):
+        exp_info_start_str = "### BEGIN EXPERIMENT INFO"
+        exp_info_end_str = "### END EXPERIMENT INFO"
+        start = docstring.find(exp_info_start_str) + len(exp_info_start_str)
+        end = docstring.find(exp_info_end_str)
+        cp = configparser.ConfigParser()
+        cp.read_string(docstring)
+        depreciated = cp["info"]["depreciated"]
+        if not depreciated:
+            return cp["info"]["name"]
+        else:
+            return None
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
