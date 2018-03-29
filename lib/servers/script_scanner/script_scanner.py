@@ -28,6 +28,8 @@ from scheduler import scheduler
 import sys
 import os
 from six.moves import configparser
+import pkgutil
+import StringIO
 
 
 class script_class_parameters(object):
@@ -62,29 +64,44 @@ class ScriptScanner(ScriptSignalsServer):
 
     name = 'ScriptScanner'
 
+    @inlineCallbacks
     def initServer(self):
 
         # Dictionary with experiment.name as keys and
         # script_class_parameters instances are the values.
         self.script_parameters = {}
         # Instance of a complicated object
-        self.scheduler = scheduler(ScriptSignalsServer)
-        self.load_scripts()
+        self.scheduler = scheduler(ScriptSignalsServer, self.allowed_concurrent)
+        yield self.load_scripts()
 
+    @inlineCallbacks
     def load_scripts(self):
         '''
         loads script information from the configuration file
         '''
-        config = sc_config.config
 
-        paths = config.paths
-        experiments_from_paths = self._get_all_experiments_from_basepaths(paths)
-        for experiment in experiments_from_paths:
-            config.scripts.append(experiment)
+        try:
+            self.allowed_concurrent = {}
+            reg = self.client.registry
+            reg_path = ["", "Servers", self.name]
+            p = reg.packet()
+            p.cd(path)
+            p.get("directories", "s")
+            ans = yield p.send()
+            paths = ans.get
+            experiments = self._get_all_experiments_from_basepaths(paths)
+            for experiment in experiments:
+                scripts.append((experiment[0], experiment[1]))
+                self.allowed_concurrent[experiment[1]] = experiment[2]
+        except:
+            print("Cannot load experiment paths from registry. " + 
+                  "Checking config file now.")
+            config = sc_config.config
+            scripts = config.scripts
+            self.allowed_concurrent = config.allowed_concurrent
 
-        config.scripts = list(set(config.scripts))
-        
-        for import_path, class_name in config.scripts:
+        scripts = list(set(scripts))
+        for import_path, class_name in scripts:
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
@@ -110,51 +127,56 @@ class ScriptScanner(ScriptSignalsServer):
 
     def _get_all_experiments_from_basepaths(self, paths):
         modules = []
-        import importlib
-        imported_module = importlib.import_module(paths[0])
-        self._list_submodules(modules, imported_module)
-
-        modules = list(set(modules))
-        experiments = []
-        for module in modules:
+        for path in paths:
             try:
-                imported_module = importlib.import_module(module)
-                docstring = imported_module.__doc__
-                class_name = self._get_experiment_class_name_from_docstring(docstring)
-                if class_name is not None:
-                    experiments.append((module, class_name))
-            except:
-                pass
+                imported_module = __import__(path)
+                self._list_submodules(modules, imported_module)
+        
+                modules = list(set(modules))
+                experiments = []
+                for module in modules:
+                    try:
+                        imported_module = __import__(module)
+                        docstring = imported_module.__doc__
+                        class_name, allow_concurrent = self._get_experiment_info(docstring)
+                        if class_name is not None:
+                            if allow_concurrent is None:
+                                allow_concurrent = []
+                            experiments.append((module, class_name, allow_concurrent))
+                    except Exception as e:
+                        pass
+            except Exception as e:
+                print("Exception when importing " + path ". " + e)
         return experiments
 
     def _list_submodules(self, list, package_name):
-        import pkgutil
-        for loader, module_name, is_pkg in pkgutil.walk_packages(package_name.__path__, package_name.__name__+'.'):
+        for loader, module_name, is_pkg in pkgutil.walk_packages(package_name.__path__,
+                                                                 package_name.__name__ + '.'):
             try:
                 list.append(module_name)
                 if is_pkg:
-                    module_name = __import__(module_name, fromlist='dummylist')
+                    module_name = __import__(module_name)
                     self._list_submodules(list, module_name)
-            except:
+            except Exception as e:
                 pass
                 
-    def _get_experiment_class_name_from_docstring(self, docstring):
+    def _get_experiment_info(self, docstring):
         exp_info_start_str = "### BEGIN EXPERIMENT INFO"
         exp_info_end_str = "### END EXPERIMENT INFO"
         start = docstring.find(exp_info_start_str) + len(exp_info_start_str)
         end = docstring.find(exp_info_end_str)
         if end > start:
-            import StringIO
             buf = StringIO.StringIO(docstring)
             cp = configparser.ConfigParser()
             cp.readfp(buf)
-            depreciated = eval(cp.get("info", "depreciated"))
-            if not depreciated:
-                return cp.get("info", "name")
+            if eval(cp.get("info", "load_into_script_scanner"):
+                name = cp.get("info", "name")
+                allow_concurrent = eval(cp.get("info", "allow_concurrent"))
+                return (name, allow_concurrent)
             else:
-                return None
+                return (None, None)
         else:
-            return None
+            return (None, None)
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):

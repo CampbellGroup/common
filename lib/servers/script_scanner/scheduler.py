@@ -75,7 +75,7 @@ class running_script(object):
         self.externally_launched = externally_launched
 
 
-class scheduler(object):
+class scheduler(object, allowed_concurrent):
     """
 
     TODO: proper class name
@@ -89,6 +89,7 @@ class scheduler(object):
         self.scheduled = {}
         self.scheduled_ID_counter = 0
         self.scan_ID_counter = 0
+        self.allowed_concurrent = allowed_concurrent
 
     def running_deferred_list(self):
         return [script.defer_on_done for script in self.running.itervalues() if not script.externally_launched]
@@ -180,7 +181,7 @@ class scheduler(object):
         non_conflicting = []
         for running, script in self.running.iteritems():
             cls_name = script.scan.script_cls.name
-            non_conf = config.allowed_concurrent.get(cls_name, None)
+            non_conf = self.allowed_concurrent.get(cls_name, None)
             if non_conf is not None:
                 non_conflicting.append(set(non_conf))
         if non_conflicting:
