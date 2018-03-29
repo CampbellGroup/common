@@ -75,12 +75,12 @@ class running_script(object):
         self.externally_launched = externally_launched
 
 
-class scheduler(object, allowed_concurrent):
+class scheduler(object):
     """
 
     TODO: proper class name
     """
-    def __init__(self, signals):
+    def __init__(self, signals, allowed_concurrent):
         self.signals = signals
         # dict[identification] = running_script_instance
         self.running = {}

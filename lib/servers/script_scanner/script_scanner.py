@@ -30,6 +30,7 @@ import os
 from six.moves import configparser
 import pkgutil
 import StringIO
+import importlib
 
 
 class script_class_parameters(object):
@@ -71,8 +72,8 @@ class ScriptScanner(ScriptSignalsServer):
         # script_class_parameters instances are the values.
         self.script_parameters = {}
         # Instance of a complicated object
-        self.scheduler = scheduler(ScriptSignalsServer, self.allowed_concurrent)
         yield self.load_scripts()
+        self.scheduler = scheduler(ScriptSignalsServer, self.allowed_concurrent)
 
     @inlineCallbacks
     def load_scripts(self):
@@ -82,11 +83,12 @@ class ScriptScanner(ScriptSignalsServer):
 
         try:
             self.allowed_concurrent = {}
+            scripts = []
             reg = self.client.registry
             reg_path = ["", "Servers", self.name]
             p = reg.packet()
-            p.cd(path)
-            p.get("directories", "s")
+            p.cd(reg_path)
+            p.get("Directories")
             ans = yield p.send()
             paths = ans.get
             experiments = self._get_all_experiments_from_basepaths(paths)
@@ -129,24 +131,22 @@ class ScriptScanner(ScriptSignalsServer):
         modules = []
         for path in paths:
             try:
-                imported_module = __import__(path)
+                imported_module = importlib.import_module(path)
                 self._list_submodules(modules, imported_module)
-        
-                modules = list(set(modules))
-                experiments = []
-                for module in modules:
-                    try:
-                        imported_module = __import__(module)
-                        docstring = imported_module.__doc__
-                        class_name, allow_concurrent = self._get_experiment_info(docstring)
-                        if class_name is not None:
-                            if allow_concurrent is None:
-                                allow_concurrent = []
-                            experiments.append((module, class_name, allow_concurrent))
-                    except Exception as e:
-                        pass
             except Exception as e:
-                print("Exception when importing " + path ". " + e)
+                print("Exception when importing " + path + ". " + e)
+
+        modules = list(set(modules))
+        experiments = []
+        for module in modules:
+            try:
+                imported_module = importlib.import_module(module)
+                docstring = imported_module.__doc__
+                class_name, allow_concurrent = self._get_experiment_info(docstring)
+                if class_name is not None:
+                    experiments.append((module, class_name, allow_concurrent))
+            except Exception as e:
+                pass
         return experiments
 
     def _list_submodules(self, list, package_name):
@@ -155,7 +155,7 @@ class ScriptScanner(ScriptSignalsServer):
             try:
                 list.append(module_name)
                 if is_pkg:
-                    module_name = __import__(module_name)
+                    module_name = importlib.import_module(module_name)
                     self._list_submodules(list, module_name)
             except Exception as e:
                 pass
@@ -169,9 +169,12 @@ class ScriptScanner(ScriptSignalsServer):
             buf = StringIO.StringIO(docstring)
             cp = configparser.ConfigParser()
             cp.readfp(buf)
-            if eval(cp.get("info", "load_into_script_scanner"):
+            if eval(cp.get("info", "load_into_scriptscanner")):
                 name = cp.get("info", "name")
-                allow_concurrent = eval(cp.get("info", "allow_concurrent"))
+                try:
+                    allow_concurrent = eval(cp.get("info", "allow_concurrent"))
+                except:
+                    allow_concurrent = []
                 return (name, allow_concurrent)
             else:
                 return (None, None)
