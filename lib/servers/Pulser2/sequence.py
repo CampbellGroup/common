@@ -71,7 +71,7 @@ class Sequence():
         if self.switchingTimes.has_key(timeStep):
             if self.switchingTimes[timeStep][chan]: # checks if 0 or 1/-1
                 # if set to turn off, but want on, replace with zero, fixes error adding 2 TTLs back to back
-                if self.switchingTimes[timeStep][chan] == -1 and value == 1:
+                if self.switchingTimes[timeStep][chan] * value == -1:
                     self.switchingTimes[timeStep][chan] = 0
                 else:
                     raise Exception ('Double switch at time {} for channel {}'.format(timeStep, chan))
