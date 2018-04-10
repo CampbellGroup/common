@@ -81,26 +81,34 @@ class ScriptScanner(ScriptSignalsServer):
         loads script information from the configuration file
         '''
 
+        self.allowed_concurrent = {}
+        scripts = []
+        reg_path = ["", "Servers", self.name]
+        reg = self.client.registry
+        p = reg.packet()
         try:
-            self.allowed_concurrent = {}
-            scripts = []
-            reg = self.client.registry
-            reg_path = ["", "Servers", self.name]
-            p = reg.packet()
             p.cd(reg_path)
             p.get("Directories")
             ans = yield p.send()
             paths = ans.get
+            if not len(paths):
+                print("No path found in registry")
+                raise Exception()
+        except:
+            print("Cannot load experiment paths from registry. " + 
+                  "Creating the registry path and checking config file now.")
+            p = reg.packet()
+            p.cd(reg_path, True)
+            p.set("Directories", [])
+            yield p.send()
+            config = sc_config.config
+            scripts = config.scripts
+            self.allowed_concurrent = config.allowed_concurrent
+        else:
             experiments = self._get_all_experiments_from_basepaths(paths)
             for experiment in experiments:
                 scripts.append((experiment[0], experiment[1]))
                 self.allowed_concurrent[experiment[1]] = experiment[2]
-        except:
-            print("Cannot load experiment paths from registry. " + 
-                  "Checking config file now.")
-            config = sc_config.config
-            scripts = config.scripts
-            self.allowed_concurrent = config.allowed_concurrent
 
         scripts = list(set(scripts))
         for import_path, class_name in scripts:
