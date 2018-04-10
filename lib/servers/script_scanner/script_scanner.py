@@ -425,7 +425,7 @@ class ScriptScanner(ScriptSignalsServer):
     def reload_available_scripts(self, c):
         reload(sc_config)
         self.script_parameters = {}
-        self.load_scripts()
+        yield self.load_scripts()
 
     @inlineCallbacks
     def stopServer(self):
