@@ -42,7 +42,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         chanName.setFont(QtGui.QFont(shell_font, pointSize=16))
         chanName.setAlignment(QtCore.Qt.AlignCenter)
 
-        configtitle = QtGui.QLabel("WLM Connections:\nChannel " + str(wmChannel))
+        configtitle = QtGui.QLabel("WLM Connections: Channel " + str(wmChannel))
         configtitle.setAlignment(QtCore.Qt.AlignCenter)
         configtitle.setFont(QtGui.QFont(shell_font, pointSize=13))
 
@@ -78,14 +78,14 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setRange(0, 10000.0)
         self.spinExp.setKeyboardTracking(False)
 
-        layout.addWidget(self.spinExp,          4, 0)
-        layout.addWidget(self.measSwitch,       0, 2)
-        layout.addWidget(self.lockChannel,      1, 2)
-        layout.addWidget(chanName,              0, 0)
-        layout.addWidget(configtitle,           2, 2)
-        layout.addWidget(self.currentfrequency, 1, 0, 2, 1)
-        layout.addWidget(exposurelabel,         3, 0)
-        layout.addWidget(self.powermeter,       0, 3, 5, 1)
+        layout.addWidget(self.spinExp,          4, 3)
+        layout.addWidget(self.measSwitch,       0, 3)
+        layout.addWidget(self.lockChannel,      1, 3)
+        layout.addWidget(chanName,              0, 1)
+        layout.addWidget(configtitle,           2, 3)
+        layout.addWidget(self.currentfrequency, 1, 1, 4, 1)
+        layout.addWidget(exposurelabel,         3, 3)
+        layout.addWidget(self.powermeter,       0, 0, 5, 1)
 
         layout.minimumSize()
 

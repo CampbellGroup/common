@@ -34,9 +34,11 @@ class TextChangingButton(QtGui.QPushButton):
         if down:
             self.setText(on_text)
             self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
+            self.setStyleSheet("color: black;")
         else:
             self.setText(off_text)
             self.setPalette(QtGui.QPalette(QtCore.Qt.black))
+            self.setStyleSheet("color: black;")
 
     def _set_button_texts(self):
         """Return button texts when they are on or off."""
