@@ -1428,7 +1428,7 @@ class DataVault(LabradServer):
         return sess.getTags(dirs, datasets)
 
     @setting(128, 'add additional header', header_name='s', name='s', returns='')
-    def add_addition_header(self, c, header_name, name, data):
+    def add_additional_header(self, c, header_name, name, data):
         """
         Add a new additional header to the current dataset.
         header_name will be converted to lower case.
