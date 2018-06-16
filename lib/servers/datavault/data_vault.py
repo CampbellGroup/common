@@ -128,6 +128,12 @@ class ParameterInUseError(T.Error):
     def __init__(self, name):
         self.msg = "Already a parameter called '%s'." % name
 
+class AdditionalHeaderInUseError(T.Error):
+    code = 11
+
+    def __init__(self, header_name, name):
+        self.msg = "Already a value called '%s' in header '%s'." % (name, header_name)
+
 
 # filename translation
 
@@ -471,6 +477,7 @@ class Dataset:
         self.file  # create the datafile, but don't do anything with it
         self.listeners = set()  # contexts that want to hear about added data
         self.param_listeners = set()
+        self.add_header_listeners = set()
         self.comment_listeners = set()
         self.deferredParameterDict = {}  # MK
         self.timeOutCallIDs = {}
@@ -487,6 +494,7 @@ class Dataset:
             self.comments = []
             self.matrixrows = []
             self.matrixcolumns = []
+            self.additional_headers = {}
             self.save()
         else:
             self.load()
@@ -502,6 +510,11 @@ class Dataset:
         self.created = timeFromStr(S.get(gen, 'Created'))
         self.accessed = timeFromStr(S.get(gen, 'Accessed'))
         self.modified = timeFromStr(S.get(gen, 'Modified'))
+        non_additional_header_names = ["DType", "Title", "Created", "Accessed",
+                                       "Modified", "Independent", "Dependent",
+                                       "Parameters", "Comments"]
+        additional_header_names = [header for header in S.options("General")
+                                   if header not in non_additional_header_names]
 
         def getInd(i):
             sec = 'Independent %d' % (i + 1)
@@ -529,6 +542,16 @@ class Dataset:
         count = S.getint(gen, 'Parameters')
         self.parameters = [getPar(i) for i in range(count)]
 
+        def getAddHeader(header_name, i):
+            sec = header_name + ' %d' % (i + 1)
+            label = S.get(sec, 'Label', raw=True)
+            # TODO: big security hole! eval can execute arbitrary code
+            data = T.evalLRData(S.get(sec, 'Data', raw=True))
+            return dict(label=label, data=data)
+        for header in additional_header_names:
+            count = S.getint(gen, header)
+            self.additional_headers[header] = [getAddHeader(header, i) for i in range(count)]
+
         # get comments if they're there
         if S.has_section('Comments'):
             def getComment(i):
@@ -554,6 +577,8 @@ class Dataset:
         S.set(sec, 'Dependent', repr(len(self.dependents)))
         S.set(sec, 'Parameters', repr(len(self.parameters)))
         S.set(sec, 'Comments', repr(len(self.comments)))
+        for header in self.additional_headers:
+            S.set(sec, header, repr(len(self.additional_headers[header])))
 
         for i, ind in enumerate(self.independents):
             sec = 'Independent %d' % (i + 1)
@@ -574,6 +599,14 @@ class Dataset:
             S.set(sec, 'Label', par['label'])
             # TODO: smarter saving here, since eval'ing is insecure
             S.set(sec, 'Data', repr(par['data']))
+
+        for header in self.additional_headers:
+            values = self.additional_headers[header]
+            for i, value in enumerate(values):
+                sec = header + ' %d' % (i + 1)
+                S.add_section(sec)
+                S.set(sec, 'Label', value['label'])
+                S.set(sec, 'Data', repr(value['data']))
 
         sec = 'Comments'
         S.add_section(sec)
@@ -771,6 +804,23 @@ class Dataset:
         else:
             self.comment_listeners.add(context)
 
+    def addAdditionalHeader(self, header_name, name, data, saveNow=True):
+        if header_name not in self.additional_headers:
+            self.additional_headers[header_name] = []
+        for p in self.additional_headers[header_name]:
+            if p['label'] == name:
+                raise AdditionalHeaderInUseError(header_name, name)
+        d = dict(label=name, data=data)
+        self.additional_headers[header_name].append(d)
+        if saveNow:
+            self.save()
+
+        # notify all listening contexts
+        self.parent.onNewAdditionalHeader(None, self.add_header_listeners)
+        self.parent.onNewAdditionalHeaderDataset((int(self.name[0:5]), self.name[8:len(self.name)], self.session.path, name), self.parent.root.listeners)
+        self.add_header_listeners = set()
+        return name
+
 
 class NumpyDataset(Dataset):
 
@@ -955,6 +1005,7 @@ class DataVault(LabradServer):
                 removeFromList(dataset.listeners)
                 removeFromList(dataset.param_listeners)
                 removeFromList(dataset.comment_listeners)
+                removeFromList(dataset.add_header_listeners)
 
     def getSession(self, c):
         """Get a session object for the current path."""
@@ -978,6 +1029,8 @@ class DataVault(LabradServer):
     onDataAvailable = Signal(543619, 'signal: data available', '')
     onNewParameterDataset = Signal(543620, 'signal: new parameter dataset', '(i, s, ?, s)') ####MK
     onNewParameter = Signal(543625, 'signal: new parameter', '')
+    onNewAdditionalHeader = Signal(543626, 'signal: new additional header', '')
+    onNewAdditionalHeaderDataset = Signal(543627, 'signal: new additional header dataset', '(i, s, ?, s)')
     onCommentsAvailable = Signal(543621, 'signal: comments available', '')
 
     @setting(6, tagFilters=['s', '*s'], includeTags='b',
@@ -1349,6 +1402,12 @@ class DataVault(LabradServer):
         if isinstance(datasets, str):
             datasets = [datasets]
         return sess.getTags(dirs, datasets)
+
+    @setting(128, 'add additional header', header_name='s', name='s', returns='')
+    def add_addition_header(self, c, header_name, name, data):
+        """Add a new addtional header to the current dataset."""
+        dataset = self.getDataset(c)
+        dataset.addAdditionalHeader(header_name, name, data)
 
 
 __server__ = DataVault()
