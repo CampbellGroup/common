@@ -135,6 +135,13 @@ class AdditionalHeaderInUseError(T.Error):
         self.msg = "Already a value called '%s' in header '%s'." % (name, header_name)
 
 
+class BadAdditionalHeaderError(T.Error):
+    code = 12
+
+    def __init__(self, header_name, name):
+        self.msg = "'%s' in header '%s' not found." % (name, header_name)
+
+
 # filename translation
 
 encodings = [
@@ -510,9 +517,9 @@ class Dataset:
         self.created = timeFromStr(S.get(gen, 'Created'))
         self.accessed = timeFromStr(S.get(gen, 'Accessed'))
         self.modified = timeFromStr(S.get(gen, 'Modified'))
-        non_additional_header_names = ["DType", "Title", "Created", "Accessed",
-                                       "Modified", "Independent", "Dependent",
-                                       "Parameters", "Comments"]
+        non_additional_header_names = ["dtype", "title", "created", "accessed",
+                                       "modified", "independent", "dependent",
+                                       "parameters", "comments"]
         additional_header_names = [header for header in S.options("General")
                                    if header not in non_additional_header_names]
 
@@ -542,15 +549,16 @@ class Dataset:
         count = S.getint(gen, 'Parameters')
         self.parameters = [getPar(i) for i in range(count)]
 
-        def getAddHeader(header_name, i):
+        def getAddiHeader(header_name, i):
             sec = header_name + ' %d' % (i + 1)
             label = S.get(sec, 'Label', raw=True)
             # TODO: big security hole! eval can execute arbitrary code
             data = T.evalLRData(S.get(sec, 'Data', raw=True))
             return dict(label=label, data=data)
+        self.additional_headers = {}
         for header in additional_header_names:
             count = S.getint(gen, header)
-            self.additional_headers[header] = [getAddHeader(header, i) for i in range(count)]
+            self.additional_headers[header] = [getAddiHeader(header, i) for i in range(count)]
 
         # get comments if they're there
         if S.has_section('Comments'):
@@ -805,6 +813,7 @@ class Dataset:
             self.comment_listeners.add(context)
 
     def addAdditionalHeader(self, header_name, name, data, saveNow=True):
+        header_name = header_name.lower()
         if header_name not in self.additional_headers:
             self.additional_headers[header_name] = []
         for p in self.additional_headers[header_name]:
@@ -817,9 +826,24 @@ class Dataset:
 
         # notify all listening contexts
         self.parent.onNewAdditionalHeader(None, self.add_header_listeners)
-        self.parent.onNewAdditionalHeaderDataset((int(self.name[0:5]), self.name[8:len(self.name)], self.session.path, name), self.parent.root.listeners)
+        self.parent.onNewAdditionalHeaderDataset((int(self.name[0:5]),
+                                                  self.name[8:len(self.name)],
+                                                  self.session.path,
+                                                  name),
+                                                 self.parent.root.listeners)
         self.add_header_listeners = set()
         return name
+
+    def getAdditionalHeader(self, header_name, name, case_sensitive=True):
+        for header in self.additional_headers:
+            for item in self.additional_headers[header]:
+                if case_sensitive:
+                    if item['label'] == name:
+                        return item['data']
+                else:
+                    if item['label'].lower() == name.lower():
+                        return item['data']
+        raise BadAdditionalHeaderError(header_name, name)
 
 
 class NumpyDataset(Dataset):
@@ -1405,9 +1429,48 @@ class DataVault(LabradServer):
 
     @setting(128, 'add additional header', header_name='s', name='s', returns='')
     def add_addition_header(self, c, header_name, name, data):
-        """Add a new addtional header to the current dataset."""
+        """
+        Add a new additional header to the current dataset.
+        header_name will be converted to lower case.
+        """
         dataset = self.getDataset(c)
         dataset.addAdditionalHeader(header_name, name, data)
+
+    @setting(129, returns='*(ss)')
+    def additional_headers(self, c):
+        """Get a list of additional header (header_name, name) tuples."""
+        dataset = self.getDataset(c)
+        # send a message when new additional headers are added
+        dataset.add_header_listeners.add(c.ID)
+        additional_headers = []
+        for header in dataset.additional_headers:
+            for item in dataset.additional_headers[header]:
+                additional_headers.append((header, item["label"]))
+        return additional_headers
+
+    @setting(130, 'get additional header', header_name='s', name='s')
+    def get_additional_header(self, c, header_name, name, case_sensitive=True):
+        """Get the value of an additional header."""
+        dataset = self.getDataset(c)
+        return dataset.getAdditionalHeader(header_name, name, case_sensitive)
+
+    @setting(131, 'get additional headers')
+    def get_additional_headers(self, c):
+        """Get all additional headers.
+
+        Returns a cluster of (header_name, name, value) clusters, one for each header item.
+        If the set has no additional headers, nothing is returned (since empty clusters
+        are not allowed).
+        """
+        dataset = self.getDataset(c)
+        additional_headers = ()
+        for header in dataset.additional_headers:
+            for item in dataset.additional_headers[header]:
+                additional_headers += ((header, item["label"], item["data"]), )
+        # send a message when new parameters are added
+        dataset.add_header_listeners.add(c.ID)
+        if len(additional_headers) > 0:
+            return additional_headers
 
 
 __server__ = DataVault()
