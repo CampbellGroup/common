@@ -101,7 +101,9 @@ class switchclient(QtGui.QWidget):
             inverted = self.chaninfo[chan][2]
             if inverted:
                 state = not state
+            self.d[port].TTLSwitch.blockSignal(True)
             self.d[port].TTLswitch.setChecked(state)
+            self.d[port].TTLSwitch.blockSignal(False)
 
     def closeEvent(self, x):
         self.reactor.stop()
