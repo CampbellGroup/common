@@ -84,7 +84,7 @@ class wavemeterclient(QtGui.QWidget):
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
 
-        self.setWindowTitle('Multiplexed Wavemeter')
+        self.setWindowTitle('Wavemeter')
 
         # this "group" contains all 8 channel outputs and settings
         qBox = QtGui.QGroupBox('Wave Length and Lock settings')
