@@ -63,7 +63,7 @@ class Pulser(DDS, LineTrigger):
         self.initializeSettings()
         yield self.initializeDDS()
         self.listeners = set()
-        
+
         self.programmed_sequence = None
 
     def initializeBoard(self):
@@ -104,7 +104,7 @@ class Pulser(DDS, LineTrigger):
     @setting(1, "Program Sequence", returns = '')
     def programSequence(self, c, sequence):
         """
-        Programs Pulser with the current sequence. 
+        Programs Pulser with the current sequence.
         Saves the current sequence to self.programmed_sequence.
         """
         #print "program sequence"
@@ -218,7 +218,7 @@ class Pulser(DDS, LineTrigger):
     def humanReadableTTL(self, c, getProgrammed = None):
         """
         Args:
-        getProgrammed (bool): False/None(default) to get the sequence added by current context, 
+        getProgrammed (bool): False/None(default) to get the sequence added by current context,
                               True to get the last programmed sequence
         Returns:
         a readable form of TTL sequence
@@ -234,7 +234,7 @@ class Pulser(DDS, LineTrigger):
     def humanReadableDDS(self, c, getProgrammed = None):
         """
         Args:
-        getProgrammed (bool): False/None(default) to get the sequence added by current context, 
+        getProgrammed (bool): False/None(default) to get the sequence added by current context,
                               True to get the last programmed sequence
         Returns:
         a readable form of DDS sequence
@@ -313,13 +313,13 @@ class Pulser(DDS, LineTrigger):
         """
         if timeout is None: timeout = self.sequenceTimeRange[1]
         #print timeout
-        requestCalls = int(timeout / 0.050 ) #number of request calls
+        requestCalls = int(timeout / 0.001 ) #number of request calls
         for i in range(requestCalls):
             yield self.inCommunication.acquire()
             done = yield deferToThread(self.api.isSeqDone)
             self.inCommunication.release()
             if done: returnValue(True)
-            yield self.wait(0.050)
+            yield self.wait(0.001)
         returnValue(False)
 
     @setting(17, 'Repeatitions Completed', returns = 'w')
