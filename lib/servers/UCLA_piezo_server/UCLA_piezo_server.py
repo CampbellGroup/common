@@ -76,6 +76,10 @@ class UCLAPiezo(DeviceServer):
     deviceName = 'UCLAPiezo'
     deviceWrapper = UCLAPiezo_device
 
+    """
+    UCLA piezo controller box (4 channel controller designed by Peter Yu and Christian Schneider)
+    """
+
     @inlineCallbacks
     def initServer(self):
         print 'loading config info...',
