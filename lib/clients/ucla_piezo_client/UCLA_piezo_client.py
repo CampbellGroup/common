@@ -34,10 +34,7 @@ class ucla_piezo_client(QtGui.QWidget):
             print len(setting)
             init_volt = setting[0]
             init_pos = setting[1]
-            if len(setting) == 3:
-                chan_button = QCustomSwitchChannel(setting[2], ('On', 'Off'))
-            else:
-                chan_button = QCustomSwitchChannel(str(i + 1), ('On', 'Off'))
+            chan_button = QCustomSwitchChannel(setting[2], ('On', 'Off'))
             chan_button.TTLswitch.setChecked(init_pos)
             chan_button.TTLswitch.toggled.connect(lambda state=chan_button.TTLswitch.isDown(),
                                                   chan= i + 1: self.on_chan_toggled(state, chan))
