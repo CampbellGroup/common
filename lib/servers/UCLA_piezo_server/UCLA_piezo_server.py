@@ -27,7 +27,7 @@ class UCLAPiezo_device(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
-        """Connect to a piezp device."""
+        """Connect to a piezo device."""
         print 'connecting to "%s" on port "%s"...' % (server.name, port),
         self.server = server
         self.ctx = server.context()
@@ -78,6 +78,9 @@ class UCLAPiezo(DeviceServer):
 
     """
     UCLA piezo controller box (4 channel controller designed by Peter Yu and Christian Schneider)
+    registry should contain a folder called 'settings' with 4 channel key value pairs ex.
+    ucla_piezo_chan_4 (1.4V, false, 'name')
+    
     """
 
     @inlineCallbacks
@@ -85,6 +88,7 @@ class UCLAPiezo(DeviceServer):
         print 'loading config info...',
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
+        yield self.reg.cd(['', 'settings'], True)
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
@@ -126,10 +130,12 @@ class UCLAPiezo(DeviceServer):
         returnValue([device_type, device_id, hardware_id, firmware])
 
     @setting(101, 'set_voltage', chan = 'i', voltage ='v[V]')
-    def get_device_info(self, c, chan, voltage):
+    def set_voltage(self, c, chan, voltage):
         dev = self.selectDevice(c)
         output = 'vout.w ' + str(chan) + ' ' + str(voltage['V'])
         yield dev.write(output)
+        setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
+        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, setting[1]))
 
     @setting(102, 'piezo_output', chan = 'i', state ='b')
     def piezo_output(self, c, chan, state):
@@ -139,7 +145,8 @@ class UCLAPiezo(DeviceServer):
         else:
             output = 'out.w ' + str(chan) + ' 0'
         yield dev.write(output)
-        
+        setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
+        yield self.reg.set('ucla_piezo_chan_' + str(chan), (setting[0], state))
 
 if __name__ == "__main__":
     from labrad import util
