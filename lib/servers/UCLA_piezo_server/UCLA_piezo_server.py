@@ -135,7 +135,9 @@ class UCLAPiezo(DeviceServer):
         output = 'vout.w ' + str(chan) + ' ' + str(voltage['V'])
         yield dev.write(output)
         setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
-        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, setting[1], setting[2]))
+        state = setting[1]
+        name = setting[2]
+        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
 
     @setting(102, 'piezo_output', chan = 'i', state ='b')
     def piezo_output(self, c, chan, state):
@@ -146,7 +148,9 @@ class UCLAPiezo(DeviceServer):
             output = 'out.w ' + str(chan) + ' 0'
         yield dev.write(output)
         setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
-        yield self.reg.set('ucla_piezo_chan_' + str(chan), (setting[0], state, setting[2]))
+        voltage = setting[0]
+        name = setting[2]
+        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
 
 if __name__ == "__main__":
     from labrad import util
