@@ -20,7 +20,7 @@ class api(object):
     def connectOKBoard(self):
         fp = ok.FrontPanel()
         module_count = fp.GetDeviceCount()
-        print "Found {} unused modules".format(module_count)
+        print("Found {} unused modules".format(module_count))
         for i in range(module_count):
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
@@ -28,7 +28,7 @@ class api(object):
             iden = tmp.GetDeviceID()
             if iden == self.okDeviceID:
                 self.xem = tmp
-                print 'Connected to {}'.format(iden)
+                print('Connected to {}'.format(iden))
                 self.programOKBoard()
                 return True
         return False

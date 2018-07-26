@@ -228,7 +228,7 @@ class DDS(LabradServer):
             yield cxn.servers[server][reset]()
             yield cxn.servers[server][program]([(channel.channelnumber, buf)])
         except (KeyError,AttributeError):
-            print 'Not programing remote channel {}'.format(channel.remote)
+            print('Not programing remote channel {}'.format(channel.remote))
 
     def _getCurrentDDS(self):
         '''

@@ -88,9 +88,9 @@ class Pulser(DDS, LineTrigger):
             for name,rc in self.remoteChannels.iteritems():
                 try:
                     self.remoteConnections[name] = yield connectAsync(rc.ip)
-                    print 'Connected to {}'.format(name)
+                    print('Connected to {}'.format(name))
                 except:
-                    print 'Not Able to connect to {}'.format(name)
+                    print('Not Able to connect to {}'.format(name))
                     self.remoteConnections[name] = None
 
     @setting(0, "New Sequence", returns = '')
@@ -345,14 +345,14 @@ class Pulser(DDS, LineTrigger):
         yield self.inCommunication.acquire()
         if mode == 'Normal':
             #set the mode on the device and set update time for normal mode
-            print 'in conditional'
+            print('in conditional')
             yield deferToThread(self.api.setModeNormal)
             yield deferToThread(self.api.setPMTCountRate, countRate)
         elif mode == 'Differential':
             yield deferToThread(self.api.setModeDifferential)
         self.clear_next_pmt_counts = 3 #assign to clear next two counts
         self.inCommunication.release()
-        print 'Defer Released'
+        print('Defer Released')
 
     @setting(22, 'Set Collection Time', new_time = 'v', mode = 's', returns = '')
     def setCollectTime(self, c, new_time, mode):
