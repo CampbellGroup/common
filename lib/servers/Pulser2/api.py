@@ -5,6 +5,12 @@ try:
 except:
     from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
+import sys
+if sys.version_info > (3,):
+    bytearray_to_str = lambda x: x.decode("utf-8")
+else:
+    bytearray_to_str = str
+
 class api(object):
     '''class containing all commands for interfacing with the fpga'''
     def __init__(self):
@@ -146,7 +152,7 @@ class api(object):
         #buf = "\x00"*(number*2)
         buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa0,2,buf)
-        return buf
+        return bytearray_to_str(buf)
     
     def getNormalTotal(self):
         '''
@@ -165,7 +171,7 @@ class api(object):
         #buf = "\x00"* ( number * 2 )
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa1,2,buf)
-        return buf
+        return bytearray_to_str(buf)
     
     def getReadoutTotal(self):
         '''
@@ -184,7 +190,7 @@ class api(object):
         #buf = "\x00"* ( number * 2 )
         buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa2,2,buf)
-        return buf
+        return bytearray_to_str(buf)
     
     def howManySequencesDone(self):
         '''
