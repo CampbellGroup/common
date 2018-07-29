@@ -212,8 +212,7 @@ class DDS_CONTROL(QtWidgets.QFrame):
             self.widgets[chan].setParamNoSignal(param, val)
 
     def closeEvent(self, x):
-        #self.reactor.stop()
-        pass
+        self.reactor.stop()
 
 if __name__ == "__main__":
     import sys
