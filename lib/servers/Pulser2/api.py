@@ -44,7 +44,7 @@ class api(object):
         
     def programBoard(self, sequence):
         sequence_data = self.padTo16(sequence)
-        self.xem.WriteToBlockPipeIn(0x80, 16, sequence_data)
+        self.xem.WriteToBlockPipeIn(0x80, 16, bytearray(sequence_data))
   
     def startLooped(self):
         '''
@@ -255,7 +255,7 @@ class api(object):
 #             print "prog dds",i,"=", prog[i]
         ### pad to a multiple of 16 bytes
         prog_padded = self.padTo16(prog)
-        self.xem.WriteToBlockPipeIn(0x81, 16, prog_padded)  # very important !!! second argument need to be 16. Don't change this.
+        self.xem.WriteToBlockPipeIn(0x81, 16, bytearray(prog_padded))  # very important !!! second argument need to be 16. Don't change this.
         #print "program DDS"
     
     def initializeDDS(self):

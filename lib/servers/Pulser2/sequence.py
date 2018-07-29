@@ -98,7 +98,7 @@ class Sequence():
         if not self.userAddedDDS(): return None
         state = self.parent._getCurrentDDS()
         pulses_end = {}.fromkeys(state, (0, 'stop')) #time / boolean whether in a middle of a pulse
-        dds_program = {}.fromkeys(state, '')
+        dds_program = {}.fromkeys(state, b'')
         lastTime = 0
         entries = sorted(self.ddsSettingList, key = lambda t: t[1] ) #sort by starting time
         possibleError = (0,'')
@@ -113,7 +113,7 @@ class Sequence():
                     self._addNewSwitch(lastTime + self.resetstepDuration,self.advanceDDS,-1)
                 #add termination
                 for name in dds_program:
-                    dds_program[name] +=  '\x00\x00'
+                    dds_program[name] +=  b'\x00\x00'
                 #at the end of the sequence, reset dds
                 lastTTL = max(self.switchingTimes.keys())
                 self._addNewSwitch(lastTTL ,self.resetDDS, 1 )
@@ -154,7 +154,7 @@ class Sequence():
 
     def parseTTL(self):
         """Returns the representation of the sequence for programming the FPGA"""
-        rep = ''
+        rep = b''
         lastChannels = numpy.zeros(self.channelTotal)
         powerArray = 2**numpy.arange(self.channelTotal, dtype = numpy.uint64)
         for key,newChannels in sorted(iteritems(self.switchingTimes)):
