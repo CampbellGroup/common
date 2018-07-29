@@ -60,7 +60,7 @@ p.program_sequence()
 
 ##start once
 for i in range(1):
-    print i
+    print(i)
     p.start_number(10)
 
 # ##wait until sequence is done
