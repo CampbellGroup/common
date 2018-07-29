@@ -466,7 +466,7 @@ class Pulser(DDS, LineTrigger):
     def infoFromBuf(buf):
         #converts the received buffer into useful information
         #the most significant digit of the buffer indicates wheter 866 is on or off
-        count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
+        count = 65536*(256*buf[1]+buf[0])+(256*buf[3]+buf[2])
         if count >= 2**31:
             status = 'OFF'
             count = count % 2**31
