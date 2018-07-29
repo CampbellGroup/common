@@ -1,5 +1,7 @@
 import numpy
 import array
+from six import iteritems
+from builtins import range
 
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
@@ -68,7 +70,7 @@ class Sequence():
         return b
 
     def _addNewSwitch(self, timeStep, chan, value):
-        if self.switchingTimes.has_key(timeStep):
+        if timeStep in self.switchingTimes:
             if self.switchingTimes[timeStep][chan]: # checks if 0 or 1/-1
                 # if set to turn off, but want on, replace with zero, fixes error adding 2 TTLs back to back
                 if self.switchingTimes[timeStep][chan] * value == -1:
@@ -110,7 +112,7 @@ class Sequence():
                     self._addNewSwitch(lastTime,self.advanceDDS,1)
                     self._addNewSwitch(lastTime + self.resetstepDuration,self.advanceDDS,-1)
                 #add termination
-                for name in dds_program.iterkeys():
+                for name in dds_program:
                     dds_program[name] +=  '\x00\x00'
                 #at the end of the sequence, reset dds
                 lastTTL = max(self.switchingTimes.keys())
@@ -143,7 +145,7 @@ class Sequence():
                 pulses_end[name] = (start, typ)
 
     def addToProgram(self, prog, state):
-        for name,num in state.iteritems():
+        for name,num in iteritems(state):
             if not hardwareConfiguration.ddsDict[name].phase_coherent_model:
                 buf = self.parent._intToBuf(num)
             else:
@@ -155,7 +157,7 @@ class Sequence():
         rep = ''
         lastChannels = numpy.zeros(self.channelTotal)
         powerArray = 2**numpy.arange(self.channelTotal, dtype = numpy.uint64)
-        for key,newChannels in sorted(self.switchingTimes.iteritems()):
+        for key,newChannels in sorted(iteritems(self.switchingTimes)):
             channels = lastChannels + newChannels #computes the action of switching on the state
             if (channels < 0).any(): raise Exception ('Trying to switch off channel that is not already on')
             channelInt = numpy.dot(channels,powerArray)
@@ -174,7 +176,7 @@ class Sequence():
     def ddsHumanRepresentation(self, dds):
         program = []
         print(dds)
-        for name,buf in dds.iteritems():
+        for name,buf in iteritems(dds):
             print("name is ", name)
             arr = array.array('B', buf)
             arr = arr[:-2] #remove termination
@@ -184,7 +186,7 @@ class Sequence():
             ampl_min,ampl_max = channel.boardamplrange
             def chunks(l, n):
                 """ Yield successive n-sized chunks from l."""
-                for i in xrange(0, len(l), n):
+                for i in range(0, len(l), n):
                     yield l[i:i+n]
             if not coherent:
                 for a,b,c,d in chunks(arr, 4):
@@ -220,5 +222,5 @@ class Sequence():
             reverse = expand[::-1]
             return reverse
 
-        channels = map(expandChannel,channels)
+        channels = list(map(expandChannel,channels))
         return numpy.vstack((times,channels)).transpose()
