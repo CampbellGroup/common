@@ -31,6 +31,7 @@ timeout = 20
 """
 
 from __future__ import with_statement
+from builtins import input
 
 from labrad import types as T, util
 from labrad.server import LabradServer, Signal, setting
@@ -39,17 +40,20 @@ from twisted.internet import reactor
 from twisted.internet.reactor import callLater
 from twisted.internet.defer import inlineCallbacks, Deferred, returnValue, DeferredList
 
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 import os, re, sys
 from datetime import datetime
 
+if sys.version_info > (3,):
+    long = int
+
 try:
     import numpy
-    print "Numpy imported."
+    print("Numpy imported.")
     useNumpy = True
-except ImportError, e:
-    print e
-    print "Numpy not imported.  The DataVault will operate, but will be slower."
+except ImportError as e:
+    print(e)
+    print("Numpy not imported.  The DataVault will operate, but will be slower.")
     useNumpy = False
 
 # TODO: tagging
@@ -224,7 +228,7 @@ class Session(object):
 
     @classmethod
     def getAll(cls):
-        return cls._sessions.values()
+        return list(cls._sessions.values())
 
     @staticmethod
     def exists(path):
@@ -345,8 +349,8 @@ class Session(object):
                 tag = tag[1:]
             else:
                 filter = include
-            dirs = filter(dirs, tag, self.session_tags)
-            datasets = filter(datasets, tag, self.dataset_tags)
+            dirs = list(filter(dirs, tag, self.session_tags))
+            datasets = list(filter(datasets, tag, self.dataset_tags))
         return dirs, datasets
 
     def listDatasets(self):
@@ -730,7 +734,7 @@ class Dataset:
             self.parameters.append(d)
         if saveNow:
             self.save()
-        if name in self.deferredParameterDict.keys():
+        if name in self.deferredParameterDict:
             for dParam in self.deferredParameterDict[name][:]:
                 self.timeOutCallIDs[dParam].cancel() # cancel the callLater!
                 self.timeOutCallIDs.pop(dParam)
@@ -983,9 +987,9 @@ class DataVault(LabradServer):
             gotLocation = True
         except:
             try:
-                print 'Could not load repository location from registry.'
-                print 'Please enter data storage directory or hit enter to use the current directory:'
-                DATADIR = raw_input('>>>')
+                print('Could not load repository location from registry.')
+                print('Please enter data storage directory or hit enter to use the current directory:')
+                DATADIR = input('>>>')
                 if DATADIR == '':
                     DATADIR = os.path.join(os.path.split(__file__)[0], '__data__')
                 if not os.path.exists(DATADIR):
@@ -996,17 +1000,17 @@ class DataVault(LabradServer):
                 p.set(nodename, DATADIR)
                 p.set('__default__', DATADIR)
                 yield p.send()
-                print DATADIR, "has been saved in the registry",
-                print "as the data location."
-                print "To change this, stop this server,"
-                print "edit the registry keys at", path,
-                print "and then restart."
-            except Exception, E:
-                print
-                print E
-                print
-                print "Press [Enter] to continue..."
-                raw_input()
+                print(DATADIR, "has been saved in the registry",)
+                print("as the data location.")
+                print("To change this, stop this server,")
+                print("edit the registry keys at", path,)
+                print("and then restart.")
+            except Exception as E:
+                print()
+                print(E)
+                print()
+                print("Press [Enter] to continue...")
+                input()
                 sys.exit()
         # create root session
         # root = Session([''], self)
@@ -1025,7 +1029,7 @@ class DataVault(LabradServer):
                 ls.remove(c.ID)
         for session in Session.getAll():
             removeFromList(session.listeners)
-            for dataset in session.datasets.values():
+            for dataset in list(session.datasets.values()):
                 removeFromList(dataset.listeners)
                 removeFromList(dataset.param_listeners)
                 removeFromList(dataset.comment_listeners)

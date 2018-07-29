@@ -89,14 +89,14 @@ class NormalPMTFlow(LabradServer):
                 self.openDataSet = yield self.makeNewDataSet(self.saveFolder,
                                                              self.dataSetName)
                 self.onNewSetting(('dataset', self.openDataSet))
-            print 'Connected: Data Vault'
+            print('Connected: Data Vault')
         except AttributeError:
             self.dv = None
-            print 'Not Connected: Data Vault'
+            print('Not Connected: Data Vault')
 
     @inlineCallbacks
     def disconnect_data_vault(self):
-        print 'Not Connected: Data Vault'
+        print('Not Connected: Data Vault')
         self.dv = None
         yield None
 
@@ -109,14 +109,14 @@ class NormalPMTFlow(LabradServer):
                 yield self.dorecordData()
                 self.onNewSetting(('state', 'on'))
                 self.recordingInterrupted = False
-            print 'Connected: Pulser'
+            print('Connected: Pulser')
         except AttributeError:
             self.pulser = None
-            print 'Not Connected: Pulser'
+            print('Not Connected: Pulser')
 
     @inlineCallbacks
     def disconnect_pulser(self):
-        print 'Not Connected: Pulser'
+        print('Not Connected: Pulser')
         self.pulser = None
         if self.recording.running:
             yield self.recording.stop()
@@ -148,7 +148,7 @@ class NormalPMTFlow(LabradServer):
             self.grapher.plot(ds, 'pmt', False)
         except AttributeError:
             self.grapher = None
-            print "no grapher"
+            print("no grapher")
         returnValue(name)
 
     @inlineCallbacks
@@ -363,7 +363,7 @@ class NormalPMTFlow(LabradServer):
         try:
             rawdata = yield self.pulser.get_pmt_counts()
         except:
-            print 'Not Able to Get PMT Counts'
+            print('Not Able to Get PMT Counts')
             rawdata = []
         if len(rawdata) != 0:
             if self.currentMode == 'Normal':
@@ -375,7 +375,7 @@ class NormalPMTFlow(LabradServer):
             try:
                 yield self.dv.add(toDataVault)
             except:
-                print 'Not Able to Save To Data Vault'
+                print('Not Able to Save To Data Vault')
 
     def processSignals(self, data):
         lastPt = data[-1]
