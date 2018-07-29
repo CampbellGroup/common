@@ -146,7 +146,6 @@ class api(object):
         #buf = "\x00"*(number*2)
         buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa0,2,buf)
-        buf = str(buf)
         return buf
     
     def getNormalTotal(self):
@@ -166,7 +165,6 @@ class api(object):
         #buf = "\x00"* ( number * 2 )
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa1,2,buf)
-        buf = str(buf)
         return buf
     
     def getReadoutTotal(self):
@@ -186,7 +184,6 @@ class api(object):
         #buf = "\x00"* ( number * 2 )
         buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa2,2,buf)
-        buf = str(buf)
         return buf
     
     def howManySequencesDone(self):
