@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 
-class progress_bar(QtGui.QProgressBar):
+class progress_bar(QtWidgets.QProgressBar):
     def __init__(self, reactor, parent=None):
         super(progress_bar, self).__init__(parent)
         self.reactor = reactor
@@ -16,7 +16,7 @@ class progress_bar(QtGui.QProgressBar):
         self.reactor.stop()
 
 
-class fixed_width_button(QtGui.QPushButton):
+class fixed_width_button(QtWidgets.QPushButton):
     def __init__(self, text, size):
         super(fixed_width_button, self).__init__(text)
         self.size = size
@@ -26,7 +26,7 @@ class fixed_width_button(QtGui.QPushButton):
         return QtCore.QSize(*self.size)
 
 
-class script_status_widget(QtGui.QWidget):
+class script_status_widget(QtWidgets.QWidget):
 
     on_pause = QtCore.pyqtSignal()
     on_continue = QtCore.pyqtSignal()
@@ -95,7 +95,7 @@ class script_status_widget(QtGui.QWidget):
         self.reactor.stop()
 
 
-class running_scans_list(QtGui.QTableWidget):
+class running_scans_list(QtWidgets.QTableWidget):
 
     on_pause = QtCore.pyqtSignal(int, bool)
     on_stop = QtCore.pyqtSignal(int)
@@ -109,7 +109,7 @@ class running_scans_list(QtGui.QTableWidget):
             self.font = QtGui.QFont('MS Shell Dlg 2', pointSize=12)
         self.setupLayout()
         self.d = {}
-        self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.mapper_pause = QtCore.QSignalMapper()
         self.mapper_pause.mapped.connect(self.emit_pause)
         self.mapper_continue = QtCore.QSignalMapper()
@@ -124,13 +124,13 @@ class running_scans_list(QtGui.QTableWidget):
         self.on_pause.emit(ident, False)
 
     def setupLayout(self):
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.setColumnCount(1)
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
-                           QtGui.QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                           QtWidgets.QSizePolicy.MinimumExpanding)
 
     def add(self, ident, name):
         ident = int(ident)
@@ -193,7 +193,7 @@ class running_scans_list(QtGui.QTableWidget):
         self.reactor.stop()
 
 
-class running_combined(QtGui.QWidget):
+class running_combined(QtWidgets.QWidget):
     """
     What does this class do?
     Instantiated in the scripting_widget class
@@ -220,9 +220,9 @@ class running_combined(QtGui.QWidget):
         self.scans_list.clear()
 
     def setupLayout(self):
-        layout = QtGui.QGridLayout()
-        title = QtGui.QLabel("Running", font=self.font)
-        title.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        layout = QtWidgets.QGridLayout()
+        title = QtWidgets.QLabel("Running", font=self.font)
+        title.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         title.setAlignment(QtCore.Qt.AlignLeft)
         self.scans_list = running_scans_list(self.reactor, self.parent)
         layout.addWidget(title, 0, 0, 1, 3)

@@ -1,6 +1,6 @@
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtWidgets, QtGui
 
-class FilterModel(QtGui.QSortFilterProxyModel):
+class FilterModel(QtCore.QSortFilterProxyModel):
     def __init__(self, parent):
         super(FilterModel, self).__init__(parent)
         #filtering

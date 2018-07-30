@@ -1,7 +1,7 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 
-class fixed_width_button(QtGui.QPushButton):
+class fixed_width_button(QtWidgets.QPushButton):
     def __init__(self, text, size):
         super(fixed_width_button, self).__init__(text)
         self.size = size
@@ -11,7 +11,7 @@ class fixed_width_button(QtGui.QPushButton):
         return QtCore.QSize(*self.size)
 
 
-class queued_widget(QtGui.QWidget):
+class queued_widget(QtWidgets.QWidget):
     def __init__(self, reactor, ident, name, font=None, parent=None):
         super(queued_widget, self).__init__(parent)
         self.reactor = reactor
@@ -49,7 +49,7 @@ class queued_widget(QtGui.QWidget):
         self.reactor.stop()
 
 
-class queued_list(QtGui.QTableWidget):
+class queued_list(QtWidgets.QTableWidget):
 
     on_cancel = QtCore.pyqtSignal(int)
 
@@ -60,7 +60,7 @@ class queued_list(QtGui.QTableWidget):
         self.font = font
         if self.font is None:
             self.font = QtGui.QFont('MS Shell Dlg 2', pointSize=12)
-        self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.setupLayout()
         self.d = {}  # stores identification: corresponding widget
         self.mapper = QtCore.QSignalMapper()
@@ -70,14 +70,14 @@ class queued_list(QtGui.QTableWidget):
         self.on_cancel.emit(ident)
 
     def setupLayout(self):
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.setColumnCount(1)
         self.setRowCount(1)
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
-                           QtGui.QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                           QtWidgets.QSizePolicy.MinimumExpanding)
 
     def add(self, ident, name, order):
         # make the widget
@@ -118,7 +118,7 @@ class queued_list(QtGui.QTableWidget):
         self.reactor.stop()
 
 
-class queued_combined(QtGui.QWidget):
+class queued_combined(QtWidgets.QWidget):
     def __init__(self, reactor, font=None, parent=None):
         super(queued_combined, self).__init__(parent)
         self.reactor = reactor
@@ -133,11 +133,11 @@ class queued_combined(QtGui.QWidget):
         self.ql.clear()
 
     def setupLayout(self):
-        layout = QtGui.QGridLayout()
-        title = QtGui.QLabel("Queued", font=self.font)
+        layout = QtWidgets.QGridLayout()
+        title = QtWidgets.QLabel("Queued", font=self.font)
         title.setAlignment(QtCore.Qt.AlignLeft)
         self.ql = queued_list(self.reactor, self.parent)
-        self.cancel_all = QtGui.QPushButton("Cancel All")
+        self.cancel_all = QtWidgets.QPushButton("Cancel All")
         layout.addWidget(title, 0, 0, 1, 2)
         layout.addWidget(self.cancel_all, 0, 2, 1, 1)
         layout.addWidget(self.ql, 1, 0, 3, 3)

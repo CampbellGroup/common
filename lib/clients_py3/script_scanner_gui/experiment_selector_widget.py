@@ -1,4 +1,4 @@
-from PyQt4 import QtGui, QtCore, uic
+from PyQt5 import QtGui, QtWidgets, QtCore, uic
 from numpy import linspace
 import os
 
@@ -13,7 +13,7 @@ class dialog_ui(base, form):
         self.setupUi(self)
 
 
-class scan_dialog(QtGui.QDialog, dialog_ui):
+class scan_dialog(QtWidgets.QDialog, dialog_ui):
     def __init__(self, selected, experiment_list, parameter_info, parent=None):
         QtGui.QDialog.__init__(self)
         dialog_ui.__init__(self, parent)
@@ -159,7 +159,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         return steps
 
 
-class repeat_dialog(QtGui.QDialog):
+class repeat_dialog(QtWidgets.QDialog):
     def __init__(self):
         super(repeat_dialog, self).__init__()
         self.setWindowTitle('Repeat')
@@ -190,7 +190,7 @@ class repeat_dialog(QtGui.QDialog):
         self.cancel_button.pressed.connect(self.reject)
 
 
-class schedule_dialog(QtGui.QDialog):
+class schedule_dialog(QtWidgets.QDialog):
     def __init__(self):
         super(schedule_dialog, self).__init__()
         self.setWindowTitle('Schedule')
@@ -229,7 +229,7 @@ class schedule_dialog(QtGui.QDialog):
         self.cancel_button.pressed.connect(self.reject)
 
 
-class experiment_selector_widget(QtGui.QWidget):
+class experiment_selector_widget(QtWidgets.QWidget):
 
     on_refresh = QtCore.pyqtSignal(bool)
     on_run = QtCore.pyqtSignal(str)
@@ -250,22 +250,22 @@ class experiment_selector_widget(QtGui.QWidget):
         self.connect_layout()
 
     def setupLayout(self):
-        layout = QtGui.QGridLayout()
-        label = QtGui.QLabel("Experiment", font=self.font)
-        self.dropdown = QtGui.QComboBox()
+        layout = QtWidgets.QGridLayout()
+        label = QtWidgets.QLabel("Experiment", font=self.font)
+        self.dropdown = QtWidgets.QComboBox()
         self.dropdown.setMaxVisibleItems(30)
         self.dropdown.addItem('')  # add empty item for no selection state
         # enable sorting
-        sorting_model = QtGui.QSortFilterProxyModel(self.dropdown)
+        sorting_model = QtCore.QSortFilterProxyModel(self.dropdown)
         sorting_model.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
         sorting_model.setSourceModel(self.dropdown.model())
         self.dropdown.model().setParent(sorting_model)
         self.dropdown.setModel(sorting_model)
-        self.run_button = QtGui.QPushButton("Run")
-        self.repeat_button = QtGui.QPushButton("Repeat")
-        self.scan_button = QtGui.QPushButton("Scan")
-        self.schedule_button = QtGui.QPushButton("Schedule")
-        self.refresh_button = QtGui.QPushButton()
+        self.run_button = QtWidgets.QPushButton("Run")
+        self.repeat_button = QtWidgets.QPushButton("Repeat")
+        self.scan_button = QtWidgets.QPushButton("Scan")
+        self.schedule_button = QtWidgets.QPushButton("Schedule")
+        self.refresh_button = QtWidgets.QPushButton()
         self.refresh_button.setIcon(QtGui.QIcon.fromTheme('view-refresh'))
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addWidget(self.dropdown, 0, 1, 1, 3)
@@ -275,8 +275,8 @@ class experiment_selector_widget(QtGui.QWidget):
         layout.addWidget(self.scan_button, 1, 3, 1, 1,)
         layout.addWidget(self.schedule_button, 1, 4, 1, 1)
         self.setLayout(layout)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
-                           QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                           QtWidgets.QSizePolicy.Fixed)
         self.check_button_disable(self.dropdown.currentText())
 
     def clear_all(self):
@@ -290,8 +290,8 @@ class experiment_selector_widget(QtGui.QWidget):
         self.repeat_button.pressed.connect(self.on_repeat_button)
         self.schedule_button.pressed.connect(self.on_schedule_button)
         self.scan_button.pressed.connect(self.on_scan_button)
-        self.dropdown.currentIndexChanged[QtCore.QString].connect(self.on_experiment_selected)
-        self.dropdown.currentIndexChanged[QtCore.QString].connect(self.check_button_disable)
+        self.dropdown.currentIndexChanged[str].connect(self.on_experiment_selected)
+        self.dropdown.currentIndexChanged[str].connect(self.check_button_disable)
 
     def check_button_disable(self, selection):
         """

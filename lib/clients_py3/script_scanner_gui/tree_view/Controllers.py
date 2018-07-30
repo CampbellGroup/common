@@ -1,8 +1,8 @@
-from PyQt4 import QtCore, uic
-from Data import Node
-from FilterModel import FilterModel
-from Models import ParametersTreeModel
-from PropertiesEditor import PropertiesEditor
+from PyQt5 import QtCore, QtWidgets, uic
+from .Data import Node
+from .FilterModel import FilterModel
+from .Models import ParametersTreeModel
+from .PropertiesEditor import PropertiesEditor
 import os
 from six import iteritems
 

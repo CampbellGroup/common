@@ -1,4 +1,4 @@
-from PyQt4 import QtCore, QtGui, uic
+from PyQt5 import QtGui, QtWidgets, uic
 import numpy as np
 import os
 
@@ -6,7 +6,7 @@ basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"..","..","Views", "DurationBandwidthEditor.ui")
 base, form = uic.loadUiType(path)
 
-class parameter_delegate(QtGui.QAbstractItemDelegate):
+class parameter_delegate(QtWidgets.QAbstractItemDelegate):
     def __init__(self, parent):
         super(parameter_delegate, self).__init__()
         self.parent = parent
@@ -62,7 +62,7 @@ class DurationBandwidthEditor(base, form):
         self.WithUnit = WithUnit
         
         self.setupUi(self)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QtWidgets.QDataWidgetMapper(self)
         self._dataMapper.setItemDelegate(parameter_delegate(self))
         self.connect_signals()
     
@@ -94,7 +94,7 @@ class DurationBandwidthEditor(base, form):
         self._dataMapper.addMapping(self.uiMin, 3)
         self._dataMapper.addMapping(self.uiMax, 4)
         self._dataMapper.addMapping(self.uiValue, 5)
-        self._dataMapper.addMapping(QtGui.QWidget(self), 6)
+        self._dataMapper.addMapping(QtWidgets.QWidget(self), 6)
      
     def setSelection(self, current):
         parent = current.parent()
