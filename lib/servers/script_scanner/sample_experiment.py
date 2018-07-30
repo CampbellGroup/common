@@ -1,5 +1,5 @@
 import labrad
-from Qsim.abstractdevices.script_scanner.scan_methods import experiment
+from experiment import experiment
 
 class fft_spectrum(experiment):
     
