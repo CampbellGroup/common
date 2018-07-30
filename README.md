@@ -18,6 +18,10 @@ Please note that you might have to change the LABRADHOST environmental variable 
 
 To install the ok module, you need to go the software folder on the Campbell server and install the corresponding package.
 
+# Issues
+
+See issue templates located at https://github.com/CampbellGroup/common/tree/master/.github/ISSUE_TEMPLATE before submitting issues
+
 # Conventions
 New code should...  
 * Be Python 2 & 3 compatible, using
