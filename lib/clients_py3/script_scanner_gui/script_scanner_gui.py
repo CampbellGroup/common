@@ -388,7 +388,7 @@ class script_scanner_gui(QtWidgets.QWidget):
 
     def displayError(self, text):
         # runs the message box in a non-blocking method
-        message = QtGui.QMessageBox(self.scripting_widget)
+        message = QtWidgets.QMessageBox(self.scripting_widget)
         message.setText(text)
         message.open()
         message.show()

@@ -5,7 +5,7 @@ class fixed_width_button(QtWidgets.QPushButton):
     def __init__(self, text, size):
         super(fixed_width_button, self).__init__(text)
         self.size = size
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
     def sizeHint(self):
         return QtCore.QSize(*self.size)
@@ -24,19 +24,19 @@ class queued_widget(QtWidgets.QWidget):
         self.setup_layout()
 
     def setup_layout(self):
-        layout = QtGui.QHBoxLayout()
-        self.id_label = QtGui.QLabel('{0}'.format(self.ident))
+        layout = QtWidgets.QHBoxLayout()
+        self.id_label = QtWidgets.QLabel('{0}'.format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setMinimumHeight(15)
         self.id_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.id_label.setSizePolicy(QtGui.QSizePolicy.Fixed,
-                                    QtGui.QSizePolicy.Fixed)
-        self.name_label = QtGui.QLabel(self.name)
+        self.id_label.setSizePolicy(QtWidgets.QSizePolicy.Fixed,
+                                    QtWidgets.QSizePolicy.Fixed)
+        self.name_label = QtWidgets.QLabel(self.name)
         self.name_label.setFont(self.font)
         self.name_label.setAlignment(QtCore.Qt.AlignLeft)
-        self.name_label.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
-                                      QtGui.QSizePolicy.Fixed)
+        self.name_label.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                      QtWidgets.QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
         self.cancel_button = fixed_width_button("Cancel", (75, 23))
@@ -154,12 +154,3 @@ class queued_combined(QtWidgets.QWidget):
 
     def closeEvent(self, x):
         self.reactor.stop()
-
-if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
-    from twisted.internet import reactor
-    widget = queued_combined(reactor)
-    widget.show()
-    reactor.run()

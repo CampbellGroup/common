@@ -5,7 +5,7 @@ class fixed_width_button(QtWidgets.QPushButton):
     def __init__(self, text, size):
         super(fixed_width_button, self).__init__(text)
         self.size = size
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
     def sizeHint(self):
         return QtCore.QSize(*self.size)
@@ -26,21 +26,21 @@ class scheduled_widget(QtWidgets.QWidget):
         self.setup_layout()
 
     def setup_layout(self):
-        layout = QtGui.QHBoxLayout()
+        layout = QtWidgets.QHBoxLayout()
         self.id_label = QtWidgets.QLabel('{0}'.format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setMinimumHeight(15)
         self.id_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.id_label.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.id_label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.name_label = QtWidgets.QLabel(self.name)
         self.name_label.setFont(self.font)
         self.name_label.setAlignment(QtCore.Qt.AlignLeft)
-        self.name_label.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
-                                      QtGui.QSizePolicy.Fixed)
+        self.name_label.setSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding,
+                                      QtWidgets.QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
-        self.scheduled_duration = QtGui.QSpinBox()
+        self.scheduled_duration = QtWidgets.QSpinBox()
         self.scheduled_duration.setMinimumHeight(20)
         self.scheduled_duration.setRange(1, 3600)
         self.scheduled_duration.setKeyboardTracking(False)
