@@ -45,6 +45,10 @@ class scheduled_widget(QtWidgets.QWidget):
         self.scheduled_duration.setRange(1, 3600)
         self.scheduled_duration.setKeyboardTracking(False)
         self.scheduled_duration.setSuffix(' sec')
+        try:
+            self.duration = self.duration["s"]
+        except Exception as e:
+            self.duration
         self.scheduled_duration.setValue(self.duration)
         self.cancel_button = fixed_width_button("Cancel", (75, 23))
         layout.addWidget(self.id_label)
