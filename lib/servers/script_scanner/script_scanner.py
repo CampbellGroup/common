@@ -26,7 +26,7 @@ except:
 import scan_methods
 from scheduler import scheduler
 import sys
-
+from six.moves import reload_module
 
 class script_class_parameters(object):
     '''
@@ -80,13 +80,13 @@ class ScriptScanner(ScriptSignalsServer):
                 module = sys.modules[import_path]
                 cls = getattr(module, class_name)
             except ImportError as e:
-                print 'Script Control Error importing: ', e
+                print('Script Control Error importing: ', e)
             except AttributeError:
-                print 'There is no class {0} in module {1}'.format(class_name, module)
+                print('There is no class {0} in module {1}'.format(class_name, module))
             except SyntaxError as e:
-                print 'Incorrect syntax in file {0}'.format(import_path, class_name)
+                print('Incorrect syntax in file {0}'.format(import_path, class_name))
             except Exception as e:
-                print 'There was an error in {0} : {1}'.format(class_name, e)
+                print('There was an error in {0} : {1}'.format(class_name, e))
             else:
                 try:
                     name = cls.name
@@ -94,17 +94,17 @@ class ScriptScanner(ScriptSignalsServer):
                 except AttributeError:
                     name_not_provided = 'Name is not provided for class {0} in'
                     name_not_provided += ' module {1}'
-                    print name_not_provided.format(class_name, module)
+                    print(name_not_provided.format(class_name, module))
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
-        return self.script_parameters.keys()
+        return list(self.script_parameters.keys())
 
     @setting(1, "get_script_parameters", script='s', returns='*(ss)')
     def get_script_parameters(self, c, script):
-        if script not in self.script_parameters.keys():
+        if script not in self.script_parameters:
             raise Exception("Script {} Not Found".format(script))
         return self.script_parameters[script].parameters
 
@@ -165,7 +165,7 @@ class ScriptScanner(ScriptSignalsServer):
         -------
         scan_id: int
         '''
-        if script_name not in self.script_parameters.keys():
+        if script_name not in self.script_parameters:
             raise Exception("Script {} Not Found".format(script_name))
         # Grabs an instance of script_class_parameters that holds
         # the experiment name, the experiment class, and the list of
@@ -179,7 +179,7 @@ class ScriptScanner(ScriptSignalsServer):
     @setting(11, "new_script_repeat", script_name='s', repeat='w',
              save_data='b')
     def new_script_repeat(self, c, script_name, repeat, save_data=True):
-        if script_name not in self.script_parameters.keys():
+        if script_name not in self.script_parameters:
             raise Exception("Script {} Not Found".format(script_name))
         script = self.script_parameters[script_name]
         repeat_launch = scan_methods.repeat_reload(script.cls, repeat,
@@ -194,9 +194,9 @@ class ScriptScanner(ScriptSignalsServer):
     def new_scan(self, c, scan_script_name, measure_script_name, collection,
                  parameter_name, minim, maxim, steps, units):
         # need error checking that parmaters are valid
-        if scan_script_name not in self.script_parameters.keys():
+        if scan_script_name not in self.script_parameters:
             raise Exception("Script {} Not Found".format(scan_script_name))
-        if measure_script_name not in self.script_parameters.keys():
+        if measure_script_name not in self.script_parameters:
             raise Exception("Script {} Not Found".format(measure_script_name))
         scan_script = self.script_parameters[scan_script_name]
         measure_script = self.script_parameters[measure_script_name]
@@ -220,7 +220,7 @@ class ScriptScanner(ScriptSignalsServer):
         Schedule the script to run every spcified duration of seconds.
         Priority indicates the priority with which the scrpt is scheduled.
         '''
-        if script_name not in self.script_parameters.keys():
+        if script_name not in self.script_parameters:
             raise Exception("Script {} Not Found".format(script_name))
         if priority not in ['Normal', 'First in Queue', 'Pause All Others']:
             raise Exception("Priority not recognized")
@@ -340,7 +340,7 @@ class ScriptScanner(ScriptSignalsServer):
 
     @setting(37, "reload_available_scripts")
     def reload_available_scripts(self, c):
-        reload(sc_config)
+        reload_module(sc_config)
         self.script_parameters = {}
         self.load_scripts()
 
