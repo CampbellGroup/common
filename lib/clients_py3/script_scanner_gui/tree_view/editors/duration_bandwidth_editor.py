@@ -78,7 +78,12 @@ class DurationBandwidthEditor(base, form):
         except ZeroDivisionError:
             pass
         else:
-            self.uiBandwidth.setValue(bandwidth[str(self.uiBandwidth.suffix())])
+            try:
+                bandwidth = bandwidth[str(self.uiBandwidth.suffix())]
+            except TypeError:
+                pass
+            else:
+                self.uiBandwidth.setValue(bandwidth)
 
     
     def on_new_decimals(self, decimals):
