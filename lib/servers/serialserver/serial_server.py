@@ -42,7 +42,9 @@ from serial import Serial
 from serial.serialutil import SerialException
 
 from time import sleep
-
+import sys
+if sys.version_info > (3,):
+    long = int
 
 class NoPortSelectedError(Error):
     """Please open a port first."""
@@ -59,7 +61,7 @@ class SerialServer(LabradServer):
     name = '%LABRADNODE% Serial Server'
 
     def initServer(self):
-        print 'Searching for COM ports:'
+        print('Searching for COM ports:')
         self.SerialPorts = []
         ports = list_ports.comports()
         for name, description, hardware in ports:
@@ -67,13 +69,13 @@ class SerialServer(LabradServer):
             try:
                 ser = Serial(name)
                 ser.close()
-            except SerialException, e:
+            except SerialException as e:
                 pass
             else:
                 self.SerialPorts += [name]
-                print name
+                print(name)
         if not len(self.SerialPorts):
-            print '  none'
+            print('  none')
 
     def expireContext(self, c):
         if 'PortObject' in c:
@@ -117,7 +119,7 @@ class SerialServer(LabradServer):
         else:
             try:
                 c['PortObject'] = Serial(port, timeout=0)
-            except SerialException, e:
+            except SerialException as e:
                 if e.message.find('cannot find') >= 0:
                     raise Error(code=1, msg=e.message)
                 else:
