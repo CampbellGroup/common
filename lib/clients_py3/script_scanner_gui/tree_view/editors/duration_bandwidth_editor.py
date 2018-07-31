@@ -1,4 +1,4 @@
-from PyQt5 import QtGui, QtWidgets, uic
+from PyQt5 import QtGui, QtWidgets, uic, QtCore
 import numpy as np
 import os
 
@@ -46,7 +46,7 @@ class parameter_delegate(QtWidgets.QAbstractItemDelegate):
     def setModelData(self, editor, model, index):
         if index.column() == 6:
             return
-        elif isinstance(editor, QtGui.QLineEdit):
+        elif isinstance(editor, QtWidgets.QLineEdit):
             value = editor.text()
         else:
             value = editor.value()

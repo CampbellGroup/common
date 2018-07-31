@@ -47,7 +47,7 @@ class scan_delegate(QtWidgets.QAbstractItemDelegate):
     def setModelData(self, editor, model, index):
         if index.column() == 8:
             return
-        elif isinstance(editor, QtGui.QLineEdit):
+        elif isinstance(editor, QtWidgets.QLineEdit):
             value = editor.text()
         else:
             value = editor.value()

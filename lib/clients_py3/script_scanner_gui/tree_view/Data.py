@@ -169,7 +169,6 @@ class BoolNode(Node):
             return self._value
     
     def setData(self, column, value):
-        value = value.toPyObject()
         if column == 3:
             self._value = value
 
@@ -274,7 +273,6 @@ class StringNode(Node):
             return self._value
     
     def setData(self, column, value):
-        value = value.toPyObject()
         if column == 3:
             self._value = value
 
@@ -354,7 +352,7 @@ class ScanNode(Node):
                                                          self._scan_points)
 
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:
@@ -406,7 +404,7 @@ class SelectionSimpleNode(Node):
             return self._options
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._value = value
         elif column == 4:
@@ -451,7 +449,7 @@ class LineSelectionNode(Node):
             return self._dict
     
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._value = str(value)
         elif column == 4:
@@ -504,7 +502,6 @@ class SidebandElectorNode(Node):
             return self._micromotion
     
     def setData(self, column, value):
-        value = value.toPyObject()
         if column == 3:
             self._radial1 = value
         if column == 4:
@@ -569,7 +566,7 @@ class DurationBandwidthNode(Node):
         return '{0} {1}'.format(self._value, self._units)
         
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:
@@ -628,7 +625,6 @@ class SpectrumSensitivityNode(Node):
             return self._amplitude
     
     def setData(self, column, value):
-        value = value.toPyObject()
         if column == 3:
             self._span = value
         if column == 4:
