@@ -124,7 +124,7 @@ class ParameterNode(Node):
         return '{0} {1}'.format(self._value, self._units)
         
     def setData(self, column, value):
-        value = value.toPyObject()
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:
