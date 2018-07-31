@@ -477,7 +477,7 @@ class Pulser(DDS, LineTrigger):
     #should make nicer by combining with above.
     @staticmethod
     def infoFromBuf_readout(buf):
-        count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
+        count = 65536*(256*buf[1]+buf[0])+(256*buf[3]+buf[2])
         return count
 
     def convertKCperSec(self, inp):
@@ -518,7 +518,7 @@ class Pulser(DDS, LineTrigger):
         counted = yield deferToThread(self.api.getResolvedTotal)
         raw = yield deferToThread(self.api.getResolvedCounts, counted)
         self.inCommunication.release()
-        arr = numpy.fromstring(bytes(raw), dtype = numpy.uint16)
+        arr = numpy.from_buffer(bytes(raw), dtype = numpy.uint16)
         del(raw)
         arr = arr.reshape(-1,2)
         timetags =( 65536 * arr[:,0] + arr[:,1]) * self.timeResolvedResolution
