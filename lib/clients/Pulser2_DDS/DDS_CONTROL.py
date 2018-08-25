@@ -59,7 +59,7 @@ class DDS_CHAN(QCustomFreqPower):
             yield self.server.amplitude(self.chan, val, context = self.context)
         except self.Error as e:
             old_value =  yield self.server.amplitude(self.chan, context = self.context)
-            self.setPowerNoSignal(old_value)
+            self.setPowerNoSignal(old_value["dBm"])
             self.displayError(e.msg)
             
     @inlineCallbacks
@@ -69,7 +69,7 @@ class DDS_CHAN(QCustomFreqPower):
             yield self.server.frequency(self.chan, val, context = self.context)
         except self.Error as e:
             old_value =  yield self.server.frequency(self.chan, context = self.context)
-            self.setFreqNoSignal(old_value)
+            self.setFreqNoSignal(old_value["MHz"])
             self.displayError(e.msg)
             
     
@@ -78,7 +78,7 @@ class DDS_CHAN(QCustomFreqPower):
         try:
             yield self.server.output(self.chan,pressed, context = self.context)
         except self.Error as e:
-            old_value =  yield self.server.frequency(self.chan, context = self.context)
+            old_value =  yield self.server.output(self.chan, context = self.context)
             self.setStateNoSignal(old_value)
             self.displayError(e.msg)
     
