@@ -7,8 +7,8 @@ if version_info[0] < 3:
     import qt4reactor
     qt4reactor.install()
 else:
-    from PyQt5 import QtGui, QtCore, QtWidget
-    a = QtWidget.QApplication( [])
+    from PyQt5 import QtGui, QtCore, QtWidgets
+    a = QtWidgets.QApplication( [])
     import qt5reactor
     qt5reactor.install()
 
