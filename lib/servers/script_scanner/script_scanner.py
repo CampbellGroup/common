@@ -29,9 +29,8 @@ import sys
 import os
 import pkgutil
 import importlib
-from io import StringIO
-from six.moves import configparser
-from six.moves import reload_module
+import inspect
+from six.moves import configparser, StringIO, reload_module
 
 class script_class_parameters(object):
     '''
@@ -149,7 +148,7 @@ class ScriptScanner(ScriptSignalsServer):
         for module in modules:
             try:
                 imported_module = importlib.import_module(module)
-                docstring = imported_module.__doc__
+                docstring = inspect.getdoc(imported_module)
                 class_name, allow_concurrent = self._get_experiment_info(docstring)
                 if class_name is not None:
                     experiments.append((module, class_name, allow_concurrent))
