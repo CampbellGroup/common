@@ -28,8 +28,8 @@ from scheduler import scheduler
 import sys
 import os
 import pkgutil
-import StringIO
 import importlib
+from io import StringIO
 from six.moves import configparser
 from six.moves import reload_module
 
@@ -174,7 +174,7 @@ class ScriptScanner(ScriptSignalsServer):
         start = docstring.find(exp_info_start_str) + len(exp_info_start_str)
         end = docstring.find(exp_info_end_str)
         if end > start:
-            buf = StringIO.StringIO(docstring)
+            buf = StringIO(docstring)
             cp = configparser.ConfigParser()
             cp.readfp(buf)
             if eval(cp.get("info", "load_into_scriptscanner")):
