@@ -1,5 +1,5 @@
 import labrad
-from Qsim.abstractdevices.script_scanner.scan_methods import experiment
+from experiment import experiment
 
 class fft_spectrum(experiment):
     
@@ -7,13 +7,13 @@ class fft_spectrum(experiment):
     required_parameters = []
     
     def initialize(self, cxn, context, ident):
-        print 'init'
+        print('init')
         
     def run(self, cxn, context):
-        print 'running'
+        print('running')
             
     def finalize(self, cxn, context):
-        print 'finalize'
+        print('finalize')
 
 class conflicting_experiment(fft_spectrum):
     
@@ -31,8 +31,27 @@ class crashing_example(fft_spectrum):
     name = 'crashing_example'
 
     def initialize(self, cxn, context, ident):
-        print 'in initialize', self.name(), ident
+        print('in initialize', self.name(), ident)
         raise Exception ("In a case of a crash, real message would follow")
+        
+class experiment_with_parameter(fft_spectrum):
+    
+    name = 'experiment_with_parameter'
+    required_parameters = [('TrapFrequencies', 'rf_drive_frequency')]
+
+    @classmethod
+    def all_required_parameters(cls):
+        return cls.required_parameters
+
+    def __init__(self, name=None, required_parameters=None, cxn=None,
+                 min_progress=0.0, max_progress=100.0):
+        required_parameters = self.all_required_parameters()
+        super(fft_spectrum, self).__init__(name, required_parameters)
+
+        if name is None:
+            self.name = self.__class__.__name__
+        else:
+            self.name = name
 
 if __name__ == '__main__':
     #normal way to launch

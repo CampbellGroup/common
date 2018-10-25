@@ -1,5 +1,6 @@
 from twisted.internet.threads import deferToThread
 from twisted.internet.defer import Deferred, DeferredList
+from six import itervalues, iteritems
 
 try:
     from config.scriptscanner_config import config
@@ -92,14 +93,14 @@ class scheduler(object):
         self.allowed_concurrent = allowed_concurrent
 
     def running_deferred_list(self):
-        return [script.defer_on_done for script in self.running.itervalues() if not script.externally_launched]
+        return [script.defer_on_done for script in itervalues(self.running) if not script.externally_launched]
 
     def get_running_external(self):
-        return [ident for (ident, script) in self.running.iteritems() if script.externally_launched]
+        return [ident for (ident, script) in iteritems(self.running) if script.externally_launched]
 
     def get_running(self):
         running = []
-        for ident, script in self.running.iteritems():
+        for ident, script in iteritems(self.running):
             running.append((ident, script.name))
         return running
 
@@ -112,7 +113,7 @@ class scheduler(object):
 
     def get_scheduled(self):
         scheduled = []
-        for ident, (scan_name, loop) in self.scheduled.iteritems():
+        for ident, (scan_name, loop) in iteritems(self.scheduled):
             scheduled.append([ident, scan_name, loop.interval])
         return scheduled
 
@@ -166,7 +167,7 @@ class scheduler(object):
 
     def is_higher_priority_than_running(self, priority):
         try:
-            priorities = [running.priority for running in self.running.itervalues()]
+            priorities = [running.priority for running in itervalues(self.running)]
             priorities.sort()
             highest_running = priorities[0]
             return priority < highest_running
@@ -179,7 +180,7 @@ class scheduler(object):
         running experiments
         '''
         non_conflicting = []
-        for running, script in self.running.iteritems():
+        for running, script in iteritems(self.running):
             cls_name = script.scan.script_cls.name
             non_conf = self.allowed_concurrent.get(cls_name, None)
             if non_conf is not None:
@@ -201,7 +202,7 @@ class scheduler(object):
         return scan_id
 
     def remove_from_running(self, deferred_result, running_id):
-        print 'removing from running now', running_id
+        print('removing from running now', running_id)
         del self.running[running_id]
 
     def remove_if_external(self, running_id):
@@ -279,7 +280,7 @@ class scheduler(object):
     def pause_running(self, result, scan, current_ident):
         paused_idents = []
         paused_deferred = []
-        for ident, script in self.running.iteritems():
+        for ident, script in iteritems(self.running):
             non_conf = config.allowed_concurrent.get(script.name, [])
             if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
                 # don't pause unless it's a conflicting experiment and it's not
@@ -295,7 +296,7 @@ class scheduler(object):
     def unpause_on_finish(self, result):
         unpaused_defers = []
         for ident in self._paused_by_script:
-            if not ident in self.running.keys():
+            if not ident in self.running:
                 # if the previously paused experiment is no longer running
                 self._paused_by_script.remove(ident)
                 break

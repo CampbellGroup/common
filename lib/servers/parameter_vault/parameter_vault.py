@@ -17,6 +17,7 @@ timeout = 20
 """
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks
+from six import itervalues, iteritems
 
 
 class ParameterVault(LabradServer):
@@ -65,14 +66,14 @@ class ParameterVault(LabradServer):
 
     def _get_parameter_names(self, collection):
         names = []
-        for key in self.parameters.keys():
+        for key in self.parameters:
             if key[0] == collection:
                 names.append(key[1])
         return names
 
     def _get_collections(self):
         names = set()
-        for key in self.parameters.keys():
+        for key in self.parameters:
             names.add(key[0])
         return list(names)
 
@@ -80,7 +81,7 @@ class ParameterVault(LabradServer):
     def save_parameters(self):
         '''save the latest parameters into registry'''
         regDir = self.registryDirectory
-        for key, value in self.parameters.iteritems():
+        for key, value in iteritems(self.parameters):
             key = list(key)
             parameter_name = key.pop()
             fullDir = regDir + key
@@ -142,7 +143,7 @@ class ParameterVault(LabradServer):
             return item[0]
 
         elif param_type == 'line_selection':
-            assert item[0] in dict(item[1]).keys(), bad_selection.format(key)
+            assert item[0] in dict(item[1]), bad_selection.format(key)
             return item[0]
 
         else:  # parameter type not known
@@ -154,7 +155,7 @@ class ParameterVault(LabradServer):
                      full_info=False):
         """Set Parameter"""
         key = (collection, parameter_name)
-        if key not in self.parameters.keys():
+        if key not in self.parameters:
             raise Exception(str(key) + " Parameter Not Found")
         if full_info:
             self.parameters[key] = value
@@ -168,7 +169,7 @@ class ParameterVault(LabradServer):
     def getParameter(self, c, collection, parameter_name, checked=True):
         """Get Parameter Value"""
         key = (collection, parameter_name)
-        if key not in self.parameters.keys():
+        if key not in self.parameters:
             raise Exception(str(key) + "  Parameter Not Found")
         value = self.parameters[key]
         if checked:

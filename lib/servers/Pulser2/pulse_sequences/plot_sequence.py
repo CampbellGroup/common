@@ -23,7 +23,7 @@ class SequencePlotter():
         times = np.array(self.seq.transpose()[0], dtype = np.float)
         l =  self.seq.transpose()[1]
         flatten = lambda x: [int(i) for i in x]
-        switches = np.array( map(flatten, l) )
+        switches = np.array(list(map(flatten, l)))
         switches = switches.transpose()
         return times,switches
     

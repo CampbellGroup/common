@@ -1,6 +1,7 @@
 import traceback
 import labrad
 from treedict import TreeDict
+from six import iteritems
 from common.lib.servers.script_scanner.experiment_info import experiment_info
 
 
@@ -53,7 +54,7 @@ class experiment(experiment_info):
             self._finalize(self.cxn, self.context)
         except Exception as e:
             reason = traceback.format_exc()
-            print reason
+            print(reason)
             if hasattr(self, 'sc'):
                 self.sc.error_finish_confirmed(self.ident, reason)
         finally:
@@ -81,7 +82,7 @@ class experiment(experiment_info):
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
-                print e
+                print(e)
                 message = "In {}: Parameter {} not found among Parameter Vault parameters"
                 raise Exception (message.format(self.name, (collection, parameter_name)))
             else:
@@ -95,7 +96,7 @@ class experiment(experiment_info):
         '''
         if isinstance(parameter_dict, dict):
             udpate_dict = TreeDict()
-            for (collection,parameter_name), value in parameter_dict.iteritems():
+            for (collection,parameter_name), value in iteritems(parameter_dict):
                 udpate_dict['{0}.{1}'.format(collection, parameter_name)] = value
         elif isinstance(parameter_dict, TreeDict):
             udpate_dict = parameter_dict

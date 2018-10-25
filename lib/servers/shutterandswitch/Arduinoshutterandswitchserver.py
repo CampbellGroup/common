@@ -29,7 +29,7 @@ class TTLDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a TTL device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -72,7 +72,7 @@ class ArduinoTTL(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -134,15 +134,15 @@ class ArduinoTTL(DeviceServer):
         try:
             status = int(status)
             if status == 1:
-                print 'status is 1'
+                print('status is 1')
                 returnValue(True)
             elif status == 0:
-                print 'status is 0'
+                print('status is 0')
                 returnValue(False)
             else:
-                print status, 'invalid TTL', returnValue(False)
+                print(status, 'invalid TTL', returnValue(False))
         except ValueError:
-            print status, 'Error Reading'
+            print(status, 'Error Reading')
             returnValue(False)
 
 

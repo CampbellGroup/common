@@ -40,11 +40,11 @@ class AndorCamera(object):
 
     def __init__(self):
         try:
-            print 'Loading DLL'
+            print('Loading DLL')
             self.dll = c.windll.LoadLibrary(config.path_to_dll)
-            print 'Initializing Camera'
+            print('Initializing Camera')
             error = self.dll.Initialize(os.path.dirname(__file__))
-            print 'Done Initializing, {}'.format(ERROR_CODE[error])
+            print('Done Initializing, {}'.format(ERROR_CODE[error]))
             self.info = AndorInfo()
             self.get_detector_dimensions()
             self.get_temperature_range()
@@ -63,7 +63,7 @@ class AndorCamera(object):
             self.get_cooler_state()
             self.get_temperature()
         except Exception as e:
-            print 'Error Initializing Camera', e
+            print('Error Initializing Camera', e)
 
     def print_get_software_version(self):
         '''
@@ -76,13 +76,13 @@ class AndorCamera(object):
         dllRev = c.c_int()
         dllVer = c.c_int()
         self.dll.GetSoftwareVersion(c.byref(eprom), c.byref(cofFile), c.byref(vxdRev), c.byref(vxdVer),  c.byref(dllRev), c.byref(dllVer))
-        print 'Software Version'
-        print eprom
-        print cofFile
-        print vxdRev
-        print vxdVer
-        print dllRev
-        print dllVer
+        print('Software Version')
+        print(eprom)
+        print(cofFile)
+        print(vxdRev)
+        print(vxdVer)
+        print(dllRev)
+        print(dllVer)
 
     def print_get_capabilities(self):
         '''
@@ -106,17 +106,17 @@ class AndorCamera(object):
         caps = AndorCapabilities()
         caps.ulSize = c.c_ulong(c.sizeof(caps))
         error = self.dll.GetCapabilities(c.byref(caps))
-        print 'ulAcqModes',         '{:07b}'.format(caps.ulAcqModes)
-        print 'ulReadModes',        '{:06b}'.format(caps.ulReadModes)
-        print 'ulTriggerModes',     '{:08b}'.format(caps.ulTriggerModes)
-        print 'ulCameraType',       '{}'.format(caps.ulCameraType)
-        print 'ulPixelMode',        '{:032b}'.format(caps.ulPixelMode)
-        print 'ulSetFunctions',     '{:025b}'.format(caps.ulSetFunctions)
-        print 'ulGetFunctions',     '{:016b}'.format(caps.ulGetFunctions)
-        print 'ulFeatures',         '{:020b}'.format(caps.ulFeatures)
-        print 'ulPCICard',          '{}'.format(caps.ulPCICard)
-        print 'ulEMGainCapability', '{:020b}'.format(caps.ulEMGainCapability)
-        print 'ulFTReadModes',      '{:06b}'.format(caps.ulFTReadModes)
+        print('ulAcqModes',         '{:07b}'.format(caps.ulAcqModes))
+        print('ulReadModes',        '{:06b}'.format(caps.ulReadModes))
+        print('ulTriggerModes',     '{:08b}'.format(caps.ulTriggerModes))
+        print('ulCameraType',       '{}'.format(caps.ulCameraType))
+        print('ulPixelMode',        '{:032b}'.format(caps.ulPixelMode))
+        print('ulSetFunctions',     '{:025b}'.format(caps.ulSetFunctions))
+        print('ulGetFunctions',     '{:016b}'.format(caps.ulGetFunctions))
+        print('ulFeatures',         '{:020b}'.format(caps.ulFeatures))
+        print('ulPCICard',          '{}'.format(caps.ulPCICard))
+        print('ulEMGainCapability', '{:020b}'.format(caps.ulEMGainCapability))
+        print('ulFTReadModes',      '{:06b}'.format(caps.ulFTReadModes))
 
     def get_detector_dimensions(self):
         '''

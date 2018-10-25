@@ -4,6 +4,7 @@ from twisted.internet.threads import deferToThread
 import array
 from labrad.units import WithUnit
 from errors import dds_access_locked
+from six import iteritems
 import numpy as np
 
 class DDS(LabradServer):
@@ -16,7 +17,7 @@ class DDS(LabradServer):
     def initializeDDS(self):
         self.ddsLock = False
         self.api.initializeDDS()
-        for name,channel in self.ddsDict.iteritems():
+        for name,channel in iteritems(self.ddsDict):
             channel.name = name
             freq,ampl = (channel.frequency, channel.amplitude)
             self._checkRange('amplitude', channel, ampl)
@@ -26,7 +27,7 @@ class DDS(LabradServer):
     @setting(41, "Get DDS Channels", returns = '*s')
     def getDDSChannels(self, c):
         """get the list of available channels"""
-        return self.ddsDict.keys()
+        return list(self.ddsDict.keys())
 
     @setting(43, "Amplitude", name= 's', amplitude = 'v[dBm]', returns = 'v[dBm]')
     def amplitude(self, c, name = None, amplitude = None):
@@ -179,7 +180,7 @@ class DDS(LabradServer):
     def _programDDSSequence(self, dds):
         '''takes the parsed dds sequence and programs the board with it'''
         self.ddsLock = True
-        for name,channel in self.ddsDict.iteritems():
+        for name,channel in iteritems(self.ddsDict):
             buf = dds[name]
             yield self.program_dds_chanel(channel, buf)
 
@@ -228,13 +229,13 @@ class DDS(LabradServer):
             yield cxn.servers[server][reset]()
             yield cxn.servers[server][program]([(channel.channelnumber, buf)])
         except (KeyError,AttributeError):
-            print 'Not programing remote channel {}'.format(channel.remote)
+            print('Not programing remote channel {}'.format(channel.remote))
 
     def _getCurrentDDS(self):
         '''
         Returns a dictionary {name:num} with the reprsentation of the current dds state
         '''
-        d = dict([(name,self._channel_to_num(channel)) for (name,channel) in self.ddsDict.iteritems()])
+        d = dict([(name,self._channel_to_num(channel)) for (name,channel) in iteritems(self.ddsDict)])
         return d
 
     def _channel_to_num(self, channel):

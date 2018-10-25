@@ -1,5 +1,7 @@
 import numpy
 import array
+from six import iteritems
+from builtins import range
 
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
@@ -68,7 +70,7 @@ class Sequence():
         return b
 
     def _addNewSwitch(self, timeStep, chan, value):
-        if self.switchingTimes.has_key(timeStep):
+        if timeStep in self.switchingTimes:
             if self.switchingTimes[timeStep][chan]: # checks if 0 or 1/-1
                 # if set to turn off, but want on, replace with zero, fixes error adding 2 TTLs back to back
                 if self.switchingTimes[timeStep][chan] * value == -1:
@@ -96,7 +98,7 @@ class Sequence():
         if not self.userAddedDDS(): return None
         state = self.parent._getCurrentDDS()
         pulses_end = {}.fromkeys(state, (0, 'stop')) #time / boolean whether in a middle of a pulse
-        dds_program = {}.fromkeys(state, '')
+        dds_program = {}.fromkeys(state, b'')
         lastTime = 0
         entries = sorted(self.ddsSettingList, key = lambda t: t[1] ) #sort by starting time
         possibleError = (0,'')
@@ -110,8 +112,8 @@ class Sequence():
                     self._addNewSwitch(lastTime,self.advanceDDS,1)
                     self._addNewSwitch(lastTime + self.resetstepDuration,self.advanceDDS,-1)
                 #add termination
-                for name in dds_program.iterkeys():
-                    dds_program[name] +=  '\x00\x00'
+                for name in dds_program:
+                    dds_program[name] +=  b'\x00\x00'
                 #at the end of the sequence, reset dds
                 lastTTL = max(self.switchingTimes.keys())
                 self._addNewSwitch(lastTTL ,self.resetDDS, 1 )
@@ -143,7 +145,7 @@ class Sequence():
                 pulses_end[name] = (start, typ)
 
     def addToProgram(self, prog, state):
-        for name,num in state.iteritems():
+        for name,num in iteritems(state):
             if not hardwareConfiguration.ddsDict[name].phase_coherent_model:
                 buf = self.parent._intToBuf(num)
             else:
@@ -152,10 +154,10 @@ class Sequence():
 
     def parseTTL(self):
         """Returns the representation of the sequence for programming the FPGA"""
-        rep = ''
+        rep = b''
         lastChannels = numpy.zeros(self.channelTotal)
         powerArray = 2**numpy.arange(self.channelTotal, dtype = numpy.uint64)
-        for key,newChannels in sorted(self.switchingTimes.iteritems()):
+        for key,newChannels in sorted(iteritems(self.switchingTimes)):
             channels = lastChannels + newChannels #computes the action of switching on the state
             if (channels < 0).any(): raise Exception ('Trying to switch off channel that is not already on')
             channelInt = numpy.dot(channels,powerArray)
@@ -173,9 +175,9 @@ class Sequence():
 
     def ddsHumanRepresentation(self, dds):
         program = []
-        print dds
-        for name,buf in dds.iteritems():
-            print "name is ", name
+        print(dds)
+        for name,buf in iteritems(dds):
+            print("name is ", name)
             arr = array.array('B', buf)
             arr = arr[:-2] #remove termination
             channel = hardwareConfiguration.ddsDict[name]
@@ -184,7 +186,7 @@ class Sequence():
             ampl_min,ampl_max = channel.boardamplrange
             def chunks(l, n):
                 """ Yield successive n-sized chunks from l."""
-                for i in xrange(0, len(l), n):
+                for i in range(0, len(l), n):
                     yield l[i:i+n]
             if not coherent:
                 for a,b,c,d in chunks(arr, 4):
@@ -198,9 +200,9 @@ class Sequence():
                     freq_num = 256**2*(256*f7 + f6) + (256*f5 + f4)
                     ampl_num = 256*amp1 + amp0
                     freq = freq_min +  freq_num * (freq_max - freq_min) / float(16**8 - 1)
-                    print "freq is ", freq
+                    print("freq is ", freq)
                     ampl = ampl_min +  ampl_num * (ampl_max - ampl_min) / float(16**4 - 1)
-                    print " ampl is ", ampl
+                    print(" ampl is ", ampl)
                     program.append((name, freq,ampl))
         return program
 
@@ -220,5 +222,5 @@ class Sequence():
             reverse = expand[::-1]
             return reverse
 
-        channels = map(expandChannel,channels)
+        channels = list(map(expandChannel,channels))
         return numpy.vstack((times,channels)).transpose()

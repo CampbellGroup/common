@@ -20,7 +20,7 @@ class api(object):
     def connectOKBoard(self):
         fp = ok.FrontPanel()
         module_count = fp.GetDeviceCount()
-        print "Found {} unused modules".format(module_count)
+        print("Found {} unused modules".format(module_count))
         for i in range(module_count):
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
@@ -28,7 +28,7 @@ class api(object):
             iden = tmp.GetDeviceID()
             if iden == self.okDeviceID:
                 self.xem = tmp
-                print 'Connected to {}'.format(iden)
+                print('Connected to {}'.format(iden))
                 self.programOKBoard()
                 return True
         return False
@@ -44,7 +44,7 @@ class api(object):
         
     def programBoard(self, sequence):
         sequence_data = self.padTo16(sequence)
-        self.xem.WriteToBlockPipeIn(0x80, 16, sequence_data)
+        self.xem.WriteToBlockPipeIn(0x80, 16, bytearray(sequence_data))
   
     def startLooped(self):
         '''
@@ -146,7 +146,6 @@ class api(object):
         #buf = "\x00"*(number*2)
         buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa0,2,buf)
-        buf = str(buf)
         return buf
     
     def getNormalTotal(self):
@@ -166,7 +165,6 @@ class api(object):
         #buf = "\x00"* ( number * 2 )
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa1,2,buf)
-        buf = str(buf)
         return buf
     
     def getReadoutTotal(self):
@@ -186,7 +184,6 @@ class api(object):
         #buf = "\x00"* ( number * 2 )
         buf = bytearray(number*2)
         self.xem.ReadFromBlockPipeOut(0xa2,2,buf)
-        buf = str(buf)
         return buf
     
     def howManySequencesDone(self):
@@ -255,7 +252,7 @@ class api(object):
 #             print "prog dds",i,"=", prog[i]
         ### pad to a multiple of 16 bytes
         prog_padded = self.padTo16(prog)
-        self.xem.WriteToBlockPipeIn(0x81, 16, prog_padded)  # very important !!! second argument need to be 16. Don't change this.
+        self.xem.WriteToBlockPipeIn(0x81, 16, bytearray(prog_padded))  # very important !!! second argument need to be 16. Don't change this.
         #print "program DDS"
     
     def initializeDDS(self):

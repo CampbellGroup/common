@@ -1,5 +1,10 @@
 from config.andor_config import andor_config as config
-from PyQt4 import QtGui, QtCore
+from sys import version_info
+if version_info[0] < 3:
+    from PyQt4 import QtGui, QtCore
+else:
+    from PyQt5 import QtGui, QtCore, QtWidgets
+
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import LoopingCall
 import numpy as np
@@ -75,7 +80,7 @@ class AndorVideo(QtGui.QWidget):
         mingain, maxgain = self.emrange
         self.emccdSpinBox.setMinimum(mingain)#mingain)
         self.emccdSpinBox.setMaximum(maxgain)#maxgain)
-        print maxgain
+        print(maxgain)
         self.emccdSpinBox.setKeyboardTracking(False)
         layout.addWidget(emccd_label, 2, 4,)
         layout.addWidget(self.emccdSpinBox, 2, 5)
@@ -211,8 +216,8 @@ class AndorVideo(QtGui.QWidget):
             yield self.server.set_shutter_mode(None, 'Open')
             yield self.server.startAcquisition(None)
             self.binx, self.biny, self.startx, self.stopx, self.starty, self.stopy = yield self.server.getImageRegion(None)
-            self.pixels_x = (self.stopx - self.startx + 1) / self.binx
-            self.pixels_y = (self.stopy - self.starty + 1) / self.biny
+            self.pixels_x = int((self.stopx - self.startx + 1) / self.binx)
+            self.pixels_y = int((self.stopy - self.starty + 1) / self.biny)
             yield self.server.waitForAcquisition(None)
             self.live_update_loop.start(0)
         else:

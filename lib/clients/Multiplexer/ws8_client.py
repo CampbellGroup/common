@@ -163,10 +163,14 @@ class wavemeterclient(QtGui.QWidget):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
+            self.d[chan].spinExp.blockSignals(True)
             self.d[chan].spinExp.setValue(value)
+            self.d[chan].spinExp.blockSignals(False)
 
     def updateWLMOutput(self, c, signal):
+        self.startSwitch.blockSignals(True)
         self.startSwitch.setChecked(signal)
+        self.startSwitch.blockSignals(False)
 
     def updateAmplitude(self, c, signal):
         wmChannel = signal[0]

@@ -21,6 +21,7 @@ from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, Deferred
 from twisted.internet.threads import deferToThread
+from six import itervalues, iteritems
 import time
 
 try:
@@ -72,7 +73,7 @@ class Pulser(DDS, LineTrigger):
             raise Exception ("Pulser Not Found")
 
     def initializeSettings(self):
-        for channel in self.channelDict.itervalues():
+        for channel in itervalues(self.channelDict):
             channelnumber = channel.channelnumber
             if channel.ismanual:
                 state = self.cnot(channel.manualinv, channel.manualstate)
@@ -85,12 +86,12 @@ class Pulser(DDS, LineTrigger):
         self.remoteConnections = {}
         if len(self.remoteChannels):
             from labrad.wrappers import connectAsync
-            for name,rc in self.remoteChannels.iteritems():
+            for name,rc in iteritems(self.remoteChannels):
                 try:
                     self.remoteConnections[name] = yield connectAsync(rc.ip)
-                    print 'Connected to {}'.format(name)
+                    print('Connected to {}'.format(name))
                 except:
-                    print 'Not Able to connect to {}'.format(name)
+                    print('Not Able to connect to {}'.format(name))
                     self.remoteConnections[name] = None
 
     @setting(0, "New Sequence", returns = '')
@@ -149,7 +150,7 @@ class Pulser(DDS, LineTrigger):
         """
         Add a TTL Pulse to the sequence, times are in seconds
         """
-        if channel not in self.channelDict.keys(): raise Exception("Unknown Channel {}".format(channel))
+        if channel not in list(self.channelDict.keys()): raise Exception("Unknown Channel {}".format(channel))
         hardwareAddr = self.channelDict.get(channel).channelnumber
         sequence = c.get('sequence')
         start = start['s']
@@ -252,9 +253,9 @@ class Pulser(DDS, LineTrigger):
         Returns all available channels, and the corresponding hardware numbers
         """
         d = self.channelDict
-        keys = d.keys()
+        keys = list(d.keys())
         numbers = [d[key].channelnumber for key in keys]
-        return zip(keys,numbers)
+        return list(zip(keys,numbers))
 
     @setting(13, 'Switch Manual', channelName = 's', state= 'b')
     def switchManual(self, c, channelName, state = None):
@@ -262,7 +263,7 @@ class Pulser(DDS, LineTrigger):
         Switches the given channel into the manual mode, by default will go into the last remembered state but can also
         pass the argument which state it should go into.
         """
-        if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
+        if channelName not in list(self.channelDict.keys()): raise Exception("Incorrect Channel")
         channel = self.channelDict[channelName]
         channelNumber = channel.channelnumber
         channel.ismanual = True
@@ -283,7 +284,7 @@ class Pulser(DDS, LineTrigger):
         """
         Switches the given channel into the automatic mode, with an optional inversion.
         """
-        if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
+        if channelName not in list(self.channelDict.keys()): raise Exception("Incorrect Channel")
         channel = self.channelDict[channelName]
         channelNumber = channel.channelnumber
         channel.ismanual = False
@@ -301,7 +302,7 @@ class Pulser(DDS, LineTrigger):
         """
         Returns the current state of the switch: in the form (Manual/Auto, ManualOn/Off, ManualInversionOn/Off, AutoInversionOn/Off)
         """
-        if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
+        if channelName not in list(self.channelDict.keys()): raise Exception("Incorrect Channel")
         channel = self.channelDict[channelName]
         answer = (channel.ismanual,channel.manualstate,channel.manualinv,channel.autoinv)
         return answer
@@ -339,20 +340,20 @@ class Pulser(DDS, LineTrigger):
         In the differential mode, the FPGA uses triggers the pulse sequence
         frequency and to know when the repumping light is swtiched on or off.
         """
-        if mode not in self.collectionTime.keys(): raise Exception("Incorrect mode")
+        if mode not in list(self.collectionTime.keys()): raise Exception("Incorrect mode")
         self.collectionMode = mode
         countRate = self.collectionTime[mode]
         yield self.inCommunication.acquire()
         if mode == 'Normal':
             #set the mode on the device and set update time for normal mode
-            print 'in conditional'
+            print('in conditional')
             yield deferToThread(self.api.setModeNormal)
             yield deferToThread(self.api.setPMTCountRate, countRate)
         elif mode == 'Differential':
             yield deferToThread(self.api.setModeDifferential)
         self.clear_next_pmt_counts = 3 #assign to clear next two counts
         self.inCommunication.release()
-        print 'Defer Released'
+        print('Defer Released')
 
     @setting(22, 'Set Collection Time', new_time = 'v', mode = 's', returns = '')
     def setCollectTime(self, c, new_time, mode):
@@ -361,7 +362,7 @@ class Pulser(DDS, LineTrigger):
         """
         new_time = new_time['s']
         if not self.collectionTimeRange[0]<=new_time<=self.collectionTimeRange[1]: raise Exception('incorrect collection time')
-        if mode not in self.collectionTime.keys(): raise("Incorrect mode")
+        if mode not in list(self.collectionTime.keys()): raise("Incorrect mode")
         if mode == 'Normal':
             self.collectionTime[mode] = new_time
             yield self.inCommunication.acquire()
@@ -438,8 +439,8 @@ class Pulser(DDS, LineTrigger):
         inFIFO = self.api.getNormalTotal()
         reading = self.api.getNormalCounts(inFIFO)
         split = self.split_len(reading, 4)
-        countlist = map(self.infoFromBuf, split)
-        countlist = map(self.convertKCperSec, countlist)
+        countlist = list(map(self.infoFromBuf, split))
+        countlist = list(map(self.convertKCperSec, countlist))
         countlist = self.appendTimes(countlist, time.time())
         countlist = self.clear_pmt_counts(countlist)
         return countlist
@@ -458,14 +459,14 @@ class Pulser(DDS, LineTrigger):
         inFIFO = self.api.getReadoutTotal()
         reading = self.api.getReadoutCounts(inFIFO)
         split = self.split_len(reading, 4)
-        countlist = map(self.infoFromBuf_readout, split)
+        countlist = list(map(self.infoFromBuf_readout, split))
         return countlist
 
     @staticmethod
     def infoFromBuf(buf):
         #converts the received buffer into useful information
         #the most significant digit of the buffer indicates wheter 866 is on or off
-        count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
+        count = 65536*(256*buf[1]+buf[0])+(256*buf[3]+buf[2])
         if count >= 2**31:
             status = 'OFF'
             count = count % 2**31
@@ -476,7 +477,7 @@ class Pulser(DDS, LineTrigger):
     #should make nicer by combining with above.
     @staticmethod
     def infoFromBuf_readout(buf):
-        count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
+        count = 65536*(256*buf[1]+buf[0])+(256*buf[3]+buf[2])
         return count
 
     def convertKCperSec(self, inp):
@@ -517,7 +518,7 @@ class Pulser(DDS, LineTrigger):
         counted = yield deferToThread(self.api.getResolvedTotal)
         raw = yield deferToThread(self.api.getResolvedCounts, counted)
         self.inCommunication.release()
-        arr = numpy.fromstring(raw, dtype = numpy.uint16)
+        arr = numpy.from_buffer(bytes(raw), dtype = numpy.uint16)
         del(raw)
         arr = arr.reshape(-1,2)
         timetags =( 65536 * arr[:,0] + arr[:,1]) * self.timeResolvedResolution
@@ -541,8 +542,8 @@ class Pulser(DDS, LineTrigger):
         inFIFO = self.api.getSecondaryNormalTotal()
         reading = self.api.getSecondaryNormalCounts(inFIFO)
         split = self.split_len(reading, 4)
-        countlist = map(self.infoFromBuf, split)
-        countlist = map(self.convertKCperSec, countlist)
+        countlist = list(map(self.infoFromBuf, split))
+        countlist = list(map(self.convertKCperSec, countlist))
         countlist = self.appendTimes(countlist, time.time())
         return countlist
 

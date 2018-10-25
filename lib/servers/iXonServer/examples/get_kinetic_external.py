@@ -26,12 +26,12 @@ cam.set_number_kinetics(kinetic_number)
 
 cam.set_trigger_mode('External')
 cam.start_acquisition()
-print 'waiting, needs to get TTLs to proceed with each image'
+print('waiting, needs to get TTLs to proceed with each image')
 
 proceed = cam.wait_for_kinetic()
 while not proceed:
     proceed = cam.wait_for_kinetic()
-print 'proceeding to analyze'
+print('proceeding to analyze')
 
 image = cam.get_acquired_data(kinetic_number).asarray
 image = np.reshape(image, (kinetic_number, pixels_y, pixels_x))
