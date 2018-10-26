@@ -518,7 +518,7 @@ class Pulser(DDS, LineTrigger):
         counted = yield deferToThread(self.api.getResolvedTotal)
         raw = yield deferToThread(self.api.getResolvedCounts, counted)
         self.inCommunication.release()
-        arr = numpy.from_buffer(bytes(raw), dtype = numpy.uint16)
+        arr = numpy.frombuffer(bytes(raw), dtype = numpy.uint16)
         del(raw)
         arr = arr.reshape(-1,2)
         timetags =( 65536 * arr[:,0] + arr[:,1]) * self.timeResolvedResolution
