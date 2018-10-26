@@ -237,6 +237,7 @@ class SerialServer(LabradServer):
     def write(self, c, data):
         """Sends data over the port."""
         ser = self.getPort(c)
+        data = data.encode("ascii")
         if isinstance(data, list):
             data = ''.join(chr(x & 255) for x in data)
         ser.write(data)
@@ -247,6 +248,7 @@ class SerialServer(LabradServer):
     def write_line(self, c, data):
         """Sends data over the port appending CR LF."""
         ser = self.getPort(c)
+        data = data.encode("ascii")
         ser.write(data + '\r\n')
         return long(len(data)+2)
 
@@ -299,7 +301,10 @@ class SerialServer(LabradServer):
              returns=['s: Received data'])
     def read(self, c, count=0):
         """Read data from the port."""
-        return self.readSome(c, count)
+        recd = self.readSome(c, count)
+        if not isinstance(recd, str):
+            recd = recd.decode("utf-8")
+        return recd
 
     @setting(51, 'Read as Words',
                  data=[': Read all bytes in buffer',
@@ -321,21 +326,23 @@ class SerialServer(LabradServer):
         timeout = c['Timeout']
 
         if data:
-            delim, skip = data, ''
+            delim, skip = data, b''
 
         else:
-            delim, skip = '\n', '\r'
+            delim, skip = b'\n', b'\r'
 
-        recd = ''
+        recd = b''
         while True:
             r = ser.read(1)
-            if r == '' and timeout > 0:
+            if r == b'' and timeout > 0:
                 # only try a deferred read if there is a timeout
                 r = yield self.deferredRead(ser, timeout)
-            if r in ('', delim):
+            if r in (b'', delim):
                 break
             if r != skip:
                 recd += r
+        if not isinstance(recd, str):
+            recd = recd.decode("utf-8")
         returnValue(recd)
 
 
