@@ -1,5 +1,5 @@
-from common.lib.clients.qtui.multiplexerchannel_no_pid import QCustomWavemeterChannel
-from common.lib.clients.qtui.q_custom_text_changing_button import \
+from common.lib.clients_py3.qtui.multiplexerchannel_no_pid import QCustomWavemeterChannel
+from common.lib.clients_py3.qtui.q_custom_text_changing_button import \
     TextChangingButton
 
 from pyqtgraph.Qt import QtGui
