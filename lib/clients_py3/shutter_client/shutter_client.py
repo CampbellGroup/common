@@ -12,7 +12,7 @@ class ShutterClient(QtWidgets.QWidget):
     SIGNALID = 219749
 
     def __init__(self, reactor, cxn=None):
-        super(switchclient, self).__init__()
+        super(ShutterClient, self).__init__()
         self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.reactor = reactor
         self.cxn = cxn
@@ -25,8 +25,7 @@ class ShutterClient(QtWidgets.QWidget):
         if self.cxn is None:
             self.cxn = connection(name="Shutter Client")
             yield self.cxn.connect()
-        self.server = yield self.cxn.shutter_client
-        self.reg = yield self.cxn.registry
+        self.server = yield self.cxn.cxn.shutter_server
 
         yield self.server.signal__on_shutter_changed(self.SIGNALID)
         yield self.server.addListener(listener=self.signal_shutter_changed,
@@ -80,7 +79,7 @@ class ShutterClient(QtWidgets.QWidget):
 
 
 if __name__ == "__main__":
-    a = QtWidgets.QApplication(sys.argv)
+    a = QtWidgets.QApplication([])
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor

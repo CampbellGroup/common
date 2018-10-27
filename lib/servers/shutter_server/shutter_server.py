@@ -17,9 +17,11 @@ timeout = 20
 """
 
 from labrad.types import Value
+from labrad.server import Signal
+from labrad.support import getNodeName
 from common.lib.servers.serialdeviceserver \
     import SerialDeviceServer, setting, inlineCallbacks, \
-    SerialDeviceError, SerialConnectionError, Signal, returnValue
+    SerialDeviceError, SerialConnectionError, returnValue
 
 SERVERNAME = 'shutter_server'
 TIMEOUT = 1.0
@@ -53,12 +55,25 @@ class ShutterServer(SerialDeviceServer):
                 print('Check set up and restart serial server')
             else:
                 raise
+
+        self.listeners = set()
         # yield self.ser.read_line()
         # yield self.ser.read_line()
 
+    def initContext(self, c):
+        """Initialize a new context object."""
+        self.listeners.add(c.ID)
+
+    def expireContext(self, c):
+        self.listeners.remove(c.ID)
+
+    def getOtherListeners(self, c):
+        notified = self.listeners.copy()
+        notified.remove(c.ID)
+        return notified
+
     @setting(100, chan='i', state='b')
     def set_channel_state(self, c, chan, state):
-        dev = self.selectDevice(c)
         output = (chan << 2) | (state + 2)
         yield self.ser.write(chr(output))
         notified = self.getOtherListeners(c)
@@ -66,20 +81,16 @@ class ShutterServer(SerialDeviceServer):
 
     @setting(200, chan='i', returns='b')
     def get_channel_state(self, c, chan):
-        dev = self.selectDevice(c)
+        """ Function not tested """
         output = (chan << 2)
         yield self.ser.write(chr(output))
         status = yield self.ser.read_line()
-
-        try:
-            status = ord(status.encode('ascii'))
-            if status == 1:
-                returnValue(True)
-            elif status == 0:
-                returnValue(False)
-            else:
-                raise ValueError("Invalid returned value")
-        except ValueError:
+        status = ord(status.encode('ascii'))
+        if status == 1:
+            returnValue(True)
+        elif status == 0:
+            returnValue(False)
+        else:
             raise ValueError("Invalid returned value")
 
 
