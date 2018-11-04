@@ -41,9 +41,16 @@ class AndorCamera(object):
     def __init__(self):
         try:
             print('Loading DLL')
-            self.dll = c.windll.LoadLibrary(config.path_to_dll)
+            if os.name == "nt":
+                self.dll = c.windll.LoadLibrary(config.path_to_dll)
+            else:
+                self.dll = c.cdll.LoadLibrary(config.path_to_dll)
             print('Initializing Camera')
-            error = self.dll.Initialize(os.path.dirname(__file__))
+            if os.name == "nt":
+                error = self.dll.Initialize(os.path.dirname(__file__))
+            else:
+                lib_path = c.c_char_p(b"/usr/local/etc/andor")
+                error = self.dll.Initialize(lib_path)
             print('Done Initializing, {}'.format(ERROR_CODE[error]))
             self.info = AndorInfo()
             self.get_detector_dimensions()
