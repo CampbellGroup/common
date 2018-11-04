@@ -1,7 +1,7 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = shutter_server
+name = Shutter Server
 version = 1.0
 description =
 instancename = shutter_server
@@ -57,8 +57,6 @@ class ShutterServer(SerialDeviceServer):
                 raise
 
         self.listeners = set()
-        # yield self.ser.read_line()
-        # yield self.ser.read_line()
 
     def initContext(self, c):
         """Initialize a new context object."""
