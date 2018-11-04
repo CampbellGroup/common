@@ -868,6 +868,7 @@ class NumpyDataset(Dataset):
                 # will be the case.  Even if the file exists on disk, we must
                 # check its size
                 if self._fileSize() > 0:
+                    self.file.seek(0)
                     self._data = _get(self.file)
                 else:
                     self._data = numpy.array([[]])
