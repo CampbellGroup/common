@@ -301,7 +301,7 @@ class SerialServer(LabradServer):
              returns=['s: Received data'])
     def read(self, c, count=0):
         """Read data from the port."""
-        recd = self.readSome(c, count)
+        recd = yield self.readSome(c, count)
         if not isinstance(recd, str):
             recd = recd.decode("utf-8")
         return recd
