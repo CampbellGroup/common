@@ -237,7 +237,7 @@ class SerialServer(LabradServer):
     def write(self, c, data):
         """Sends data over the port."""
         ser = self.getPort(c)
-        data = data.encode("ascii")
+        data = data.encode("latin-1")
         if isinstance(data, list):
             data = ''.join(chr(x & 255) for x in data)
         ser.write(data)
@@ -248,7 +248,7 @@ class SerialServer(LabradServer):
     def write_line(self, c, data):
         """Sends data over the port appending CR LF."""
         ser = self.getPort(c)
-        data = data.encode("ascii")
+        data = data.encode("latin-1")
         ser.write(data + '\r\n')
         return long(len(data)+2)
 
