@@ -257,7 +257,7 @@ class SerialServer(LabradServer):
         killit = False
 
         def doRead(count):
-            d = ''
+            d = b''
             while not killit:
                 d = ser.read(count)
                 if d:
@@ -265,10 +265,10 @@ class SerialServer(LabradServer):
                 sleep(0.010)
             return d
         data = threads.deferToThread(doRead, count)
-        r = yield util.maybeTimeout(data, min(timeout, 300), '')
+        r = yield util.maybeTimeout(data, min(timeout, 300), b'')
         killit = True
 
-        if r == '':
+        if r == b'':
             r = ser.read(count)
 
         returnValue(r)
@@ -284,12 +284,12 @@ class SerialServer(LabradServer):
         if timeout == 0:
             returnValue(ser.read(count))
 
-        recd = ''
+        recd = b''
         while len(recd) < count:
             r = ser.read(count - len(recd))
-            if r == '':
+            if r == b'':
                 r = yield self.deferredRead(ser, timeout, count - len(recd))
-                if r == '':
+                if r == b'':
                     ser.close()
                     ser.open()
                     break
