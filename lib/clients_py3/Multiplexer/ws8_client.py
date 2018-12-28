@@ -116,9 +116,9 @@ class wavemeterclient(QtGui.QWidget):
             color = tuple(color)
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
-            widget.spinExp.valueChanged.connect(lambda exp=widget.spinExp.value(), wmChannel=wmChannel : self.expChanged(exp, wmChannel))
             initvalue = yield self.server.get_exposure(wmChannel)
             widget.spinExp.setValue(initvalue)
+            widget.spinExp.valueChanged.connect(lambda exp=widget.spinExp.value(), wmChannel=wmChannel : self.expChanged(exp, wmChannel))
             initmeas = yield self.server.get_switcher_signal_state(wmChannel)
             initmeas = initmeas
             widget.measSwitch.setChecked(bool(initmeas))
