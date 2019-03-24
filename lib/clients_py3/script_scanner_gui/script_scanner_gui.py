@@ -1,4 +1,4 @@
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 from twisted.internet.defer import inlineCallbacks
 from .scripting_widget import scripting_widget
 from common.lib.clients_py3.connection import connection
@@ -389,6 +389,8 @@ class script_scanner_gui(QtWidgets.QWidget):
     def displayError(self, text):
         # runs the message box in a non-blocking method
         message = QtWidgets.QMessageBox(self.scripting_widget)
+        message.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse
+                                        | QtCore.Qt.TextSelectableByKeyboard)
         message.setText(text)
         message.open()
         message.show()
