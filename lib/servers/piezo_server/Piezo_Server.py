@@ -70,19 +70,18 @@ class PiezoDevice(DeviceWrapper):
         ans = yield p.send()
         returnValue(ans.read_line)
 
+
 class Piezo_Server(DeviceServer):
     name = 'Piezo_Server'
     deviceName = 'Piezo_Server'
     deviceWrapper = PiezoDevice
-
-    #on_switch_changed = Signal(124973, 'signal: on_switch_changed', '(ib)')
 
     @inlineCallbacks
     def initServer(self):
         print 'loading config info...',
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        yield self.reg.cd(['','settings'], True)
+        yield self.reg.cd(['', 'settings'], True)
         yield DeviceServer.initServer(self)
         self.listeners = set()
 
@@ -90,7 +89,7 @@ class Piezo_Server(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'ArduinoTTL', 'Links'], True)
+        yield reg.cd(['', 'Servers', 'UCLAPiezo', 'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
