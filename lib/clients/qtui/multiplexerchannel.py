@@ -83,8 +83,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.setPID.setFont(QtGui.QFont(shell_font, pointSize=10))
 
         self.measSwitch = TextChangingButton('WLM Measure')
-
         self.lockChannel = TextChangingButton('Lock Channel')
+        self.zeroVoltage = QtGui.QPushButton('Zero Voltage')
         self.lockChannel.setMinimumWidth(180)
 
         #editable fields
@@ -108,9 +108,10 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         layout.addWidget(self.measSwitch,       0, 2)
         layout.addWidget(self.lockChannel,      1,2,1,1)
         layout.addWidget(self.setPID,           2,2,1,1)
+        layout.addWidget(self.zeroVoltage,      3,2,1,1)
         layout.addWidget(chanName,              0,0,1,2)
-        layout.addWidget(configtitle,           3,2,1,1)
-        layout.addWidget(configLabel,           4,2,1,1)
+        layout.addWidget(configtitle,           4,2,1,1)
+        layout.addWidget(configLabel,           5,2,1,1)
         layout.addWidget(self.currentfrequency, 1, 0, 4, 2)
         layout.addWidget(frequencylabel,        5, 0, 1, 1)
         layout.addWidget(exposurelabel,         5, 1, 1, 1)
