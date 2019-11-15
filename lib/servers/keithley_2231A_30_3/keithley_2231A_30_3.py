@@ -262,7 +262,7 @@ class Keithley_Server(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'ArduinoTTL', 'Links'], True)
+        yield reg.cd(['', 'Servers', 'KeithleyBField', 'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
