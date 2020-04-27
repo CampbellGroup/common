@@ -4,10 +4,11 @@ from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
-try:
-    from config.multiplexerclient_config import multiplexer_config
-except:
-    from common.lib.config.multiplexerclient_config import multiplexer_config
+import pyqtgraph as pg
+#try:
+from config.multiplexerclient_config import multiplexer_config
+#except:
+#    from common.lib.config.multiplexerclient_config import multiplexer_config
 
 import socket
 import os
