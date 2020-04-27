@@ -509,8 +509,9 @@ class MultiplexerServer(LabradServer):
     @setting(37, "get_wavemeter_pattern", chan='i', index='i', returns='array') # not sure about how to represent array
     def get_wavemeter_patttern(self, c, chan, index):
         """Gets the wavemeter pattern. Returns an array of the result."""
-        data = yield self.wmdll.GetPatternDataNum(ctypes.c_long(chan), ctypes.c_long(index), DWORD PArray) # not sure about the last attribute
-        returnValue(data)
+        data = ctypes.c_array()
+        yield self.wmdll.GetPatternDataNum(ctypes.c_long(chan), ctypes.c_long(index), ctypes.pointer(data)) # not sure about the last attribute
+        returnValue(data.value) 
         
         
     def measureChan(self):
@@ -522,6 +523,7 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
+        
 
 
 if __name__ == "__main__":
