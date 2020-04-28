@@ -4,7 +4,7 @@ from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
-import pyqtgraph as pg
+
 #try:
 from config.multiplexerclient_config import multiplexer_config
 #except:
@@ -159,6 +159,8 @@ class wavemeterclient(QtGui.QWidget):
 
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
+
+            #subLayout.addWidget(self.server.get_wavemeter_pattern(1, 0), 0, 5)
 
         self.setLayout(layout)
 
