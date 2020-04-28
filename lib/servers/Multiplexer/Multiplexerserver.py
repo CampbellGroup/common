@@ -19,6 +19,7 @@ timeout = 20
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue
 import ctypes
+from ctypes import *
 from twisted.internet import reactor
 
 UPDATEEXP = 122387
@@ -112,6 +113,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.GetChannelsCount.restype = ctypes.c_long
         self.wmdll.GetPIDSetting.restype = ctypes.c_long
         self.wmdll.GetWLMVersion.restype = ctypes.c_long
+        self.wmdll.GetPatternDataNum.restype = ctypes.c_long
 
         self.wmdll.SetDeviationMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignalNum.restype = ctypes.c_double
@@ -506,10 +508,11 @@ class MultiplexerServer(LabradServer):
 
         returnValue(polarity.value)
         
-    @setting(37, "get_wavemeter_pattern", chan='i', index='i', returns='*v[]') # not sure about how to represent array
-    def get_wavemeter_patttern(self, c, chan, index):
+    @setting(37, "get_wavemeter_pattern", chan='i', index='i', returns='*v[]')
+    def get_wavemeter_pattern(self, c, chan, index):
         """Gets the wavemeter pattern. Returns an array of the result."""
-        data = ctypes.c_array()
+        length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(0))
+        data = ctypes.c_long * length
         yield self.wmdll.GetPatternDataNum(ctypes.c_long(chan), ctypes.c_long(index), ctypes.pointer(data)) # not sure about the last attribute
         returnValue(data.value) 
         
@@ -529,3 +532,7 @@ class MultiplexerServer(LabradServer):
 if __name__ == "__main__":
     from labrad import util
     util.runServer(MultiplexerServer())
+    
+    
+    
+    
