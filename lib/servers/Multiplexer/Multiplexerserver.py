@@ -55,6 +55,8 @@ class MultiplexerServer(LabradServer):
 
     def initServer(self):
 
+        print("three")
+
         # load wavemeter dll file for use of API functions self.d and self.l
         # are dummy c_types for unused wavemeter functions
 
@@ -531,7 +533,13 @@ class MultiplexerServer(LabradServer):
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(MultiplexerServer())
+    instance = MultiplexerServer()
+    #util.runServer(MultiplexerServer())
+    print("one")
+    util.runServer(instance)
+    print("two")
+    instance.get_wlm_output(instance)
+    print("four")
     
     
     
