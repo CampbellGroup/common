@@ -515,7 +515,7 @@ class MultiplexerServer(LabradServer):
         """Gets the wavemeter pattern. Returns an array of the result."""
         length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(0))
         data = ctypes.c_long * length
-        yield self.wmdll.GetPatternDataNum(ctypes.c_long(chan), ctypes.c_long(index), byref(data)) # not sure about the last attribute
+        yield self.wmdll.GetPatternDataNum(ctypes.c_long(chan), ctypes.c_long(index), data) # not sure about the last attribute
         returnValue(data.value) 
         
         
