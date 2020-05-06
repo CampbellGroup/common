@@ -21,6 +21,7 @@ from twisted.internet.defer import returnValue
 import ctypes
 from ctypes import *
 from twisted.internet import reactor
+import numpy as np
 
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
@@ -510,13 +511,26 @@ class MultiplexerServer(LabradServer):
 
         returnValue(polarity.value)
         
-    @setting(37, "get_wavemeter_pattern", chan='i', index='i', returns='*v[]')
+    @setting(37, "get_wavemeter_pattern", chan='w', index='w', returns='*v[]')
     def get_wavemeter_pattern(self, c, chan, index):
         """Gets the wavemeter pattern. Returns an array of the result."""
+        yield self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))
         length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(0))
-        data = ctypes.c_long * length
-        yield self.wmdll.GetPatternDataNum(ctypes.c_long(chan), ctypes.c_long(index), data) # not sure about the last attribute
-        returnValue(data.value) 
+        ref = (ctypes.c_long * length)()
+        ptr = ctypes.cast(ref, ctypes.POINTER(ctypes.c_ulong))
+        #conts = ptr.contents
+        #print(conts)
+        #rtval = yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(1), index, ptr) # not sure about the last attribute
+        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(1), index, ptr)
+        #print(rtval)
+        #conts = ptr.contents
+        #print(conts)
+        #print(ptr[1])
+        data = np.empty(length, dtype = int)
+        for i in range (length-1):
+            data[i] = ptr[i]
+            
+        returnValue(data) 
         
         
     def measureChan(self):
