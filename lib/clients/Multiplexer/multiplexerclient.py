@@ -41,6 +41,7 @@ class wavemeterclient(QtGui.QWidget):
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
+    
 
     def _check_window_size(self):
         """Checks screen size to make sure window fits in the screen. """
@@ -338,6 +339,11 @@ class wavemeterclient(QtGui.QWidget):
             yield self.server.set_pid_polarity(dacPort,1)
         else:
             yield self.server.set_pid_polarity(dacPort,-1)
+            
+    @inlineCallbacks
+    def getPattern(self, chan, index):
+        yield self.server.get_wavemeter_pattern(chan, index)
+    
 
     def closeEvent(self, x):
         self.reactor.stop()
