@@ -3,8 +3,13 @@ from common.lib.clients.qtui.multiplexerPID import QCustomPID
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
-from PyQt4 import QtGui
-
+from PyQt4 import QtGui,QtCore
+import pyqtgraph
+import sys
+import numpy as np
+import pylab
+import time
+import matplotlib.pyplot as plt
 #try:
 from config.multiplexerclient_config import multiplexer_config
 #except:
@@ -113,6 +118,9 @@ class wavemeterclient(QtGui.QWidget):
 
         subLayout.addWidget(self.lockSwitch, 0, 2)
         subLayout.addWidget(self.startSwitch, 0, 0)
+        
+        self.graph = yield self.update()
+        subLayout.addWidget(self.graph, 5, 5)
 
         for chan in self.chaninfo:
             wmChannel = self.chaninfo[chan][0]
@@ -343,6 +351,20 @@ class wavemeterclient(QtGui.QWidget):
     @inlineCallbacks
     def getPattern(self, chan, index):
         yield self.server.get_wavemeter_pattern(chan, index)
+    
+    @inlineCallbacks    
+    def update(self):
+        t1=time.clock()
+        points=2048 #number of data points
+        X=np.arange(points)
+        Y= yield self.getPattern(1, 0)
+        #C=pyqtgraph.hsvColor(time.time()/5%1,alpha=.5)
+        #pen=pyqtgraph.mkPen(color=C,width=10)
+        plot = yield self.plt.plot(X,Y,clear=True)
+        #print("update took %.02f ms"%((time.clock()-t1)*1000))
+        if self.chkMore.isChecked(): #not sure what does this mean
+            QtCore.QTimer.singleShot(1, self.update) # QUICKLY repeat
+
     
 
     def closeEvent(self, x):
