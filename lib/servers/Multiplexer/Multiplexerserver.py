@@ -512,7 +512,7 @@ class MultiplexerServer(LabradServer):
 
         returnValue(polarity.value)
         
-    @setting(37, "get_wavemeter_pattern", chan='w', index='w')#, returns='*v[]')
+    @setting(37, "get_wavemeter_pattern", chan='w', index='w', returns='*v[]')
     def get_wavemeter_pattern(self, c, chan, index):
         """Gets the wavemeter pattern. Returns an array of the result."""
         yield self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))

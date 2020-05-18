@@ -4,7 +4,7 @@ from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui,QtCore
-import pyqtgraph
+import pyqtgraph as pg
 import sys
 import numpy as np
 import pylab
@@ -119,8 +119,17 @@ class wavemeterclient(QtGui.QWidget):
         subLayout.addWidget(self.lockSwitch, 0, 2)
         subLayout.addWidget(self.startSwitch, 0, 0)
         
-        self.graph = yield self.update()
-        subLayout.addWidget(self.graph, 5, 5)
+        self.plot1 = pg.PlotWidget(name='Plot 1')
+        #self.pg.setConfigOption('background','w') #unsuccessful white background
+        subLayout.addWidget(self.plot1, 5, 0)
+        self.p1 = self.plot1.plot()
+        self.update1()
+        
+        #self.plot2 = pg.PlotWidget(name='Plot 2')
+        #subLayout.addWidget(self.plot2, 5, 1)
+        #self.p2 = self.plot2.plot()
+        #self.update2()
+            
 
         for chan in self.chaninfo:
             wmChannel = self.chaninfo[chan][0]
@@ -348,24 +357,28 @@ class wavemeterclient(QtGui.QWidget):
         else:
             yield self.server.set_pid_polarity(dacPort,-1)
             
-    @inlineCallbacks
-    def getPattern(self, chan, index):
-        yield self.server.get_wavemeter_pattern(chan, index)
-    
+    #@inlineCallbacks    
+    #def get_pattern(self, chan, index):
+    #    data = yield self.server.get_wavemeter_pattern(chan, index)
+    #    returnValue(data)
+            
     @inlineCallbacks    
-    def update(self):
-        t1=time.clock()
-        points=2048 #number of data points
+    def update1(self):
+        points=1024 #number of data points
         X=np.arange(points)
-        Y= yield self.getPattern(1, 0)
-        #C=pyqtgraph.hsvColor(time.time()/5%1,alpha=.5)
-        #pen=pyqtgraph.mkPen(color=C,width=10)
-        self.plt.plot(X,Y,clear=True)
-        self.plt.show()
-        #print("update took %.02f ms"%((time.clock()-t1)*1000))
-        if self.chkMore.isChecked(): #not sure what does this mean
-            QtCore.QTimer.singleShot(1, self.update) # QUICKLY repeat
+        Y1= yield self.server.get_wavemeter_pattern(1, 0)
+        Y=Y1[0:1024]
+        self.p1.setData(X, Y)
+        QtCore.QTimer.singleShot(50, self.update1)
 
+    @inlineCallbacks    
+    def update2(self):
+        points=1024 #number of data points
+        X=np.arange(points)
+        Y1= yield self.server.get_wavemeter_pattern(2, 0)
+        Y=Y1[0:1024]
+        self.p2.setData(X, Y)
+        QtCore.QTimer.singleShot(1000, self.update2)
     
 
     def closeEvent(self, x):
