@@ -22,6 +22,7 @@ import ctypes
 from ctypes import *
 from twisted.internet import reactor
 import numpy as np
+import matplotlib.pyplot as plt
 
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
@@ -511,7 +512,7 @@ class MultiplexerServer(LabradServer):
 
         returnValue(polarity.value)
         
-    @setting(37, "get_wavemeter_pattern", chan='w', index='w', returns='*v[]')
+    @setting(37, "get_wavemeter_pattern", chan='w', index='w')#, returns='*v[]')
     def get_wavemeter_pattern(self, c, chan, index):
         """Gets the wavemeter pattern. Returns an array of the result."""
         yield self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))
@@ -530,6 +531,12 @@ class MultiplexerServer(LabradServer):
         for i in range (length-1):
             data[i] = ptr[i]
             
+        #X=np.arange(length)
+        #plt.plot(X, data)
+        #plot = plt.show()
+        
+        #if self.chkMore.isChecked(): #not sure what does this mean
+         #   QtCore.QTimer.singleShot(1, self.update) # QUICKLY repeat
         returnValue(data) 
         
         

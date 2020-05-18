@@ -360,7 +360,8 @@ class wavemeterclient(QtGui.QWidget):
         Y= yield self.getPattern(1, 0)
         #C=pyqtgraph.hsvColor(time.time()/5%1,alpha=.5)
         #pen=pyqtgraph.mkPen(color=C,width=10)
-        plot = yield self.plt.plot(X,Y,clear=True)
+        self.plt.plot(X,Y,clear=True)
+        self.plt.show()
         #print("update took %.02f ms"%((time.clock()-t1)*1000))
         if self.chkMore.isChecked(): #not sure what does this mean
             QtCore.QTimer.singleShot(1, self.update) # QUICKLY repeat
