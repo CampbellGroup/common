@@ -522,7 +522,7 @@ class MultiplexerServer(LabradServer):
         #conts = ptr.contents
         #print(conts)
         #rtval = yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(1), index, ptr) # not sure about the last attribute
-        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(1), index, ptr)
+        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), index, ptr)
         #print(rtval)
         #conts = ptr.contents
         #print(conts)

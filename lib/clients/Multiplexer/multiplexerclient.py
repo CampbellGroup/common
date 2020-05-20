@@ -125,10 +125,10 @@ class wavemeterclient(QtGui.QWidget):
         self.p1 = self.plot1.plot()
         self.update1()
         
-        #self.plot2 = pg.PlotWidget(name='Plot 2')
-        #subLayout.addWidget(self.plot2, 5, 1)
-        #self.p2 = self.plot2.plot()
-        #self.update2()
+        self.plot2 = pg.PlotWidget(name='Plot 2')
+        subLayout.addWidget(self.plot2, 5, 1)
+        self.p2 = self.plot2.plot()
+        self.update2()
             
 
         for chan in self.chaninfo:
@@ -371,6 +371,7 @@ class wavemeterclient(QtGui.QWidget):
         Y=Y1[0:1024]
         self.p1.setData(X, Y)
         QtCore.QTimer.singleShot(50, self.update1)
+        #print(Y1==Y2)
 
     @inlineCallbacks    
     def update2(self):
@@ -379,7 +380,7 @@ class wavemeterclient(QtGui.QWidget):
         Y1= yield self.server.get_wavemeter_pattern(2, 0)
         Y=Y1[0:1024]
         self.p2.setData(X, Y)
-        QtCore.QTimer.singleShot(1000, self.update2)
+        QtCore.QTimer.singleShot(50, self.update2)
     
 
     def closeEvent(self, x):
