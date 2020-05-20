@@ -367,6 +367,7 @@ class wavemeterclient(QtGui.QWidget):
         points=1024 #number of data points
         X=np.arange(points)
         Y1= yield self.server.get_wavemeter_pattern(1, 0)
+        #Y2= yield self.server.get_wavemeter_pattern(2, 0)
         Y=Y1[0:1024]
         self.p1.setData(X, Y)
         QtCore.QTimer.singleShot(50, self.update1)
