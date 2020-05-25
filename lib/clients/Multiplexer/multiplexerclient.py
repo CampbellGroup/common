@@ -119,13 +119,21 @@ class wavemeterclient(QtGui.QWidget):
         subLayout.addWidget(self.lockSwitch, 0, 2)
         subLayout.addWidget(self.startSwitch, 0, 0)
         
+        #self.buttton1 = 
+        
+        pg.setConfigOption('background', 'w')
+        
         self.plot1 = pg.PlotWidget(name='Plot 1')
+        self.plot1.hideAxis('bottom')
+        self.plot1.hideAxis('left')
         #self.pg.setConfigOption('background','w') #unsuccessful white background
         subLayout.addWidget(self.plot1, 5, 0)
         self.p1 = self.plot1.plot()
         self.update1()
         
         self.plot2 = pg.PlotWidget(name='Plot 2')
+        self.plot2.hideAxis('bottom')
+        self.plot2.hideAxis('left')
         subLayout.addWidget(self.plot2, 5, 1)
         self.p2 = self.plot2.plot()
         self.update2()
@@ -370,7 +378,7 @@ class wavemeterclient(QtGui.QWidget):
         #Y2= yield self.server.get_wavemeter_pattern(2, 0)
         Y=Y1[0:1024]
         self.p1.setData(X, Y)
-        QtCore.QTimer.singleShot(50, self.update1)
+        QtCore.QTimer.singleShot(2, self.update1)
         #print(Y1==Y2)
 
     @inlineCallbacks    
@@ -380,7 +388,7 @@ class wavemeterclient(QtGui.QWidget):
         Y1= yield self.server.get_wavemeter_pattern(2, 0)
         Y=Y1[0:1024]
         self.p2.setData(X, Y)
-        QtCore.QTimer.singleShot(50, self.update2)
+        QtCore.QTimer.singleShot(2, self.update2)
     
 
     def closeEvent(self, x):
