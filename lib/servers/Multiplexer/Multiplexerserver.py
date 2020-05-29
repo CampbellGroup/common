@@ -22,7 +22,7 @@ import ctypes
 from ctypes import *
 from twisted.internet import reactor
 import numpy as np
-import matplotlib.pyplot as plt
+from PyQt4 import QtCore
 
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
@@ -514,30 +514,32 @@ class MultiplexerServer(LabradServer):
         
     @setting(37, "get_wavemeter_pattern", chan='w', index='w', returns='*v[]')
     def get_wavemeter_pattern(self, c, chan, index):
-        """Gets the wavemeter pattern. Returns an array of the result."""
-        yield self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))
-        length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(0))
+        """
+        Gets the wavemeter pattern. Returns an array of the result.
+        Args:
+            Chan is the corresponding laser channel.
+            Index indicates which interferometer the data comes from or the type of data.
+        """
+        yield self.wmdll.SetPattern(ctypes.c_long(index), ctypes.c_long(1))
+        length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(index))
         ref = (ctypes.c_long * length)()
         ptr = ctypes.cast(ref, ctypes.POINTER(ctypes.c_ulong))
-        #conts = ptr.contents
-        #print(conts)
-        #rtval = yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(1), index, ptr) # not sure about the last attribute
-        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), index, ptr)
-        #print(rtval)
-        #conts = ptr.contents
-        #print(conts)
-        #print(ptr[1])
-        data = np.empty(length, dtype = int)
-        for i in range (length-1):
-            data[i] = ptr[i]
-            
-        #X=np.arange(length)
-        #plt.plot(X, data)
-        #plot = plt.show()
+        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
+        data = np.array(ptr[:length-1])
+        returnValue(data)
         
-        #if self.chkMore.isChecked(): #not sure what does this mean
-         #   QtCore.QTimer.singleShot(1, self.update) # QUICKLY repeat
-        returnValue(data) 
+#    @setting(38, "update_pattern", )
+#    def update_pattern(self, c, chan, index):
+#        """
+#        Update the plot for the wave meter pattern.
+#        Args:
+#            Chan is the corresponding laser channel.
+#            Index indicates which interferometer the data comes from or the type of data.
+#        """
+#        Y1= yield self.get_wavemeter_pattern(self, chan, index)
+#        print("1")
+#        QtCore.QTimer.singleShot(2, self.update_pattern, self, chan, index)
+#        returnValue(Y1[:1024])
         
         
     def measureChan(self):
@@ -555,12 +557,9 @@ class MultiplexerServer(LabradServer):
 if __name__ == "__main__":
     from labrad import util
     instance = MultiplexerServer()
-    #util.runServer(MultiplexerServer())
-    print("one")
     util.runServer(instance)
-    print("two")
     instance.get_wlm_output(instance)
-    print("four")
+
     
     
     

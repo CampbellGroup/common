@@ -4,7 +4,7 @@ from common.lib.clients.qtui.QCustomPowerMeter import MQProgressBar
 from common.lib.clients.qtui.QCustomSlideIndicator import SlideIndicator
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton as _TextChangingButton
-
+import pyqtgraph as pg
 
 class StretchedLabel(QtGui.QLabel):
     def __init__(self, *args, **kwargs):
@@ -25,12 +25,12 @@ class TextChangingButton(_TextChangingButton):
 
 
 class QCustomWavemeterChannel(QtGui.QFrame):
-    def __init__(self, chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage=None, parent=None):
+    def __init__(self, chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPattern, displayPIDvoltage=None, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
-        self.makeLayout(chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage)
+        self.makeLayout(chanName, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage, displayPattern)
 
-    def makeLayout(self, name, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage):
+    def makeLayout(self, name, wmChannel, DACPort, frequency, stretchedlabel, displayPIDvoltage, displayPattern):
         layout = QtGui.QGridLayout()
 
         shell_font = 'MS Shell Dlg 2'
@@ -102,6 +102,19 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         # 10 seconds is the max exposure time on the wavemeter.
         self.spinExp.setRange(0, 10000.0)
         self.spinExp.setKeyboardTracking(False)
+        
+        if displayPattern:
+            pg.setConfigOption('background', 'w')
+            self.plot1 = pg.PlotWidget(name='Plot 1')
+            self.plot1.hideAxis('bottom')
+            self.plot1.hideAxis('left')
+            layout.addWidget(self.plot1,        7, 0)
+            
+            self.comboBox = QtGui.QComboBox(self)
+            self.comboBox.addItem("Interferometer 1")
+            self.comboBox.addItem("Interferometer 2")
+            self.comboBox.addItem("Off")
+            layout.addWidget(self.comboBox,     7, 1)
 
         layout.addWidget(self.spinFreq,         6, 0)
         layout.addWidget(self.spinExp,          6, 1)
