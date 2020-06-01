@@ -155,6 +155,7 @@ class wavemeterclient(QtGui.QWidget):
             color = int(2.998e8/(float(hint)*1e3))
             color = RGB.wav2RGB(color)
             color = tuple(color)
+            print(color)
 
             if dacPort != 0:
                 self.wmChannels[dacPort] = wmChannel
@@ -182,15 +183,13 @@ class wavemeterclient(QtGui.QWidget):
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
 
             if displayPattern:
-                pg.mkColor(color)
-                self.p1 = widget.plot1.plot()
+                pen=pg.mkPen(color=color)
+                self.p1 = widget.plot1.plot(pen=pen)
                 
-                widget.comboBox.currentIndexChanged.connect(lambda index = widget.comboBox.currentIndex(), wmChannel = 1 : self.update1(wmChannel, index))
+                widget.comboBox.activated.connect(lambda index = widget.comboBox.currentIndex(), wmChannel = 1 : self.update1(wmChannel, index))
+                print(widget.comboBox.currentIndex())
                 
                 
-                
-            
-            
 
         self.setLayout(layout)
 
@@ -378,15 +377,27 @@ class wavemeterclient(QtGui.QWidget):
 #        
 #        QtCore.QTimer.connect(timer, lambda: self.update1(chan, index))
         condition = True
+        timer = QtCore.QTimer()
+        
+        @inlineCallbacks
+        def send_sig(self):
+            self.emit(QtCore.QTimer.SIGNAL(timer.timeout()), chan, index)
+            
         if (index == 0 or index == 1) and condition:
             points=1024
             Y1= yield self.server.get_wavemeter_pattern(chan, index)
             self.p1.setData(np.arange(points), Y1[0:points])
-            QtCore.QTimer.singleShot(2, lambda: self.update1(chan, index))
-            #timer.start()
+            #timer = QtCore.QTimer.singleShot(2, lambda: self.update1(chan, index))
+            
+            timer.timeout.connect(self.update1)
+            self.send_sig()
+            timer.start(2)
+            
         else:
             condition = False
-            #timer.stop()
+            timer.stop()
+        
+
 
     @inlineCallbacks    
     def update2(self):
