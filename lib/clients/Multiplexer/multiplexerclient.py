@@ -142,7 +142,9 @@ class wavemeterclient(QtGui.QWidget):
             dacPort = self.chaninfo[chan][5]
             displayPattern = self.chaninfo[chan][-1]
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
-
+            print(wmChannel)
+            self.plotNum = 0
+            
             if displayPID:
                 try:
                     rails = self.chaninfo[chan][6]
@@ -182,12 +184,21 @@ class wavemeterclient(QtGui.QWidget):
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
 
-            if displayPattern:
+            if displayPattern and self.plotNum%2 == 0:
                 pen=pg.mkPen(color=color)
                 self.p1 = widget.plot1.plot(pen=pen)
                 
-                widget.comboBox.activated.connect(lambda index = widget.comboBox.currentIndex(), wmChannel = 1 : self.update1(wmChannel, index))
-                print(widget.comboBox.currentIndex())
+                widget.comboBox.activated.connect(lambda channel = wmChannel, text = widget.comboBox.currentText() : self.identify(channel, text))
+                print(widget.comboBox.currentText())
+                self.plotNum += 1
+            elif displayPattern and self.plotNum%2 == 1:
+                pen=pg.mkPen(color=color)
+                self.p2 = widget.plot1.plot(pen=pen)
+                
+                widget.comboBox.activated.connect(lambda channel = wmChannel, text = widget.comboBox.currentText() : self.identify(channel, text))
+                print(widget.comboBox.currentText())
+                self.plotNum += 1
+                
                 
                 
 
@@ -368,51 +379,49 @@ class wavemeterclient(QtGui.QWidget):
         else:
             yield self.server.set_pid_polarity(dacPort,-1)
             
+    @inlineCallbacks
+    def identify(self, chan, text):
+        if text == "Off":
+            if self.plotNum%2 == 1:
+                yield self.p1.setData(np.zeros(1024), np.zeros(1024))
+                yield self.timer1.stop()
+            else:
+                yield self.p2.setData(np.zeros(1024), np.zeros(1024))
+                yield self.timer2.stop()
+        elif text == "Interferometer 1":
+            yield self.update1(chan)
+        elif text == "Interferometer 2":
+            yield self.update2(chan)
+            
             
     @inlineCallbacks    
-    def update1(self, chan, index):
-#        timer = QtCore.QTimer()
-#        timer.setInterval(2)
-#        timer.setSingleShot(True)
-#        
-#        QtCore.QTimer.connect(timer, lambda: self.update1(chan, index))
-        condition = True
-        timer = QtCore.QTimer()
-        
-        @inlineCallbacks
-        def send_sig(self):
-            self.emit(QtCore.QTimer.SIGNAL(timer.timeout()), chan, index)
-            
-        if (index == 0 or index == 1) and condition:
-            points=1024
-            Y1= yield self.server.get_wavemeter_pattern(chan, index)
-            self.p1.setData(np.arange(points), Y1[0:points])
-            #timer = QtCore.QTimer.singleShot(2, lambda: self.update1(chan, index))
-            
-            timer.timeout.connect(self.update1)
-            self.send_sig()
-            timer.start(2)
-            
-        else:
-            condition = False
-            timer.stop()
-        
-
-
-    @inlineCallbacks    
-    def update2(self):
+    def update1(self, chan):
         points=1024
-        Y2= yield self.server.get_wavemeter_pattern(2, 0)
-        self.p2.setData(np.arange(points), Y2[0:points])
-        QtCore.QTimer.singleShot(2, self.update2)
+        Y1= yield self.server.get_wavemeter_pattern(1, 0)
+        if self.plotNum%2 == 1:
+            yield self.p1.setData(np.arange(points), Y1[0:points]) 
+        else:
+            yield self.p2.setData(np.arange(points), Y1[0:points])    
+        self.timer1 = QtCore.QTimer()
+        yield self.timer1.timeout.connect(lambda: self.update1(chan))
+        yield self.timer1.start(2)
+        #QtCore.QTimer.singleShot(2, self.update1)
         
-#    @inlineCallbacks
-#    def changeInterferometer(self, chan, index):
-#        if index == 0 or index == 1:
-#            self.update1(chan, index)
-#        else:
-#            self.
-            
+        
+    @inlineCallbacks    
+    def update2(self, chan):
+        points=1024
+        Y2= yield self.server.get_wavemeter_pattern(chan, 1)
+        if self.plotNum%2 == 1:
+            yield self.p1.setData(np.arange(points), Y2[0:points]) 
+        else:
+            yield self.p2.setData(np.arange(points), Y2[0:points]) 
+        
+        #yield self.p2.setData(np.arange(points), Y2[0:points])
+        self.timer2 = QtCore.QTimer()
+        yield self.timer2.timeout.connect(lambda: self.update2(chan))
+        yield self.timer2.start(2)
+        #QtCore.QTimer.singleShot(2, self.update2)
     
 
     def closeEvent(self, x):

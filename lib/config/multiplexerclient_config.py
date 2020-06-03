@@ -7,7 +7,7 @@ class multiplexer_config(object):
     info: dict
     {channel_name: (port, hint, display_location, stretched, display_pid, dac, dac_rails))}
     '''
-    info = {'Laser 1' :(4, '461.251000', (0,1), True, False, 3, [-4,4], True),
-            'Laser 2' :(9, '607.616000', (0,2), True, False, 6, [-4,4], True),
+    info = {'Laser 1' :(1, '461.251000', (0,1), True, False, 3, [-4,4], True),
+            'Laser 2' :(2, '607.616000', (0,2), True, False, 6, [-4,4], True),
             }
     ip = '10.97.111.8'

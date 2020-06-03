@@ -111,9 +111,10 @@ class QCustomWavemeterChannel(QtGui.QFrame):
             layout.addWidget(self.plot1,        7, 0)
             
             self.comboBox = QtGui.QComboBox(self)
-            self.comboBox.addItem("Off")
             self.comboBox.addItem("Interferometer 1")
             self.comboBox.addItem("Interferometer 2")
+            self.comboBox.addItem("Off")
+
             
             layout.addWidget(self.comboBox,     7, 1)
 
