@@ -110,13 +110,13 @@ class QCustomWavemeterChannel(QtGui.QFrame):
             self.plot1.hideAxis('left')
             layout.addWidget(self.plot1,        7, 0)
             
-            self.comboBox = QtGui.QComboBox(self)
-            self.comboBox.addItem("Interferometer 1")
-            self.comboBox.addItem("Interferometer 2")
-            self.comboBox.addItem("Off")
+            self.comboPlot = QtGui.QComboBox(self)
+            self.comboPlot.addItem("Interferometer 1")
+            self.comboPlot.addItem("Interferometer 2")
+            self.comboPlot.addItem("Off")
 
             
-            layout.addWidget(self.comboBox,     7, 1)
+            layout.addWidget(self.comboPlot,     7, 1)
 
         layout.addWidget(self.spinFreq,         6, 0)
         layout.addWidget(self.spinExp,          6, 1)

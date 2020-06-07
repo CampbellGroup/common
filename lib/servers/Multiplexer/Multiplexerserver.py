@@ -527,19 +527,7 @@ class MultiplexerServer(LabradServer):
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
         data = np.array(ptr[:length-1])
         returnValue(data)
-        
-#    @setting(38, "update_pattern", )
-#    def update_pattern(self, c, chan, index):
-#        """
-#        Update the plot for the wave meter pattern.
-#        Args:
-#            Chan is the corresponding laser channel.
-#            Index indicates which interferometer the data comes from or the type of data.
-#        """
-#        Y1= yield self.get_wavemeter_pattern(self, chan, index)
-#        print("1")
-#        QtCore.QTimer.singleShot(2, self.update_pattern, self, chan, index)
-#        returnValue(Y1[:1024])
+        # call signal function and send info
         
         
     def measureChan(self):
@@ -551,7 +539,8 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-        
+            # if self.measPattern(self,chan)
+                #self.get_wavemeter_pattern(chan, inter)
 
 
 if __name__ == "__main__":

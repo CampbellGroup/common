@@ -44,6 +44,7 @@ class wavemeterclient(QtGui.QWidget):
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
+        self.timer1 = QtCore.QTimer()
     
 
     def _check_window_size(self):
@@ -140,7 +141,7 @@ class wavemeterclient(QtGui.QWidget):
             stretched = self.chaninfo[chan][3]
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
-            displayPattern = self.chaninfo[chan][-1]
+            displayPattern = self.chaninfo[chan][7]
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
             print(wmChannel)
             self.plotNum = 0
@@ -172,6 +173,11 @@ class wavemeterclient(QtGui.QWidget):
                 widget.spinFreq.setValue(float(hint))
                 widget.lockChannel.toggled.connect(lambda state = widget.lockChannel.isDown(), wmChannel = wmChannel  : self.setButtonOff(wmChannel))
 
+
+            if displayPattern:
+                widget.plot1.plot(pen=pg.mkPen(color=color))
+                widget.comboPlot.currentIndexChanged.connect(lambda index = widget.comboPlot.currentText(), wmChannel = wmChannel : self.identify(index, wmChannel))
+
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
             widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), wmChannel = wmChannel : self.expChanged(exp, wmChannel))
             initvalue = yield self.server.get_exposure(wmChannel)
@@ -183,6 +189,9 @@ class wavemeterclient(QtGui.QWidget):
 
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
+            
+
+            '''
 
             if displayPattern and self.plotNum%2 == 0:
                 pen=pg.mkPen(color=color)
@@ -198,7 +207,7 @@ class wavemeterclient(QtGui.QWidget):
                 widget.comboBox.activated.connect(lambda channel = wmChannel, text = widget.comboBox.currentText() : self.identify(channel, text))
                 print(widget.comboBox.currentText())
                 self.plotNum += 1
-                
+            ''' 
                 
                 
 
@@ -380,31 +389,29 @@ class wavemeterclient(QtGui.QWidget):
             yield self.server.set_pid_polarity(dacPort,-1)
             
     @inlineCallbacks
-    def identify(self, chan, text):
+    def identify(self, index, chan):
+        # self.server.measure_pattern(chan, True/False, interferometer)
+        widget = self.d[chan]
+        points=1024
+        
+        text = widget.comboPlot.itemText(index)
         if text == "Off":
-            if self.plotNum%2 == 1:
-                yield self.p1.setData(np.zeros(1024), np.zeros(1024))
-                yield self.timer1.stop()
-            else:
-                yield self.p2.setData(np.zeros(1024), np.zeros(1024))
-                yield self.timer2.stop()
+            yield widget.plot1.plot().setData(np.zeros(points), np.zeros(points))
+            yield self.timer1.stop()
         elif text == "Interferometer 1":
-            yield self.update1(chan)
+            yield self.update1(chan, widget)
         elif text == "Interferometer 2":
-            yield self.update2(chan)
+            yield self.update2(widget)
             
             
     @inlineCallbacks    
-    def update1(self, chan):
+    def update1(self, chan, array):
         points=1024
-        Y1= yield self.server.get_wavemeter_pattern(1, 0)
-        if self.plotNum%2 == 1:
-            yield self.p1.setData(np.arange(points), Y1[0:points]) 
-        else:
-            yield self.p2.setData(np.arange(points), Y1[0:points])    
-        self.timer1 = QtCore.QTimer()
-        yield self.timer1.timeout.connect(lambda: self.update1(chan))
-        yield self.timer1.start(2)
+        Y1= yield self.server.get_wavemeter_pattern(chan, 0)
+        yield widget.plot1.plot().setData(np.arange(points), Y1[0:points]) 
+        
+        yield self.timer1.timeout.connect(lambda: self.update1(chan, widget))
+        yield self.timer1.start(2) # ms
         #QtCore.QTimer.singleShot(2, self.update1)
         
         
