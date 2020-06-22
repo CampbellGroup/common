@@ -45,6 +45,7 @@ class wavemeterclient(QtGui.QWidget):
         self.connect()
         self._check_window_size()
         self.timer1 = QtCore.QTimer()
+        self.timer2 = QtCore.QTimer()
     
 
     def _check_window_size(self):
@@ -117,21 +118,6 @@ class wavemeterclient(QtGui.QWidget):
 
         subLayout.addWidget(self.lockSwitch, 0, 2)
         subLayout.addWidget(self.startSwitch, 0, 0)
-        
-        
-#        self.plot1 = pg.PlotWidget(name='Plot 1')
-#        self.plot1.hideAxis('bottom')
-#        self.plot1.hideAxis('left')
-#        subLayout.addWidget(self.plot1, 5, 0)
-#        self.p1 = self.plot1.plot()
-#        self.update1()
-#        
-#        self.plot2 = pg.PlotWidget(name='Plot 2')
-#        self.plot2.hideAxis('bottom')
-#        self.plot2.hideAxis('left')
-#        subLayout.addWidget(self.plot2, 5, 1)
-#        self.p2 = self.plot2.plot()
-#        self.update2()
             
 
         for chan in self.chaninfo:
@@ -398,37 +384,39 @@ class wavemeterclient(QtGui.QWidget):
         if text == "Off":
             yield widget.plot1.plot().setData(np.zeros(points), np.zeros(points))
             yield self.timer1.stop()
+            yield self.timer2.stop()
         elif text == "Interferometer 1":
             yield self.update1(chan, widget)
         elif text == "Interferometer 2":
-            yield self.update2(widget)
+            yield self.update2(chan, widget)
             
             
     @inlineCallbacks    
-    def update1(self, chan, array):
+    def update1(self, chan, widget):
+        hint = self.chaninfo[chan][1]        
+        from common.lib.clients.qtui import RGBconverter as RGB
+        RGB = RGB.RGBconverter()
+        color = int(2.998e8/(float(hint)*1e3))
+        color = RGB.wav2RGB(color)
+        color = tuple(color)
+        
         points=1024
         Y1= yield self.server.get_wavemeter_pattern(chan, 0)
-        yield widget.plot1.plot().setData(np.arange(points), Y1[0:points]) 
+        yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), Y1[0:points]) 
         
         yield self.timer1.timeout.connect(lambda: self.update1(chan, widget))
-        yield self.timer1.start(2) # ms
-        #QtCore.QTimer.singleShot(2, self.update1)
+        yield self.timer1.start(1000) # ms
         
         
-    @inlineCallbacks    
-    def update2(self, chan):
+    @inlineCallbacks
+    def update2(self, chan, widget):
         points=1024
         Y2= yield self.server.get_wavemeter_pattern(chan, 1)
-        if self.plotNum%2 == 1:
-            yield self.p1.setData(np.arange(points), Y2[0:points]) 
-        else:
-            yield self.p2.setData(np.arange(points), Y2[0:points]) 
+        yield widget.plot1.plot().setData(np.arange(points), Y2[0:points]) 
         
-        #yield self.p2.setData(np.arange(points), Y2[0:points])
-        self.timer2 = QtCore.QTimer()
-        yield self.timer2.timeout.connect(lambda: self.update2(chan))
-        yield self.timer2.start(2)
-        #QtCore.QTimer.singleShot(2, self.update2)
+        yield self.timer2.timeout.connect(lambda: self.update2(chan, widget))
+        yield self.timer2.start(1000) # ms
+        
     
 
     def closeEvent(self, x):
