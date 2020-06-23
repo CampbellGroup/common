@@ -24,6 +24,7 @@ SIGNALID5 = 190909
 SIGNALID6 = 102588
 SIGNALID7 = 148323
 SIGNALID8 = 238883
+SIGNALID9 = 462916
 
 #this is the signal for the updated frequencys
 
@@ -80,6 +81,7 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__pidvoltage_changed(SIGNALID6)
         yield self.server.signal__channel_lock_changed(SIGNALID7)
         yield self.server.signal__amplitude_changed(SIGNALID8)
+        yield self.server.signal__pattern_changed(SIGNALID9)
 
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1)
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
@@ -89,6 +91,7 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
         yield self.server.addListener(listener = self.toggleChannelLock, source = None, ID = SIGNALID7)
         yield self.server.addListener(listener = self.updateAmplitude, source = None, ID = SIGNALID8)
+        yield self.server.addListener(listener = self.updatePattern, source = None, ID = SIGNALID9)
 
         self.initializeGUI()
 
@@ -130,7 +133,6 @@ class wavemeterclient(QtGui.QWidget):
             displayPattern = self.chaninfo[chan][7]
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
             print(wmChannel)
-            self.plotNum = 0
             
             if displayPID:
                 try:
@@ -373,46 +375,80 @@ class wavemeterclient(QtGui.QWidget):
             yield self.server.set_pid_polarity(dacPort,1)
         else:
             yield self.server.set_pid_polarity(dacPort,-1)
-            
+ 
     @inlineCallbacks
-    def identify(self, index, chan):
-        # self.server.measure_pattern(chan, True/False, interferometer)
+    def updatePattern(self, c, signal):
+        data = signal[0]
+        chan = signal[1]
         widget = self.d[chan]
-        points=1024
-        
-        text = widget.comboPlot.itemText(index)
-        if text == "Off":
-            yield widget.plot1.plot().setData(np.zeros(points), np.zeros(points))
-            yield self.timer1.stop()
-            yield self.timer2.stop()
-        elif text == "Interferometer 1":
-            yield self.update1(chan, widget)
-        elif text == "Interferometer 2":
-            yield self.update2(chan, widget)
-            
-            
-    @inlineCallbacks    
-    def update1(self, chan, widget):
-        hint = self.chaninfo[chan][1]        
+        for num in self.chaninfo:
+            if self.chaninfo[num][1] == chan:
+                break
+        hint = self.chaninfo[num][1]        
         from common.lib.clients.qtui import RGBconverter as RGB
         RGB = RGB.RGBconverter()
         color = int(2.998e8/(float(hint)*1e3))
         color = RGB.wav2RGB(color)
         color = tuple(color)
-        
         points=1024
-        Y1= yield self.server.get_wavemeter_pattern(chan, 0)
+        yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), data[0:points])
+        
+    @inlineCallbacks
+    def identify(self, index, chan):
+        widget = self.d[chan]
+        text = widget.comboPlot.itemText(index)
+        if text == "Off":
+            yield self.server.set_measure_pattern(chan, False, index)
+        elif text == "Interferometer 1":
+            yield self.server.set_measure_pattern(chan, True, 0)
+        elif text == "Interferometer 2":
+            yield self.server.set_measure_pattern(chan, True, 1)
+#        points=1024
+#        
+#        text = widget.comboPlot.itemText(index)
+#        if text == "Off":
+#            yield widget.plot1.plot().setData(np.zeros(points), np.zeros(points))
+#            yield self.timer1.stop()
+#            yield self.timer2.stop()
+#        elif text == "Interferometer 1":
+#            yield self.update1(chan, widget, 0)
+#        elif text == "Interferometer 2":
+#            yield self.update1(chan, widget, 1)
+            
+            
+    @inlineCallbacks    
+    def update1(self, chan, widget, index):
+        for num in self.chaninfo:
+            if self.chaninfo[num][1] == chan:
+                break
+        hint = self.chaninfo[num][1]        
+        from common.lib.clients.qtui import RGBconverter as RGB
+        RGB = RGB.RGBconverter()
+        color = int(2.998e8/(float(hint)*1e3))
+        color = RGB.wav2RGB(color)
+        color = tuple(color)
+        points=1024
+        Y1= yield self.server.get_wavemeter_pattern(chan, index)
         yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), Y1[0:points]) 
         
-        yield self.timer1.timeout.connect(lambda: self.update1(chan, widget))
-        yield self.timer1.start(1000) # ms
+#        yield self.timer1.timeout.connect(lambda: self.update1(chan, widget))
+#        yield self.timer1.start(1000) # ms
         
         
     @inlineCallbacks
     def update2(self, chan, widget):
+        for num in self.chaninfo:
+            if self.chaninfo[num][1] == chan:
+                break
+        hint = self.chaninfo[num][1]        
+        from common.lib.clients.qtui import RGBconverter as RGB
+        RGB = RGB.RGBconverter()
+        color = int(2.998e8/(float(hint)*1e3))
+        color = RGB.wav2RGB(color)
+        color = tuple(color)
         points=1024
         Y2= yield self.server.get_wavemeter_pattern(chan, 1)
-        yield widget.plot1.plot().setData(np.arange(points), Y2[0:points]) 
+        yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), Y2[0:points]) 
         
         yield self.timer2.timeout.connect(lambda: self.update2(chan, widget))
         yield self.timer2.start(1000) # ms

@@ -32,6 +32,7 @@ OUTPUTCHANGED = 121212
 PIDVOLTAGE = 902484
 CHANNELLOCK = 282388
 AMPCHANGED = 142308
+UPDATEPATTERN = 462916
 
 
 class MultiplexerServer(LabradServer):
@@ -54,10 +55,11 @@ class MultiplexerServer(LabradServer):
     pidvoltagechanged = Signal(PIDVOLTAGE, voltage_text, '(iv)')
     channellock = Signal(CHANNELLOCK, 'signal: channel lock changed', '(wwb)')
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
+    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(*v[]w)')
+    
+    chanlist = []
 
     def initServer(self):
-
-        print("three")
 
         # load wavemeter dll file for use of API functions self.d and self.l
         # are dummy c_types for unused wavemeter functions
@@ -82,6 +84,7 @@ class MultiplexerServer(LabradServer):
         self.measureChan()
 
         self.listeners = set()
+        
 
     def set_pid_variables(self):
         """
@@ -516,10 +519,13 @@ class MultiplexerServer(LabradServer):
     def get_wavemeter_pattern(self, c, chan, index):
         """
         Gets the wavemeter pattern. Returns an array of the result.
+        Also adds the desired channel to the measure list.
         Args:
             Chan is the corresponding laser channel.
             Index indicates which interferometer the data comes from or the type of data.
         """
+        notified = self.getOtherListeners(c)
+        
         yield self.wmdll.SetPattern(ctypes.c_long(index), ctypes.c_long(1))
         length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(index))
         ref = (ctypes.c_long * length)()
@@ -527,7 +533,23 @@ class MultiplexerServer(LabradServer):
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
         data = np.array(ptr[:length-1])
         returnValue(data)
+        self.patternchanged((data, chan), notified)
         # call signal function and send info
+        
+    @setting(38, "set_measure_pattern", chan='w', state='b', index='w')
+    def set_measure_pattern(self, c, chan, state, index):
+        """
+        Adds or removes the channel from the channel list.
+        Args:
+            Chan is the corresponding laser channel.
+            State is whether to measure this channel.
+            Index indicates which interferometer the data comes from or the type of data.
+        """
+        if state:
+            yield self.chanlist.append([chan, index])
+        else:
+            yield self.chanlist.remove([chan, index])
+                    
         
         
     def measureChan(self):
@@ -539,6 +561,9 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
+            for i in self.chanlist:
+                if chan == i[0]:
+                    self.get_wavemeter_pattern(self, chan + 1, i[1])
             # if self.measPattern(self,chan)
                 #self.get_wavemeter_pattern(chan, inter)
 
