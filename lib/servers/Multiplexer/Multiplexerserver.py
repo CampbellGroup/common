@@ -562,7 +562,7 @@ class MultiplexerServer(LabradServer):
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
             for i in self.chanlist:
-                if chan == i[0]:
+                if chan + 1 == i[0]:
                     self.get_wavemeter_pattern(self, chan + 1, i[1])
             # if self.measPattern(self,chan)
                 #self.get_wavemeter_pattern(chan, inter)
