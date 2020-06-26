@@ -524,7 +524,7 @@ class MultiplexerServer(LabradServer):
             Chan is the corresponding laser channel.
             Index indicates which interferometer the data comes from or the type of data.
         """
-        notified = self.getOtherListeners(c)
+        #notified = self.getOtherListeners(c)
         
         yield self.wmdll.SetPattern(ctypes.c_long(index), ctypes.c_long(1))
         length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(index))
@@ -533,7 +533,7 @@ class MultiplexerServer(LabradServer):
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
         data = np.array(ptr[:length-1])
         returnValue(data)
-        self.patternchanged((data, chan), notified)
+        #self.patternchanged((data, chan), notified)
         # call signal function and send info
         
     @setting(38, "set_measure_pattern", chan='w', state='b', index='w')
