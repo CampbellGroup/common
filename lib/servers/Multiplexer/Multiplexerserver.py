@@ -57,7 +57,7 @@ class MultiplexerServer(LabradServer):
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
     patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(*v[]w)')
     
-    chanlist = []
+    
 
     def initServer(self):
 
@@ -77,6 +77,8 @@ class MultiplexerServer(LabradServer):
         self.AmplitudeMin = ctypes.c_long(0)
         self.AmplitudeMax = ctypes.c_long(2)
         self.AmplitudeAvg = ctypes.c_long(4)
+        
+        self.chanlist = {}
 
         self.set_dll_variables()
         self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
@@ -524,7 +526,7 @@ class MultiplexerServer(LabradServer):
             Chan is the corresponding laser channel.
             Index indicates which interferometer the data comes from or the type of data.
         """
-        notified = self.getOtherListeners(c)
+        #notified = self.getOtherListeners(c)
         
         yield self.wmdll.SetPattern(ctypes.c_long(index), ctypes.c_long(1))
         length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(index))
@@ -532,8 +534,7 @@ class MultiplexerServer(LabradServer):
         ptr = ctypes.cast(ref, ctypes.POINTER(ctypes.c_ulong))
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
         data = np.array(ptr[:length-1])
-        returnValue(data)
-        self.patternchanged((data, chan), notified)
+        self.patternchanged((data, chan))
         # call signal function and send info
         
     @setting(38, "set_measure_pattern", chan='w', state='b', index='w')
@@ -546,11 +547,10 @@ class MultiplexerServer(LabradServer):
             Index indicates which interferometer the data comes from or the type of data.
         """
         if state:
-            yield self.chanlist.append([chan, index])
+            self.chanlist[chan] = index
         else:
-            yield self.chanlist.remove([chan, index])
-                    
-        
+            del self.chanlist[chan]
+                 
         
     def measureChan(self):
         # TODO: Improve this with a looping call
@@ -561,11 +561,8 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-            for i in self.chanlist:
-                if (chan + 1) == i[0]:
-                    self.get_wavemeter_pattern(self, chan + 1, i[1])
-            # if self.measPattern(self,chan)
-                #self.get_wavemeter_pattern(chan, inter)
+                if (chan+1) in self.chanlist:
+                    self.get_wavemeter_pattern(self, chan + 1, self.chanlist[chan+1])
 
 
 if __name__ == "__main__":

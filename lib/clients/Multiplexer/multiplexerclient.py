@@ -163,7 +163,7 @@ class wavemeterclient(QtGui.QWidget):
 
 
             if displayPattern:
-                widget.plot1.plot(pen=pg.mkPen(color=color))
+                self.plotItem = widget.plot1.plot(pen=pg.mkPen(color=color))
                 widget.comboPlot.currentIndexChanged.connect(lambda index = widget.comboPlot.currentText(), wmChannel = wmChannel : self.identify(index, wmChannel))
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
@@ -381,8 +381,9 @@ class wavemeterclient(QtGui.QWidget):
         data = signal[0]
         chan = signal[1]
         widget = self.d[chan]
+        '''
         for num in self.chaninfo:
-            if self.chaninfo[num][1] == chan:
+            if self.chaninfo[num][0] == chan:
                 break
         hint = self.chaninfo[num][1]        
         from common.lib.clients.qtui import RGBconverter as RGB
@@ -390,19 +391,26 @@ class wavemeterclient(QtGui.QWidget):
         color = int(2.998e8/(float(hint)*1e3))
         color = RGB.wav2RGB(color)
         color = tuple(color)
+        #time test
+        '''
+        color = (0,0,0)
         points=1024
-        yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), data[0:points])
+        yield self.plotItem.setData(np.arange(points), data[0:points])
         
     @inlineCallbacks
     def identify(self, index, chan):
         widget = self.d[chan]
         text = widget.comboPlot.itemText(index)
+        print text
         if text == "Off":
             yield self.server.set_measure_pattern(chan, False, index)
+            yield self.plotItem.setData(np.zeros(1024), np.zeros(1024))
         elif text == "Interferometer 1":
             yield self.server.set_measure_pattern(chan, True, 0)
+            yield self.plotItem.setData(np.zeros(1024), np.zeros(1024))
         elif text == "Interferometer 2":
             yield self.server.set_measure_pattern(chan, True, 1)
+            yield self.plotItem.setData(np.zeros(1024), np.zeros(1024))
 #        points=1024
 #        
 #        text = widget.comboPlot.itemText(index)
