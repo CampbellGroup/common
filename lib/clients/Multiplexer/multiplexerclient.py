@@ -47,6 +47,7 @@ class wavemeterclient(QtGui.QWidget):
         self._check_window_size()
         self.timer1 = QtCore.QTimer()
         self.timer2 = QtCore.QTimer()
+        self.plotdict = {}
     
 
     def _check_window_size(self):
@@ -132,7 +133,7 @@ class wavemeterclient(QtGui.QWidget):
             dacPort = self.chaninfo[chan][5]
             displayPattern = self.chaninfo[chan][7]
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
-            print(wmChannel)
+            
             
             if displayPID:
                 try:
@@ -146,7 +147,6 @@ class wavemeterclient(QtGui.QWidget):
             color = int(2.998e8/(float(hint)*1e3))
             color = RGB.wav2RGB(color)
             color = tuple(color)
-            print(color)
 
             if dacPort != 0:
                 self.wmChannels[dacPort] = wmChannel
@@ -163,8 +163,9 @@ class wavemeterclient(QtGui.QWidget):
 
 
             if displayPattern:
-                self.plotItem = widget.plot1.plot(pen=pg.mkPen(color=color))
+                self.plotdict[wmChannel] = widget.plot1.plot(pen=pg.mkPen(color=color))
                 widget.comboPlot.currentIndexChanged.connect(lambda index = widget.comboPlot.currentText(), wmChannel = wmChannel : self.identify(index, wmChannel))
+                QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
             widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), wmChannel = wmChannel : self.expChanged(exp, wmChannel))
@@ -177,26 +178,6 @@ class wavemeterclient(QtGui.QWidget):
 
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
-            
-
-            '''
-
-            if displayPattern and self.plotNum%2 == 0:
-                pen=pg.mkPen(color=color)
-                self.p1 = widget.plot1.plot(pen=pen)
-                
-                widget.comboBox.activated.connect(lambda channel = wmChannel, text = widget.comboBox.currentText() : self.identify(channel, text))
-                print(widget.comboBox.currentText())
-                self.plotNum += 1
-            elif displayPattern and self.plotNum%2 == 1:
-                pen=pg.mkPen(color=color)
-                self.p2 = widget.plot1.plot(pen=pen)
-                
-                widget.comboBox.activated.connect(lambda channel = wmChannel, text = widget.comboBox.currentText() : self.identify(channel, text))
-                print(widget.comboBox.currentText())
-                self.plotNum += 1
-            ''' 
-                
                 
 
         self.setLayout(layout)
@@ -380,88 +361,20 @@ class wavemeterclient(QtGui.QWidget):
     def updatePattern(self, c, signal):
         data = signal[0]
         chan = signal[1]
-        widget = self.d[chan]
-        '''
-        for num in self.chaninfo:
-            if self.chaninfo[num][0] == chan:
-                break
-        hint = self.chaninfo[num][1]        
-        from common.lib.clients.qtui import RGBconverter as RGB
-        RGB = RGB.RGBconverter()
-        color = int(2.998e8/(float(hint)*1e3))
-        color = RGB.wav2RGB(color)
-        color = tuple(color)
-        #time test
-        '''
-        color = (0,0,0)
         points=1024
-        yield self.plotItem.setData(np.arange(points), data[0:points])
+        yield self.plotdict[chan].setData(np.arange(points), data[0:points])
         
     @inlineCallbacks
     def identify(self, index, chan):
         widget = self.d[chan]
         text = widget.comboPlot.itemText(index)
-        print text
         if text == "Off":
             yield self.server.set_measure_pattern(chan, False, index)
-            yield self.plotItem.setData(np.zeros(1024), np.zeros(1024))
+            yield self.plotdict[chan].setData(np.zeros(1024), np.zeros(1024))
         elif text == "Interferometer 1":
             yield self.server.set_measure_pattern(chan, True, 0)
-            yield self.plotItem.setData(np.zeros(1024), np.zeros(1024))
         elif text == "Interferometer 2":
             yield self.server.set_measure_pattern(chan, True, 1)
-            yield self.plotItem.setData(np.zeros(1024), np.zeros(1024))
-#        points=1024
-#        
-#        text = widget.comboPlot.itemText(index)
-#        if text == "Off":
-#            yield widget.plot1.plot().setData(np.zeros(points), np.zeros(points))
-#            yield self.timer1.stop()
-#            yield self.timer2.stop()
-#        elif text == "Interferometer 1":
-#            yield self.update1(chan, widget, 0)
-#        elif text == "Interferometer 2":
-#            yield self.update1(chan, widget, 1)
-            
-            
-    @inlineCallbacks    
-    def update1(self, chan, widget, index):
-        for num in self.chaninfo:
-            if self.chaninfo[num][1] == chan:
-                break
-        hint = self.chaninfo[num][1]        
-        from common.lib.clients.qtui import RGBconverter as RGB
-        RGB = RGB.RGBconverter()
-        color = int(2.998e8/(float(hint)*1e3))
-        color = RGB.wav2RGB(color)
-        color = tuple(color)
-        points=1024
-        Y1= yield self.server.get_wavemeter_pattern(chan, index)
-        yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), Y1[0:points]) 
-        
-#        yield self.timer1.timeout.connect(lambda: self.update1(chan, widget))
-#        yield self.timer1.start(1000) # ms
-        
-        
-    @inlineCallbacks
-    def update2(self, chan, widget):
-        for num in self.chaninfo:
-            if self.chaninfo[num][1] == chan:
-                break
-        hint = self.chaninfo[num][1]        
-        from common.lib.clients.qtui import RGBconverter as RGB
-        RGB = RGB.RGBconverter()
-        color = int(2.998e8/(float(hint)*1e3))
-        color = RGB.wav2RGB(color)
-        color = tuple(color)
-        points=1024
-        Y2= yield self.server.get_wavemeter_pattern(chan, 1)
-        yield widget.plot1.plot(pen=pg.mkPen(color=color)).setData(np.arange(points), Y2[0:points]) 
-        
-        yield self.timer2.timeout.connect(lambda: self.update2(chan, widget))
-        yield self.timer2.start(1000) # ms
-        
-    
 
     def closeEvent(self, x):
         self.reactor.stop()

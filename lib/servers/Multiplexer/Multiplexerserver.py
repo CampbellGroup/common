@@ -533,7 +533,7 @@ class MultiplexerServer(LabradServer):
         ref = (ctypes.c_long * length)()
         ptr = ctypes.cast(ref, ctypes.POINTER(ctypes.c_ulong))
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
-        data = np.array(ptr[:length-1])
+        data = np.array(ptr[:1024])
         self.patternchanged((data, chan))
         # call signal function and send info
         
