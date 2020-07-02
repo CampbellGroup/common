@@ -23,6 +23,7 @@ from ctypes import *
 from twisted.internet import reactor
 import numpy as np
 from PyQt4 import QtCore
+import time
 
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
@@ -55,7 +56,7 @@ class MultiplexerServer(LabradServer):
     pidvoltagechanged = Signal(PIDVOLTAGE, voltage_text, '(iv)')
     channellock = Signal(CHANNELLOCK, 'signal: channel lock changed', '(wwb)')
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
-    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(*v[]w)')
+    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(*17v[]*17v[])')
     
     
 
@@ -79,6 +80,8 @@ class MultiplexerServer(LabradServer):
         self.AmplitudeAvg = ctypes.c_long(4)
         
         self.chanlist = {}
+        self.datalist1 = [None]*17
+        self.datalist2 = [None]*17
 
         self.set_dll_variables()
         self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
@@ -534,35 +537,52 @@ class MultiplexerServer(LabradServer):
         ptr = ctypes.cast(ref, ctypes.POINTER(ctypes.c_ulong))
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
         data = np.array(ptr[:1024])
-        self.patternchanged((data, chan))
+        returnValue(data)
+        #self.patternchanged((data, chan))
         # call signal function and send info
         
-    @setting(38, "set_measure_pattern", chan='w', state='b', index='w')
-    def set_measure_pattern(self, c, chan, state, index):
+    @setting(38, "send_wavemeter_pattern")
+    def send_wavemeter_pattern(self, c):
         """
-        Adds or removes the channel from the channel list.
-        Args:
-            Chan is the corresponding laser channel.
-            State is whether to measure this channel.
-            Index indicates which interferometer the data comes from or the type of data.
+        Forms dictionaries with wavemeter data from all channels and sends them to the client.
         """
-        if state:
-            self.chanlist[chan] = index
-        else:
-            del self.chanlist[chan]
+        count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
+        for chan in range(count):
+            if self.get_switcher_signal_state(self, chan + 1):
+                self.datalist1[chan+1] = self.get_wavemeter_pattern(self, chan+1, 0)
+                self.datalist2[chan+1] = self.get_wavemeter_pattern(self, chan+1, 1)
+        self.patternchanged((self.datalist1, self.datalist2))
+        
+#    @setting(40, "set_measure_pattern", chan='w', state='b', index='w')
+#    def set_measure_pattern(self, c, chan, state, index):
+#        """
+#        Adds or removes the channel from the channel list.
+#        Args:
+#            Chan is the corresponding laser channel.
+#            State is whether to measure this channel.
+#            Index indicates which interferometer the data comes from or the type of data.
+#        """
+#        if state:
+#            self.chanlist[chan] = index
+#        else:
+#            del self.chanlist[chan]
                  
         
     def measureChan(self):
         # TODO: Improve this with a looping call
         reactor.callLater(0.1, self.measureChan)
         count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
+        t0 = time.time()
+        self.send_wavemeter_pattern(self)
         for chan in range(count):
             if self.get_switcher_signal_state(self, chan + 1):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-                if (chan+1) in self.chanlist:
-                    self.get_wavemeter_pattern(self, chan + 1, self.chanlist[chan+1])
+#                if (chan+1) in self.chanlist:
+#                    self.get_wavemeter_pattern(self, chan + 1, self.chanlist[chan+1])
+        t1 = time.time()
+        #print (t1-t0)
 
 
 if __name__ == "__main__":

@@ -45,9 +45,10 @@ class wavemeterclient(QtGui.QWidget):
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
-        self.timer1 = QtCore.QTimer()
-        self.timer2 = QtCore.QTimer()
-        self.plotdict = {}
+#        self.timer1 = QtCore.QTimer()
+#        self.timer2 = QtCore.QTimer()
+        self.plotdict1 = {}
+        self.plotdict2 = {}
     
 
     def _check_window_size(self):
@@ -163,9 +164,15 @@ class wavemeterclient(QtGui.QWidget):
 
 
             if displayPattern:
-                self.plotdict[wmChannel] = widget.plot1.plot(pen=pg.mkPen(color=color))
-                widget.comboPlot.currentIndexChanged.connect(lambda index = widget.comboPlot.currentText(), wmChannel = wmChannel : self.identify(index, wmChannel))
-                QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+                self.plotdict1[wmChannel] = widget.plot1.plot(pen=pg.mkPen(color=color))
+                self.plotdict2[wmChannel] = widget.plot2.plot(pen=pg.mkPen(color=color))
+                print "called1"
+                #widget.comboPlot.currentIndexChanged.connect(lambda index = widget.comboPlot.currentText(), wmChannel = wmChannel : self.identify(index, wmChannel))
+                #QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+#                data1 = self.server.get_wavemeter_pattern(wmChannel, 0)
+#                data2 = self.server.get_wavemeter_pattern(wmChannel, 1)
+#                widget.plot1.plot(pen=pg.mkPen(color=color))
+#                widget.plot2.plot(pen=pg.mkPen(color=color))
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
             widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), wmChannel = wmChannel : self.expChanged(exp, wmChannel))
@@ -359,10 +366,16 @@ class wavemeterclient(QtGui.QWidget):
  
     @inlineCallbacks
     def updatePattern(self, c, signal):
-        data = signal[0]
-        chan = signal[1]
+        print "called 2"
+        datalist1 = signal[0]
+        datalist2 = signal[1]
+        print datalist1[1][:10]
+        print datalist2[1][:10]
         points=1024
-        yield self.plotdict[chan].setData(np.arange(points), data[0:points])
+        for chan in range(16):
+            if (chan+1) in self.plotdict1:
+                yield self.plotdict1[chan].setData(np.arange(points), datalist1[chan])
+                yield self.plotdict2[chan].setData(np.arange(points), datalist2[chan])
         
     @inlineCallbacks
     def identify(self, index, chan):

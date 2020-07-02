@@ -106,17 +106,21 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         if displayPattern:
             pg.setConfigOption('background', 'w')
             self.plot1 = pg.PlotWidget(name='Plot 1')
+            self.plot2 = pg.PlotWidget(name='Plot 2')
             self.plot1.hideAxis('bottom')
             self.plot1.hideAxis('left')
-            layout.addWidget(self.plot1,        8, 0, 1, 2)
+            self.plot2.hideAxis('bottom')
+            self.plot2.hideAxis('left')
+            layout.addWidget(self.plot1,        7, 0)
+            layout.addWidget(self.plot2,        7, 1)
             
-            self.comboPlot = QtGui.QComboBox(self)
-            
-            self.comboPlot.addItem("Interferometer 1")
-            self.comboPlot.addItem("Interferometer 2")
-            self.comboPlot.addItem("Off")
-            
-            layout.addWidget(self.comboPlot,    7, 0)
+#            self.comboPlot = QtGui.QComboBox(self)
+#            
+#            self.comboPlot.addItem("Interferometer 1")
+#            self.comboPlot.addItem("Interferometer 2")
+#            self.comboPlot.addItem("Off")
+#            
+#            layout.addWidget(self.comboPlot,    7, 0)
 
         layout.addWidget(self.spinFreq,         6, 0)
         layout.addWidget(self.spinExp,          6, 1)
