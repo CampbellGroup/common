@@ -56,7 +56,7 @@ class MultiplexerServer(LabradServer):
     pidvoltagechanged = Signal(PIDVOLTAGE, voltage_text, '(iv)')
     channellock = Signal(CHANNELLOCK, 'signal: channel lock changed', '(wwb)')
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
-    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(*17v[]*17v[])')
+    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(*16v[]*16v[])')
     
     
 
@@ -80,8 +80,8 @@ class MultiplexerServer(LabradServer):
         self.AmplitudeAvg = ctypes.c_long(4)
         
         self.chanlist = {}
-        self.datalist1 = [None]*17
-        self.datalist2 = [None]*17
+        self.datalist1 = np.empty((16, 1024))
+        self.datalist2 = np.empty((16, 1024))
 
         self.set_dll_variables()
         self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
@@ -520,8 +520,8 @@ class MultiplexerServer(LabradServer):
 
         returnValue(polarity.value)
         
-    @setting(37, "get_wavemeter_pattern", chan='w', index='w', returns='*v[]')
-    def get_wavemeter_pattern(self, c, chan, index):
+    @setting(37, "get_wavemeter_pattern") #, chan='w', index='w', returns='*v[]'
+    def get_wavemeter_pattern(self, c):
         """
         Gets the wavemeter pattern. Returns an array of the result.
         Also adds the desired channel to the measure list.
@@ -531,27 +531,46 @@ class MultiplexerServer(LabradServer):
         """
         #notified = self.getOtherListeners(c)
         
-        yield self.wmdll.SetPattern(ctypes.c_long(index), ctypes.c_long(1))
-        length = yield self.wmdll.GetPatternItemCount(ctypes.c_long(index))
-        ref = (ctypes.c_long * length)()
-        ptr = ctypes.cast(ref, ctypes.POINTER(ctypes.c_ulong))
-        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(index), ptr)
-        data = np.array(ptr[:1024])
-        returnValue(data)
-        #self.patternchanged((data, chan))
-        # call signal function and send info
-        
-    @setting(38, "send_wavemeter_pattern")
-    def send_wavemeter_pattern(self, c):
-        """
-        Forms dictionaries with wavemeter data from all channels and sends them to the client.
-        """
+        yield self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))
+        yield self.wmdll.SetPattern(ctypes.c_long(1), ctypes.c_long(1))
+        length0 = yield self.wmdll.GetPatternItemCount(ctypes.c_long(0))
+        length1 = yield self.wmdll.GetPatternItemCount(ctypes.c_long(1))
+        ref0 = (ctypes.c_long * length0)()
+        ref1 = (ctypes.c_long * length1)()
+        ptr0 = ctypes.cast(ref0, ctypes.POINTER(ctypes.c_ulong))
+        ptr1 = ctypes.cast(ref1, ctypes.POINTER(ctypes.c_ulong))
         count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
         for chan in range(count):
             if self.get_switcher_signal_state(self, chan + 1):
-                self.datalist1[chan+1] = self.get_wavemeter_pattern(self, chan+1, 0)
-                self.datalist2[chan+1] = self.get_wavemeter_pattern(self, chan+1, 1)
+                yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(0), ptr0)
+                yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan), ctypes.c_long(1), ptr1)
+                self.datalist1[chan, :] = np.array(ptr0[:1024])
+                self.datalist2[chan, :] = np.array(ptr1[:1024])
+                #print data0
+        #print self.datalist1
+        #print self.datalist1.shape
+        #print self.datalist2.shape
         self.patternchanged((self.datalist1, self.datalist2))
+        #returnValue(data)
+        #self.patternchanged((data, chan))
+        # call signal function and send info
+        
+#    @setting(38, "send_wavemeter_pattern")
+#    def send_wavemeter_pattern(self, c):
+#        """
+#        Forms dictionaries with wavemeter data from all channels and sends them to the client.
+#        """
+#        count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
+#        for chan in range(count):
+#            if self.get_switcher_signal_state(self, chan + 1):
+#                self.datalist1.append(self.get_wavemeter_pattern(self, chan+1, 0))
+#                self.datalist2.append(self.get_wavemeter_pattern(self, chan+1, 1))
+#                print self.get_wavemeter_pattern(self, chan+1, 1)
+#                #print self.datalist1
+#                #print self.datalist2
+#                #print self.datalist2[chan+1]
+#                #print self.get_wavemeter_pattern(self, chan+1, 0)
+#        self.patternchanged((self.datalist1, self.datalist2))
         
 #    @setting(40, "set_measure_pattern", chan='w', state='b', index='w')
 #    def set_measure_pattern(self, c, chan, state, index):
@@ -573,7 +592,7 @@ class MultiplexerServer(LabradServer):
         reactor.callLater(0.1, self.measureChan)
         count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
         t0 = time.time()
-        self.send_wavemeter_pattern(self)
+        self.get_wavemeter_pattern(self)
         for chan in range(count):
             if self.get_switcher_signal_state(self, chan + 1):
                 self.get_frequency(self, chan + 1)

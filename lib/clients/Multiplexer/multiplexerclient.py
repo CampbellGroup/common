@@ -374,8 +374,8 @@ class wavemeterclient(QtGui.QWidget):
         points=1024
         for chan in range(16):
             if (chan+1) in self.plotdict1:
-                yield self.plotdict1[chan].setData(np.arange(points), datalist1[chan])
-                yield self.plotdict2[chan].setData(np.arange(points), datalist2[chan])
+                yield self.plotdict1[chan].setData(np.arange(points), datalist1[chan-1])
+                yield self.plotdict2[chan].setData(np.arange(points), datalist2[chan-1])
         
     @inlineCallbacks
     def identify(self, index, chan):
