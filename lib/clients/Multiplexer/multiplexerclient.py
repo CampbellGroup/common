@@ -45,9 +45,8 @@ class wavemeterclient(QtGui.QWidget):
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
-        self.plotcolor = {}
-        self.plotdict1 = {}
-        self.plotdict2 = {}
+        self.pattern_1 = {}
+        self.pattern_2 = {}
     
 
     def _check_window_size(self):
@@ -165,7 +164,8 @@ class wavemeterclient(QtGui.QWidget):
             if displayPattern:
                 # save the widget hanlde in a dictionay here so we don't have to 
                 # keeping recalculating the color later
-                self.plotcolor[wmChannel] = color# 
+                self.pattern_1[wmChannel] = widget.plot1.plot(pen=pg.mkPen(color=color))
+                self.pattern_2[wmChannel] = widget.plot2.plot(pen=pg.mkPen(color=color))
 
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
@@ -180,7 +180,6 @@ class wavemeterclient(QtGui.QWidget):
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
                 
-
         self.setLayout(layout)
 
 
@@ -289,13 +288,9 @@ class wavemeterclient(QtGui.QWidget):
         IF1 = signal[1]
         IF2= signal[2]
         points=1024
-        if chan in self.plotcolor:
-            self.d[chan].plot1.plot(pen=pg.mkPen(color=self.plotcolor[chan]))\
-            .setData(np.arange(points), IF1)
-            self.d[chan].plot2.plot(pen=pg.mkPen(color=self.plotcolor[chan]))\
-            .setData(np.arange(points), IF2)
-
-
+        if chan in self.pattern_1:
+            self.pattern_1[chan].setData(x=np.arange(points), y=IF1)
+            self.pattern_2[chan].setData(x=np.arange(points), y=IF2)
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
 
