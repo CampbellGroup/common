@@ -111,8 +111,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
             self.plot1.hideAxis('left')
             self.plot2.hideAxis('bottom')
             self.plot2.hideAxis('left')
-            layout.addWidget(self.plot1,        7, 0)
-            layout.addWidget(self.plot2,        7, 1)
+            layout.addWidget(self.plot1,        7, 0, 2, 1)
+            layout.addWidget(self.plot2,        7, 1, 2, 1)
             
 #            self.comboPlot = QtGui.QComboBox(self)
 #            

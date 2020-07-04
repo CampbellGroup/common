@@ -3,11 +3,8 @@ from common.lib.clients.qtui.multiplexerPID import QCustomPID
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
-from PyQt4 import QtGui,QtCore
+from PyQt4 import QtGui, QtCore
 import pyqtgraph as pg
-import numpy as np
-import time
-
 #try:
 from config.multiplexerclient_config import multiplexer_config
 #except:
@@ -24,7 +21,6 @@ SIGNALID5 = 190909
 SIGNALID6 = 102588
 SIGNALID7 = 148323
 SIGNALID8 = 238883
-SIGNALID9 = 462916
 
 #this is the signal for the updated frequencys
 
@@ -45,10 +41,6 @@ class wavemeterclient(QtGui.QWidget):
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
-        self.plotcolor = {}
-        self.plotdict1 = {}
-        self.plotdict2 = {}
-    
 
     def _check_window_size(self):
         """Checks screen size to make sure window fits in the screen. """
@@ -82,7 +74,6 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__pidvoltage_changed(SIGNALID6)
         yield self.server.signal__channel_lock_changed(SIGNALID7)
         yield self.server.signal__amplitude_changed(SIGNALID8)
-        yield self.server.signal__pattern_changed(SIGNALID9)
 
         yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1)
         yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
@@ -92,7 +83,6 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
         yield self.server.addListener(listener = self.toggleChannelLock, source = None, ID = SIGNALID7)
         yield self.server.addListener(listener = self.updateAmplitude, source = None, ID = SIGNALID8)
-        yield self.server.addListener(listener = self.updatePattern, source = None, ID = SIGNALID9)
 
         self.initializeGUI()
 
@@ -122,7 +112,6 @@ class wavemeterclient(QtGui.QWidget):
 
         subLayout.addWidget(self.lockSwitch, 0, 2)
         subLayout.addWidget(self.startSwitch, 0, 0)
-            
 
         for chan in self.chaninfo:
             wmChannel = self.chaninfo[chan][0]
@@ -131,10 +120,8 @@ class wavemeterclient(QtGui.QWidget):
             stretched = self.chaninfo[chan][3]
             displayPID = self.chaninfo[chan][4]
             dacPort = self.chaninfo[chan][5]
-            displayPattern = self.chaninfo[chan][7]
-            widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
-            
-            
+            widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPID)
+
             if displayPID:
                 try:
                     rails = self.chaninfo[chan][6]
@@ -161,13 +148,6 @@ class wavemeterclient(QtGui.QWidget):
                 widget.spinFreq.setValue(float(hint))
                 widget.lockChannel.toggled.connect(lambda state = widget.lockChannel.isDown(), wmChannel = wmChannel  : self.setButtonOff(wmChannel))
 
-
-            if displayPattern:
-                # save the widget hanlde in a dictionay here so we don't have to 
-                # keeping recalculating the color later
-                self.plotcolor[wmChannel] = color# 
-
-
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
             widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), wmChannel = wmChannel : self.expChanged(exp, wmChannel))
             initvalue = yield self.server.get_exposure(wmChannel)
@@ -179,7 +159,6 @@ class wavemeterclient(QtGui.QWidget):
 
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
-                
 
         self.setLayout(layout)
 
@@ -284,18 +263,6 @@ class wavemeterclient(QtGui.QWidget):
             #self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
             self.d[wmChannel].powermeter.setValue(value)#('Interferometer Amp\n' + str(value))
 
-    def updatePattern(self, c, signal):
-        chan = signal[0]
-        IF1 = signal[1]
-        IF2= signal[2]
-        points=1024
-        if chan in self.plotcolor:
-            self.d[chan].plot1.plot(pen=pg.mkPen(color=self.plotcolor[chan]))\
-            .setData(np.arange(points), IF1)
-            self.d[chan].plot2.plot(pen=pg.mkPen(color=self.plotcolor[chan]))\
-            .setData(np.arange(points), IF2)
-
-
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
 
@@ -369,7 +336,7 @@ class wavemeterclient(QtGui.QWidget):
             yield self.server.set_pid_polarity(dacPort,1)
         else:
             yield self.server.set_pid_polarity(dacPort,-1)
- 
+
     def closeEvent(self, x):
         self.reactor.stop()
 
