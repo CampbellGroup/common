@@ -58,8 +58,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.powermeter.setMeterBorder("orange")
 
         if displayPIDvoltage is True:
-            layout.addWidget(self.PIDvoltage,   6,2,1,1)
-            layout.addWidget(self.PIDindicator, 5,2,1,1)
+            layout.addWidget(self.PIDvoltage,   6,6,1,5)
+            layout.addWidget(self.PIDindicator, 5,6,1,5)
         if stretchedlabel is True:
             self.currentfrequency = StretchedLabel(frequency)
         else:
@@ -111,8 +111,8 @@ class QCustomWavemeterChannel(QtGui.QFrame):
             self.plot1.hideAxis('left')
             self.plot2.hideAxis('bottom')
             self.plot2.hideAxis('left')
-            layout.addWidget(self.plot1,        7, 0, 2, 1)
-            layout.addWidget(self.plot2,        7, 1, 2, 1)
+            layout.addWidget(self.plot1,        7, 0, 1, 1)
+            layout.addWidget(self.plot2,        7, 1, 1, 11) 
             
 #            self.comboPlot = QtGui.QComboBox(self)
 #            
@@ -122,18 +122,18 @@ class QCustomWavemeterChannel(QtGui.QFrame):
 #            
 #            layout.addWidget(self.comboPlot,    7, 0)
 
-        layout.addWidget(self.spinFreq,         6, 0)
-        layout.addWidget(self.spinExp,          6, 1)
-        layout.addWidget(self.measSwitch,       0, 2)
-        layout.addWidget(self.lockChannel,      1,2,1,1)
-        layout.addWidget(self.setPID,           2,2,1,1)
-        layout.addWidget(chanName,              0,0,1,2)
-        layout.addWidget(configtitle,           3,2,1,1)
-        layout.addWidget(configLabel,           4,2,1,1)
-        layout.addWidget(self.currentfrequency, 1, 0, 4, 2)
+        layout.addWidget(self.spinFreq,         6, 0, 1, 1)
+        layout.addWidget(self.spinExp,          6, 3, 1, 3)
+        layout.addWidget(self.measSwitch,       0, 6, 1, 5)
+        layout.addWidget(self.lockChannel,      1, 6, 1, 5)
+        layout.addWidget(self.setPID,           2, 6, 1, 5)
+        layout.addWidget(chanName,              0, 0, 1, 1)
+        layout.addWidget(configtitle,           3, 6, 1, 5)
+        layout.addWidget(configLabel,           4, 6, 1, 5)
+        layout.addWidget(self.currentfrequency, 1, 0, 4, 1)
         layout.addWidget(frequencylabel,        5, 0, 1, 1)
-        layout.addWidget(exposurelabel,         5, 1, 1, 1)
-        layout.addWidget(self.powermeter,       0,3,7,1)
+        layout.addWidget(exposurelabel,         5, 3, 1, 3)
+        layout.addWidget(self.powermeter,       0, 11, 7, 1)
 
         layout.minimumSize()
 
