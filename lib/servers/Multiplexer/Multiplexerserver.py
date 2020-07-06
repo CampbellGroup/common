@@ -19,7 +19,6 @@ timeout = 20
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import returnValue
 import ctypes
-from ctypes import *
 from twisted.internet import reactor
 
 UPDATEEXP = 122387
@@ -527,7 +526,7 @@ class MultiplexerServer(LabradServer):
 
         returnValue(polarity.value)
         
-    @setting(37, "get_wavemeter_pattern", chan='i')
+    @setting(37, "get_wavemeter_pattern", chan='i', returns = '*2v')
     def get_wavemeter_pattern(self, c, chan):
         """
         Gets the wavemeter pattern. Broadcast signal with results.
@@ -541,6 +540,7 @@ class MultiplexerServer(LabradServer):
         IF1 = self.pattern1_ptr[:1024]
         IF2 = self.pattern2_ptr[:1024]
         self.patternchanged((chan, IF1, IF2))
+        returnValue([IF1,IF2])
 
     def measureChan(self):
         # TODO: Improve this with a looping call
