@@ -3,18 +3,15 @@ from common.lib.clients.qtui.multiplexerPID import QCustomPID
 from common.lib.clients.qtui.q_custom_text_changing_button import \
     TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
-from PyQt4 import QtGui,QtCore
-import pyqtgraph as pg
-import numpy as np
-import time
-
+from PyQt4 import QtGui
 #try:
 from config.multiplexerclient_config import multiplexer_config
 #except:
 #    from common.lib.config.multiplexerclient_config import multiplexer_config
-
 import socket
 import os
+import pyqtgraph as pg
+import numpy as np
 
 SIGNALID1 = 445566
 SIGNALID2 = 143533
@@ -48,7 +45,6 @@ class wavemeterclient(QtGui.QWidget):
         self.pattern_1 = {}
         self.pattern_2 = {}
     
-
     def _check_window_size(self):
         """Checks screen size to make sure window fits in the screen. """
         desktop = QtGui.QDesktopWidget()
@@ -132,8 +128,7 @@ class wavemeterclient(QtGui.QWidget):
             dacPort = self.chaninfo[chan][5]
             displayPattern = self.chaninfo[chan][7]
             widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
-            
-            
+               
             if displayPID:
                 try:
                     rails = self.chaninfo[chan][6]
@@ -160,13 +155,11 @@ class wavemeterclient(QtGui.QWidget):
                 widget.spinFreq.setValue(float(hint))
                 widget.lockChannel.toggled.connect(lambda state = widget.lockChannel.isDown(), wmChannel = wmChannel  : self.setButtonOff(wmChannel))
 
-
             if displayPattern:
                 # save the widget hanlde in a dictionay here so we don't have to 
                 # keeping recalculating the color later
                 self.pattern_1[wmChannel] = widget.plot1.plot(pen=pg.mkPen(color=color))
                 self.pattern_2[wmChannel] = widget.plot2.plot(pen=pg.mkPen(color=color))
-
 
             widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
             widget.spinExp.valueChanged.connect(lambda exp = widget.spinExp.value(), wmChannel = wmChannel : self.expChanged(exp, wmChannel))
@@ -181,7 +174,6 @@ class wavemeterclient(QtGui.QWidget):
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
                 
         self.setLayout(layout)
-
 
     @inlineCallbacks
     def InitializePIDGUI(self,dacPort,chan):

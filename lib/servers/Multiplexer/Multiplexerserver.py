@@ -21,9 +21,6 @@ from twisted.internet.defer import returnValue
 import ctypes
 from ctypes import *
 from twisted.internet import reactor
-import numpy as np
-from PyQt4 import QtCore
-import time
 
 UPDATEEXP = 122387
 CHANSIGNAL = 122485
@@ -58,8 +55,6 @@ class MultiplexerServer(LabradServer):
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
     patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(i*v*v)')
     
-    
-
     def initServer(self):
 
         # load wavemeter dll file for use of API functions self.d and self.l
@@ -535,11 +530,8 @@ class MultiplexerServer(LabradServer):
     @setting(37, "get_wavemeter_pattern", chan='i')
     def get_wavemeter_pattern(self, c, chan):
         """
-        Gets the wavemeter pattern. Returns an array of the result.
-        Also adds the desired channel to the measure list.
-        Args:
-            Chan is the corresponding laser channel.
-            Index (0 or 1) indicates which interferometer (1st 2nd).
+        Gets the wavemeter pattern. Broadcast signal with results.
+
         """
 
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
@@ -554,22 +546,17 @@ class MultiplexerServer(LabradServer):
         # TODO: Improve this with a looping call
         reactor.callLater(0.1, self.measureChan)
         count = self.wmdll.GetChannelsCount(ctypes.c_long(0))
-        t0 = time.time()
         for chan in range(count):
             if self.get_switcher_signal_state(self, chan + 1):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
                 self.get_wavemeter_pattern(self, chan + 1)
-        t1 = time.time()
-        #print (t1-t0)
 
 
 if __name__ == "__main__":
     from labrad import util
-    instance = MultiplexerServer()
-    util.runServer(instance)
-    instance.get_wlm_output(instance)
+    util.runServer(MultiplexerServer())
 
     
     
