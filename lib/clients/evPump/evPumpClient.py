@@ -19,7 +19,7 @@ class eVPumpClient(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         super(eVPumpClient, self).__init__()
         self._max_current = 24.0  # maximum laser diode current in Amps
-        self._max_power = 15.0  # maximum laser output power in Watts
+        self._max_power = 15.2  # maximum laser output power in Watts
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.cxn = cxn
         self.reactor = reactor
@@ -80,7 +80,7 @@ class eVPumpClient(QtGui.QWidget):
         self.powerspinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
         self.powerspinbox.setDecimals(2)
         self.powerspinbox.setSingleStep(0.01)
-        self.powerspinbox.setRange(0.0, 15.0)
+        self.powerspinbox.setRange(0.0, 15.1)
         self.powerspinbox.valueChanged.connect(self.change_power)
         self.powerspinbox.setKeyboardTracking(False)
 
@@ -89,7 +89,7 @@ class eVPumpClient(QtGui.QWidget):
                                                 pointSize=16))
         self.currentspinbox.setDecimals(3)
         self.currentspinbox.setSingleStep(0.001)
-        self.currentspinbox.setRange(0.0, 8.0)
+        self.currentspinbox.setRange(0.0, 8.1)
         self.currentspinbox.valueChanged.connect(self.change_current)
         self.currentspinbox.setKeyboardTracking(False)
 
@@ -215,6 +215,7 @@ class eVPumpClient(QtGui.QWidget):
 
     def closeEvent(self, x):
         self.reactor.stop()
+
 
 if __name__ == "__main__":
     a = QtGui.QApplication([])

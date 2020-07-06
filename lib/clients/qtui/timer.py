@@ -18,7 +18,9 @@ class QCustomTimer(QtGui.QFrame):
         self.timer.timeout.connect(self.tick)
         self.time = 0
         self.timerlabel = QtGui.QLabel('00:00:00')
+        self.last_timer = QtGui.QLabel('')
         self.timerlabel.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=35))
+        self.last_timer.setFont(QtGui.QFont('MS_Shell Dlg 2', pointSize=20))
 
         if show_control:
             self.start_button = QtGui.QPushButton('Start')
@@ -34,6 +36,7 @@ class QCustomTimer(QtGui.QFrame):
             layout.addWidget(self.reset_button, 2, 2)
 
         layout.addWidget(self.timerlabel, 1, 0, 1, 3)
+        layout.addWidget(self.last_timer, 1, 3, 1, 3)
         self.setLayout(layout)
 
     def stop(self):
@@ -43,11 +46,17 @@ class QCustomTimer(QtGui.QFrame):
         self.timer.start(1000)
 
     def reset(self):
+        h_string, m_string, s_string = self.process_time()
+        self.last_timer.setText(h_string + ':' + m_string + ':' + s_string)
         self.time = 0
         self.timerlabel.setText('00:00:00')
 
     def tick(self):
         self.time += 1
+        h_string, m_string, s_string = self.process_time()
+        self.timerlabel.setText(h_string + ':' + m_string + ':' + s_string)
+
+    def process_time(self):
         m, s = divmod(self.time, 60)
         h, m = divmod(m, 60)
 
@@ -66,7 +75,7 @@ class QCustomTimer(QtGui.QFrame):
         else:
             h_string = str(h)
 
-        self.timerlabel.setText(h_string + ':' + m_string + ':' + s_string)
+        return h_string, m_string, s_string
 
 
 if __name__ == "__main__":

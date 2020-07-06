@@ -29,6 +29,7 @@ class pulse_sequence(object):
 	
 	@classmethod
 	def all_required_parameters(cls):
+
 		'''
 		returns a list of all required variables for the current sequence and all used subsequences
 		'''

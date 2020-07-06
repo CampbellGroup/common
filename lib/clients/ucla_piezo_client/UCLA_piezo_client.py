@@ -2,28 +2,27 @@ from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
 
+
 class ucla_piezo_client(QtGui.QWidget):
-    
-    def __init__(self, reactor, parent = None):
-            
+
+    def __init__(self, reactor, parent=None):
+
         super(ucla_piezo_client, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.connect()
-        
+
     @inlineCallbacks
     def connect(self):
 
         from labrad.wrappers import connectAsync
-
-        self.cxn = yield connectAsync(name = "UCLAPiezo client")
-        self.server = self.cxn.uclapiezo
-        self.reg = self.cxn.registry
+        self.cxn = yield connectAsync(name="UCLAPiezo client")
+        self.server = yield self.cxn.piezo_server
+        self.reg = yield self.cxn.registry
         yield self.reg.cd(['', 'settings'])
         from labrad.units import WithUnit as U
         self.U = U
-        self.initializeGUI()
-        
+        yield self.initializeGUI()
 
     @inlineCallbacks
     def initializeGUI(self):  
