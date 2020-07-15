@@ -1,13 +1,13 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Multiplexer Server
+name = multiplexerserver
 version = 1.0
 description =
-instancename = Multiplexer Server
+instancename = multiplexerserver
 
 [startup]
-cmdline = %PYTHON% %FILE%self.wmdll.SetPIDCourseNum
+cmdline = %PYTHON% %FILE%
 timeout = 20
 
 [shutdown]
@@ -39,7 +39,7 @@ class MultiplexerServer(LabradServer):
     A DLL is required to run this server.  See initServer for the path location
     for the library.
     """
-    name = 'Multiplexerserver'
+    name = 'multiplexerserver'
 
     # Set up signals to be sent to listeners
     channel_text = 'signal: selected channels changed'
@@ -81,9 +81,11 @@ class MultiplexerServer(LabradServer):
         self.pattern2_ptr = None
         self.set_interferometer_pattern_variables()
 
+        self.listeners = set()
+
         self.measureChan()
 
-        self.listeners = set()
+        
         
 
     def set_pid_variables(self):
@@ -557,8 +559,3 @@ class MultiplexerServer(LabradServer):
 if __name__ == "__main__":
     from labrad import util
     util.runServer(MultiplexerServer())
-
-    
-    
-    
-    

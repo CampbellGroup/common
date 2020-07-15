@@ -21,7 +21,7 @@ SIGNALID5 = 190909
 SIGNALID6 = 102588
 SIGNALID7 = 148323
 SIGNALID8 = 238883
-SIGNALID9 = 462916
+SIGNALID9 = 462917
 
 #this is the signal for the updated frequencys
 
@@ -247,34 +247,45 @@ class wavemeterclient(QtGui.QWidget):
     def toggleMeas(self, c, signal):
         chan = signal[0]
         value = signal[1]
-        if chan in self.d :
+        if chan in self.d:
+            self.d[chan].measSwitch.blockSignals(True)
             self.d[chan].measSwitch.setChecked(value)
+            self.d[chan].measSwitch.blockSignals(False)
 
     def toggleLock(self, c, signal):
+        self.lockSwitch.blockSignals(True)
         self.lockSwitch.setChecked(signal)
-
+        self.lockSwitch.blockSignals(False)
+        
     def toggleChannelLock(self, c, signal):
         wmChannel = signal[1]
         state = signal[2]
         if wmChannel in self.d:
+            self.d[wmChannel].lockChannel.blockSignals(True)
             self.d[wmChannel].lockChannel.setChecked(bool(state))
-
+            self.d[wmChannel].lockChannel.blockSignals(False)
+            
     def updateexp(self,c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d :
+            self.d[chan].spinExp.blockSignals(True)
             self.d[chan].spinExp.setValue(value)
+            self.d[chan].spinExp.blockSignals(False)
 
     def updateWLMOutput(self, c, signal):
+        self.startSwitch.blockSignals(True)
         self.startSwitch.setChecked(signal)
+        self.startSwitch.blockSignals(False)
 
     def updateAmplitude(self, c, signal):
         wmChannel = signal[0]
         value = signal[1]
         if wmChannel in self.d:
-            #self.d[wmChannel].interfAmp.setText('Interferometer Amp\n' + str(value))
-            self.d[wmChannel].powermeter.setValue(value)#('Interferometer Amp\n' + str(value))
-
+            self.d[wmChannel].powermeter.blockSignals(True)
+            self.d[wmChannel].powermeter.setValue(value)
+            self.d[wmChannel].powermeter.blockSignals(False)
+            
     def updatePattern(self, c, signal):
         chan = signal[0]
         IF1 = signal[1]
