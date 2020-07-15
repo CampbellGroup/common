@@ -7,7 +7,7 @@ description =
 instancename = Multiplexer Server
 
 [startup]
-cmdline = %PYTHON% %FILE%self.wmdll.SetPIDCourseNum
+cmdline = %PYTHON% %FILE%
 timeout = 20
 
 [shutdown]
@@ -551,7 +551,7 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
-                self.get_wavemeter_pattern(self, chan + 1)
+                #self.get_wavemeter_pattern(self, chan + 1)
 
 
 if __name__ == "__main__":
