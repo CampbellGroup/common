@@ -52,7 +52,7 @@ class MultiplexerServer(LabradServer):
     pidvoltagechanged = Signal(PIDVOLTAGE, voltage_text, '(iv)')
     channellock = Signal(CHANNELLOCK, 'signal: channel lock changed', '(wwb)')
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
-    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(i*v*v)')
+    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(i*v)')
     
     def initServer(self):
 
@@ -78,7 +78,6 @@ class MultiplexerServer(LabradServer):
         self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
 
         self.pattern1_ptr = None
-        self.pattern2_ptr = None
         self.set_interferometer_pattern_variables()
 
         self.listeners = set()
@@ -136,15 +135,15 @@ class MultiplexerServer(LabradServer):
 
     def set_interferometer_pattern_variables(self):
         self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))
-        self.wmdll.SetPattern(ctypes.c_long(1), ctypes.c_long(1))
         length0 = self.wmdll.GetPatternItemCount(ctypes.c_long(0))
-        length1 = self.wmdll.GetPatternItemCount(ctypes.c_long(1))
         ref0 = (ctypes.c_long * length0)()
-        ref1 = (ctypes.c_long * length1)()
-        self.pattern1_ptr = ctypes.cast(ref0, ctypes.POINTER(ctypes.c_ulong))
-        self.pattern2_ptr = ctypes.cast(ref1, ctypes.POINTER(ctypes.c_ulong))
-
-
+        self.pattern1_ptr = ctypes.cast(ref0, ctypes.POINTER(ctypes.c_ulong))        
+        # use in future if want second interferometer
+        #self.wmdll.SetPattern(ctypes.c_long(1), ctypes.c_long(1))
+        #length1 = self.wmdll.GetPatternItemCount(ctypes.c_long(1))
+        #ref1 = (ctypes.c_long * length1)()
+        #self.pattern2_ptr = ctypes.cast(ref1, ctypes.POINTER(ctypes.c_ulong))
+        
     def initContext(self, c):
         """Initialize a new context object."""
         self.listeners.add(c.ID)
@@ -534,15 +533,12 @@ class MultiplexerServer(LabradServer):
         Gets the wavemeter pattern. Broadcast signal with results.
 
         """
-
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
                     ctypes.c_long(0), self.pattern1_ptr)
-        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
-                    ctypes.c_long(1), self.pattern2_ptr)
-        IF1 = self.pattern1_ptr[:1024]
-        IF2 = self.pattern2_ptr[:1024]
-        self.patternchanged((chan, IF1, IF2))
-        returnValue([IF1,IF2])
+        # use every other data point
+        IF1 = self.pattern1_ptr[:1024:2]
+        self.patternchanged((chan, IF1))
+        returnValue([IF1])
 
     def measureChan(self):
         # TODO: Improve this with a looping call
