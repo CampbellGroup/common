@@ -52,7 +52,7 @@ class MultiplexerServer(LabradServer):
     pidvoltagechanged = Signal(PIDVOLTAGE, voltage_text, '(iv)')
     channellock = Signal(CHANNELLOCK, 'signal: channel lock changed', '(wwb)')
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
-    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(i*v*v)')
+    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(i*v)')
     
     def initServer(self):
 
@@ -537,12 +537,12 @@ class MultiplexerServer(LabradServer):
 
         yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
                     ctypes.c_long(0), self.pattern1_ptr)
-        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
-                    ctypes.c_long(1), self.pattern2_ptr)
-        IF1 = self.pattern1_ptr[:1024]
-        IF2 = self.pattern2_ptr[:1024]
-        self.patternchanged((chan, IF1, IF2))
-        returnValue([IF1,IF2])
+        #yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
+                    #ctypes.c_long(1), self.pattern2_ptr)
+        IF1 = self.pattern1_ptr[:1024:2]
+        #IF2 = self.pattern2_ptr[:1024:4]
+        self.patternchanged((chan, IF1))
+        returnValue([IF1])
 
     def measureChan(self):
         # TODO: Improve this with a looping call

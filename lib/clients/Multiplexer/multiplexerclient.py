@@ -289,11 +289,11 @@ class wavemeterclient(QtGui.QWidget):
     def updatePattern(self, c, signal):
         chan = signal[0]
         IF1 = signal[1]
-        IF2= signal[2]
-        points=1024
+        #IF2= signal[2]
+        points=512
         if chan in self.pattern_1:
             self.pattern_1[chan].setData(x=np.arange(points), y=IF1)
-            self.pattern_2[chan].setData(x=np.arange(points), y=IF2)
+            #self.pattern_2[chan].setData(x=np.arange(points), y=IF2)
             
     def setButtonOff(self,wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)
