@@ -10,17 +10,18 @@ Version 1.0
 
 SIGNALID = 378902
 
+
 class switchWidget(QtGui.QFrame):
-    def __init__(self, reactor, cxn = None, parent=None):
+    def __init__(self, reactor, cxn=None, parent=None):
         super(switchWidget, self).__init__(parent)
         self.initialized = False
         self.reactor = reactor
         self.cxn = cxn
         self.connect()
-        
+
     @inlineCallbacks
     def connect(self):
-        if self.cxn is  None:
+        if self.cxn is None:
             self.cxn = connection()
             yield self.cxn.connect()
             from labrad.types import Error
@@ -36,7 +37,7 @@ class switchWidget(QtGui.QFrame):
             self.setDisabled(True)
         self.cxn.add_on_connect('Pulser', self.reinitialize)
         self.cxn.add_on_disconnect('Pulser', self.disable)
-    
+
     @inlineCallbacks
     def get_displayed_channels(self):
         '''
@@ -44,7 +45,7 @@ class switchWidget(QtGui.QFrame):
         listed in the registry. If there is no listing, will display all channels.
         '''
         server = yield self.cxn.get_server('Pulser')
-        all_channels = yield server.get_channels(context = self.context)
+        all_channels = yield server.get_channels(context=self.context)
         all_names = [el[0] for el in all_channels]
         channels_to_display = yield self.registry_load_displayed(all_names)
         if channels_to_display is None:
@@ -55,30 +56,30 @@ class switchWidget(QtGui.QFrame):
     @inlineCallbacks
     def registry_load_displayed(self, all_names):
         reg = yield self.cxn.get_server('Registry')
-        yield reg.cd(['Clients','Switch Control'], True, context = self.context)
+        yield reg.cd(['Clients', 'Switch Control'], True, context=self.context)
         try:
-            displayed = yield reg.get('display_channels', context = self.context)
+            displayed = yield reg.get('display_channels', context=self.context)
         except self.Error as e:
             if e.code == 21:
-                #key error
-                yield reg.set('display_channels', all_names, context = self.context)
+                # key error
+                yield reg.set('display_channels', all_names, context=self.context)
                 displayed = None
             else:
                 raise
         returnValue(displayed)
-    
+
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
         server = yield self.cxn.get_server('Pulser')
         if self.initialized:
-            yield server.signal__switch_toggled(SIGNALID, context = self.context)
+            yield server.signal__switch_toggled(SIGNALID, context=self.context)
             for name in self.d.keys():
                 self.setStateNoSignals(name, server)
         else:
             yield self.initializeGUI()
             yield self.setupListeners()
-    
+
     @inlineCallbacks
     def initializeGUI(self, channels):
         '''
@@ -88,7 +89,7 @@ class switchWidget(QtGui.QFrame):
         '''
         server = yield self.cxn.get_server('Pulser')
         self.d = {}
-        #set layout
+        # set layout
         layout = QtGui.QGridLayout()
         self.setFrameStyle(QtGui.QFrame.Panel  | QtGui.QFrame.Sunken)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)

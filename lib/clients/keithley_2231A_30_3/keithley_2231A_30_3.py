@@ -33,7 +33,7 @@ class kiethleyclient(QtGui.QWidget):
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
         self.setWindowTitle('Keithley Power Supply: 2231A-30-3')
-        qBox = QtGui.QGroupBox('Kiethley 2231A')
+        qBox = QtGui.QGroupBox('Kiethley 2231A: Magnetic Field Coils')
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
         layout.addWidget(qBox, 0, 0)

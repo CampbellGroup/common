@@ -23,7 +23,8 @@ import labrad.units as _units
 from labrad.units import V, A
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(1.0, 's')
+TIMEOUT = Value(10.0, 's')
+
 
 class KeithleyWrapper(DeviceWrapper):
 

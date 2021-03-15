@@ -22,7 +22,7 @@ class Piezo_Client(QtGui.QWidget):
         self.cxn = yield connectAsync(name="Piezo Client")
         self.server = self.cxn.piezo_server
         self.reg = self.cxn.registry
-        yield self.reg.cd(['', 'settings'])
+        yield self.reg.cd(['', 'Servers', 'UCLAPiezo','parameters'])
         from labrad.units import WithUnit as U
         self.U = U
         self.initializeGUI()
@@ -30,25 +30,26 @@ class Piezo_Client(QtGui.QWidget):
     @inlineCallbacks
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
-        initial_remote_setting = yield self.server.remote_mode()
+        initial_remote_setting = False
         remote_button = QCustomSwitchChannel('Remote Mode', ('On', 'Off'))
         remote_button.TTLswitch.setChecked(int(initial_remote_setting))
-        remote_button.TTLswitch.toggled.connect(lambda state=remote_button.TTLswitch.isDown():
-                                                self.on_remote_toggled(state))
+        remote_button.TTLswitch.toggled.connect(lambda state=remote_button.TTLswitch.isDown(): self.on_remote_toggled(state))
         layout.addWidget(remote_button, 0, 0)  # puts remote button at top left
         channel_info = piezo_config.info
 
         for key in channel_info:
-            initial_channel_setting = yield self.server.output_channel(channel_info[key][0])
-            initial_voltage_list = yield self.server.set_voltage(channel_info[key][0])
-            initial_voltage = float(initial_voltage_list[1])
+
+            initial_channel_setting = yield self.server.get_output_state(channel_info[key][0])
+            initial_voltage = yield self.server.get_voltage(channel_info[key][0])
+            initial_voltage = float(initial_voltage)
+
             chan_button = QCustomSwitchChannel(key, ('On', 'Off'))
-            chan_button.TTLswitch.setChecked(int(initial_channel_setting[1]))
+            chan_button.TTLswitch.setChecked(int(initial_channel_setting))
             chan_button.TTLswitch.toggled.connect(lambda state=chan_button.TTLswitch.isDown(),
                                                   chan=channel_info[key][0]: self.on_chan_toggled(chan, state))
             voltage_spin_box = QtGui.QDoubleSpinBox()
             voltage_spin_box.setRange(0.0, 150.0)
-            voltage_spin_box.setSingleStep(0.02)
+            voltage_spin_box.setSingleStep(0.01)
             voltage_spin_box.setDecimals(3)
             voltage_spin_box.setValue(initial_voltage)
             voltage_spin_box.setKeyboardTracking(False)
@@ -61,11 +62,11 @@ class Piezo_Client(QtGui.QWidget):
 
     @inlineCallbacks
     def on_chan_toggled(self, chan, state):
-        yield self.server.output_channel(chan, state)
+        yield self.server.set_output_state(chan, state)
 
     @inlineCallbacks
     def on_remote_toggled(self, state):
-        yield self.server.remote_mode(state)
+        yield self.server.set_remote_state(state)
 
     @inlineCallbacks
     def voltage_changed(self, chan, volt):

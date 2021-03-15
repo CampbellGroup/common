@@ -41,7 +41,7 @@ class pulse_sequence(object):
 			required = required.union(additional)
 		required = list(required)
 		return required
-	
+
 	def sequence(self):
 		'''
 		implemented by subclass
