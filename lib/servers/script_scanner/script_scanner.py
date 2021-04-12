@@ -26,6 +26,11 @@ except:
 import scan_methods
 from scheduler import scheduler
 import sys
+import os
+from six.moves import configparser
+import pkgutil
+import StringIO
+import importlib
 
 
 class script_class_parameters(object):
@@ -60,21 +65,53 @@ class ScriptScanner(ScriptSignalsServer):
 
     name = 'ScriptScanner'
 
+    @inlineCallbacks
     def initServer(self):
 
         # Dictionary with experiment.name as keys and
         # script_class_parameters instances are the values.
         self.script_parameters = {}
         # Instance of a complicated object
-        self.scheduler = scheduler(ScriptSignalsServer)
-        self.load_scripts()
+        yield self.load_scripts()
+        self.scheduler = scheduler(ScriptSignalsServer, self.allowed_concurrent)
 
+    @inlineCallbacks
     def load_scripts(self):
         '''
         loads script information from the configuration file
         '''
-        config = sc_config.config
-        for import_path, class_name in config.scripts:
+
+        self.allowed_concurrent = {}
+        scripts = []
+        reg_path = ["", "Servers", self.name]
+        reg = self.client.registry
+        p = reg.packet()
+        try:
+            p.cd(reg_path)
+            p.get("Directories")
+            ans = yield p.send()
+            paths = ans.get
+            if not len(paths):
+                print("No path found in registry")
+                raise Exception()
+        except:
+            print("Cannot load experiment paths from registry. " + 
+                  "Creating the registry path and checking config file now.")
+            p = reg.packet()
+            p.cd(reg_path, True)
+            p.set("Directories", [])
+            yield p.send()
+            config = sc_config.config
+            scripts = config.scripts
+            self.allowed_concurrent = config.allowed_concurrent
+        else:
+            experiments = self._get_all_experiments_from_basepaths(paths)
+            for experiment in experiments:
+                scripts.append((experiment[0], experiment[1]))
+                self.allowed_concurrent[experiment[1]] = experiment[2]
+
+        scripts = list(set(scripts))
+        for import_path, class_name in scripts:
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
@@ -97,6 +134,60 @@ class ScriptScanner(ScriptSignalsServer):
                     print name_not_provided.format(class_name, module)
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
+
+    def _get_all_experiments_from_basepaths(self, paths):
+        modules = []
+        for path in paths:
+            try:
+                imported_module = importlib.import_module(path)
+                self._list_submodules(modules, imported_module)
+            except Exception as e:
+                print("Exception when importing " + path + ". " + e)
+
+        modules = list(set(modules))
+        experiments = []
+        for module in modules:
+            try:
+                imported_module = importlib.import_module(module)
+                docstring = imported_module.__doc__
+                class_name, allow_concurrent = self._get_experiment_info(docstring)
+                if class_name is not None:
+                    experiments.append((module, class_name, allow_concurrent))
+            except Exception as e:
+                pass
+        return experiments
+
+    def _list_submodules(self, list, package_name):
+        for loader, module_name, is_pkg in pkgutil.walk_packages(package_name.__path__,
+                                                                 package_name.__name__ + '.'):
+            try:
+                list.append(module_name)
+                if is_pkg:
+                    module_name = importlib.import_module(module_name)
+                    self._list_submodules(list, module_name)
+            except Exception as e:
+                pass
+                
+    def _get_experiment_info(self, docstring):
+        exp_info_start_str = "### BEGIN EXPERIMENT INFO"
+        exp_info_end_str = "### END EXPERIMENT INFO"
+        start = docstring.find(exp_info_start_str) + len(exp_info_start_str)
+        end = docstring.find(exp_info_end_str)
+        if end > start:
+            buf = StringIO.StringIO(docstring)
+            cp = configparser.ConfigParser()
+            cp.readfp(buf)
+            if eval(cp.get("info", "load_into_scriptscanner")):
+                name = cp.get("info", "name")
+                try:
+                    allow_concurrent = eval(cp.get("info", "allow_concurrent"))
+                except:
+                    allow_concurrent = []
+                return (name, allow_concurrent)
+            else:
+                return (None, None)
+        else:
+            return (None, None)
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
@@ -342,7 +433,7 @@ class ScriptScanner(ScriptSignalsServer):
     def reload_available_scripts(self, c):
         reload(sc_config)
         self.script_parameters = {}
-        self.load_scripts()
+        yield self.load_scripts()
 
     @inlineCallbacks
     def stopServer(self):

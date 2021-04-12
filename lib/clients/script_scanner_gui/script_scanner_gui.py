@@ -357,7 +357,7 @@ class script_scanner_gui(QtGui.QWidget):
         sc = yield self.cxn.get_server('ScriptScanner')
         pv = yield self.cxn.get_server('ParameterVault')
         ident = int(ident)
-        sc.reload_available_scripts()
+        yield sc.reload_available_scripts()
         pv.reload_parameters()
         sc.refresh()
         self.reinitialize_scriptscanner()
