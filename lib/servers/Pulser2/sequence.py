@@ -107,8 +107,8 @@ class Sequence():
                 if start  == lastTime:
                     #still have unprogrammed entries
                     self.addToProgram(dds_program, state)
-                    self._addNewSwitch(lastTime,self.advanceDDS,1)
-                    self._addNewSwitch(lastTime + self.resetstepDuration,self.advanceDDS,-1)
+                    self._addNewSwitch(lastTime, self.advanceDDS, 1)
+                    self._addNewSwitch(lastTime + self.resetstepDuration, self.advanceDDS, -1)
                 #add termination
                 for name in dds_program.iterkeys():
                     dds_program[name] +=  '\x00\x00'
