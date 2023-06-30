@@ -1,13 +1,13 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = Multiplexer Server
+name = multiplexerserver
 version = 1.0
 description =
-instancename = Multiplexer Server
+instancename = multiplexerserver
 
 [startup]
-cmdline = %PYTHON% %FILE%self.wmdll.SetPIDCourseNum
+cmdline = %PYTHON% %FILE%
 timeout = 20
 
 [shutdown]
@@ -29,6 +29,7 @@ OUTPUTCHANGED = 121212
 PIDVOLTAGE = 902484
 CHANNELLOCK = 282388
 AMPCHANGED = 142308
+UPDATEPATTERN = 462916
 
 
 class MultiplexerServer(LabradServer):
@@ -38,7 +39,7 @@ class MultiplexerServer(LabradServer):
     A DLL is required to run this server.  See initServer for the path location
     for the library.
     """
-    name = 'Multiplexerserver'
+    name = 'multiplexerserver'
 
     # Set up signals to be sent to listeners
     channel_text = 'signal: selected channels changed'
@@ -51,7 +52,8 @@ class MultiplexerServer(LabradServer):
     pidvoltagechanged = Signal(PIDVOLTAGE, voltage_text, '(iv)')
     channellock = Signal(CHANNELLOCK, 'signal: channel lock changed', '(wwb)')
     ampchanged = Signal(AMPCHANGED, 'signal: amplitude changed', '(wv)')
-
+    patternchanged = Signal(UPDATEPATTERN, 'signal: pattern changed', '(i*v)')
+    
     def initServer(self):
 
         # load wavemeter dll file for use of API functions self.d and self.l
@@ -70,13 +72,20 @@ class MultiplexerServer(LabradServer):
         self.AmplitudeMin = ctypes.c_long(0)
         self.AmplitudeMax = ctypes.c_long(2)
         self.AmplitudeAvg = ctypes.c_long(4)
-
+                
         self.set_dll_variables()
+        
         self.WavemeterVersion = self.wmdll.GetWLMVersion(ctypes.c_long(1))
+
+        self.pattern1_ptr = None
+        self.set_interferometer_pattern_variables()
+
+        self.listeners = set()
 
         self.measureChan()
 
-        self.listeners = set()
+        
+        
 
     def set_pid_variables(self):
         """
@@ -112,6 +121,7 @@ class MultiplexerServer(LabradServer):
         self.wmdll.GetChannelsCount.restype = ctypes.c_long
         self.wmdll.GetPIDSetting.restype = ctypes.c_long
         self.wmdll.GetWLMVersion.restype = ctypes.c_long
+        self.wmdll.GetPatternDataNum.restype = ctypes.c_long
 
         self.wmdll.SetDeviationMode.restype = ctypes.c_long
         self.wmdll.SetDeviationSignalNum.restype = ctypes.c_double
@@ -123,6 +133,17 @@ class MultiplexerServer(LabradServer):
         self.wmdll.SetPIDSetting.restype = ctypes.c_long
         self.wmdll.SetActiveChannel.restype = ctypes.c_long
 
+    def set_interferometer_pattern_variables(self):
+        self.wmdll.SetPattern(ctypes.c_long(0), ctypes.c_long(1))
+        length0 = self.wmdll.GetPatternItemCount(ctypes.c_long(0))
+        ref0 = (ctypes.c_long * length0)()
+        self.pattern1_ptr = ctypes.cast(ref0, ctypes.POINTER(ctypes.c_ulong))        
+        # use in future if want second interferometer
+        #self.wmdll.SetPattern(ctypes.c_long(1), ctypes.c_long(1))
+        #length1 = self.wmdll.GetPatternItemCount(ctypes.c_long(1))
+        #ref1 = (ctypes.c_long * length1)()
+        #self.pattern2_ptr = ctypes.cast(ref1, ctypes.POINTER(ctypes.c_ulong))
+        
     def initContext(self, c):
         """Initialize a new context object."""
         self.listeners.add(c.ID)
@@ -505,6 +526,19 @@ class MultiplexerServer(LabradServer):
                                        ctypes.pointer(polarity), dummyarg)
 
         returnValue(polarity.value)
+        
+    @setting(37, "get_wavemeter_pattern", chan='i', returns = '*2v')
+    def get_wavemeter_pattern(self, c, chan):
+        """
+        Gets the wavemeter pattern. Broadcast signal with results.
+
+        """
+        yield self.wmdll.GetPatternDataNum(ctypes.c_ulong(chan),\
+                    ctypes.c_long(0), self.pattern1_ptr)
+        # use every other data point
+        IF1 = self.pattern1_ptr[:1024:2]
+        self.patternchanged((chan, IF1))
+        returnValue([IF1])
 
     def measureChan(self):
         # TODO: Improve this with a looping call
@@ -515,6 +549,7 @@ class MultiplexerServer(LabradServer):
                 self.get_frequency(self, chan + 1)
                 self.get_output_voltage(self, chan + 1)
                 self.get_amplitude(self, chan + 1)
+                self.get_wavemeter_pattern(self, chan + 1)
 
 
 if __name__ == "__main__":
