@@ -1,4 +1,4 @@
-'''
+"""
 ### BEGIN NODE INFO
 [info]
 name = ScriptScanner
@@ -14,14 +14,14 @@ timeout = 20
 message = 987654321
 timeout = 20
 ### END NODE INFO
-'''
+"""
 from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
 from script_signals_server import ScriptSignalsServer
 try:
     import config.scriptscanner_config as sc_config
-except:
+except ImportError:
     import common.lib.config.scriptscanner_config as sc_config
 import scan_methods
 from scheduler import scheduler
@@ -29,14 +29,14 @@ import sys
 
 
 class script_class_parameters(object):
-    '''
+    """
     storage class for information about the launchable script
 
     TODO: rename this something meaningful.  Give it proper object syntax.
     ExperimentPackage?  Ah, script_class_parameters describes the three
     attributes of this class.  Maybe change to name or string instead
     of script.
-    '''
+    """
     def __init__(self, name, cls, parameters):
         """
         self.name: str, the experiment name
@@ -70,23 +70,24 @@ class ScriptScanner(ScriptSignalsServer):
         self.load_scripts()
 
     def load_scripts(self):
-        '''
+        """
         loads script information from the configuration file
-        '''
+        """
         config = sc_config.config
         for import_path, class_name in config.scripts:
+            module = None
             try:
                 __import__(import_path)
                 module = sys.modules[import_path]
                 cls = getattr(module, class_name)
             except ImportError as e:
-                print 'Script Control Error importing: ', e
-            except AttributeError:
-                print 'There is no class {0} in module {1}'.format(class_name, module)
+                print('Script Control Error importing: ', e)
+            except AttributeError as e:
+                print('There is no class {0} in module {1}: {2}'.format(class_name, module, e))
             except SyntaxError as e:
-                print 'Incorrect syntax in file {0}'.format(import_path, class_name)
+                print('Incorrect syntax in file {0}'.format(import_path, class_name))
             except Exception as e:
-                print 'There was an error in {0} : {1}'.format(class_name, e)
+                print('There was an error in {0} : {1}'.format(class_name, e))
             else:
                 try:
                     name = cls.name
@@ -94,7 +95,7 @@ class ScriptScanner(ScriptSignalsServer):
                 except AttributeError:
                     name_not_provided = 'Name is not provided for class {0} in'
                     name_not_provided += ' module {1}'
-                    print name_not_provided.format(class_name, module)
+                    print(name_not_provided.format(class_name, module))
                 else:
                     self.script_parameters[name] = script_class_parameters(name, cls, parameters)
 
@@ -108,28 +109,36 @@ class ScriptScanner(ScriptSignalsServer):
             raise Exception("Script {} Not Found".format(script))
         return self.script_parameters[script].parameters
 
+    @setting(7, "get_script_docstring", script='s', returns='s')
+    def get_script_docstring(self, c, script):
+        if script == "":
+            return ""
+        if script not in self.script_parameters.keys():
+            print("Script {} Not Found".format(script))
+        return self.script_parameters[script].cls.__doc__ or ""
+
     @setting(2, "get_running", returns='*(ws)')
     def get_running(self, c):
-        '''
+        """
         Returns the list of currently running scripts and their IDs.
-        '''
+        """
         return self.scheduler.get_running()
 
     @setting(3, "get_scheduled", returns='*(wsv[s])')
     def get_scheduled(self, c):
-        '''
+        """
         Returns the list of currently scheduled scans with their IDs and
-        durtation
-        '''
+        duration
+        """
         scheduled = self.scheduler.get_scheduled()
-        scheduled = [(ident, name, WithUnit(dur,'s') ) for (ident, name, dur) in scheduled]
+        scheduled = [(ident, name, WithUnit(dur, 's')) for (ident, name, dur) in scheduled]
         return scheduled
 
     @setting(4, "get_queue", returns='*(wsw)')
     def get_queue(self, c):
-        '''
+        """
         Returns the current queue of scans in the form ID / Name / order
-        '''
+        """
         return self.scheduler.get_queue()
 
     @setting(5, "remove_queued_script", script_ID='w')
@@ -138,9 +147,9 @@ class ScriptScanner(ScriptSignalsServer):
 
     @setting(6, "get_progress", script_ID='w', returns='sv')
     def get_progress(self, c, script_ID):
-        '''
+        """
         Get progress of a currently running experiment
-        '''
+        """
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
             try_progress = "Trying to get progress of script with ID {0} but"
@@ -150,7 +159,7 @@ class ScriptScanner(ScriptSignalsServer):
 
     @setting(10, 'new_experiment', script_name='s', returns='w')
     def new_experiment(self, c, script_name):
-        '''
+        """
         Queue an experiment for launching.  Returns the scan ID of the queued
         experiment from a scheduler instance.
 
@@ -164,7 +173,7 @@ class ScriptScanner(ScriptSignalsServer):
         Returns
         -------
         scan_id: int
-        '''
+        """
         if script_name not in self.script_parameters.keys():
             raise Exception("Script {} Not Found".format(script_name))
         # Grabs an instance of script_class_parameters that holds
@@ -193,7 +202,7 @@ class ScriptScanner(ScriptSignalsServer):
              minim='v[]', maxim='v[]', steps='w', units='s')
     def new_scan(self, c, scan_script_name, measure_script_name, collection,
                  parameter_name, minim, maxim, steps, units):
-        # need error checking that parmaters are valid
+        # need error checking that parameters are valid
         if scan_script_name not in self.script_parameters.keys():
             raise Exception("Script {} Not Found".format(scan_script_name))
         if measure_script_name not in self.script_parameters.keys():
@@ -216,10 +225,10 @@ class ScriptScanner(ScriptSignalsServer):
              priority='s', start_now='b', returns='w')
     def new_script_schedule(self, c, script_name, duration, priority='Normal',
                             start_now=True):
-        '''
-        Schedule the script to run every spcified duration of seconds.
-        Priority indicates the priority with which the scrpt is scheduled.
-        '''
+        """
+        Schedule the script to run every specified duration of seconds.
+        Priority indicates the priority with which the script is scheduled.
+        """
         if script_name not in self.script_parameters.keys():
             raise Exception("Script {} Not Found".format(script_name))
         if priority not in ['Normal', 'First in Queue', 'Pause All Others']:
@@ -235,17 +244,17 @@ class ScriptScanner(ScriptSignalsServer):
     @setting(14, 'change_scheduled_duration', scheduled_ID='w',
              duration='v[s]')
     def change_scheduled_duration(self, c, scheduled_ID, duration):
-        '''
+        """
         Change duration of the scheduled script executation
-        '''
+        """
         self.scheduler.change_period_scheduled_script(scheduled_ID,
                                                       duration['s'])
 
     @setting(15, 'cancel_scheduled_script', scheduled_ID='w')
     def cancel_scheduled_script(self, c, scheduled_ID):
-        '''
+        """
         Cancel the currently scheduled script
-        '''
+        """
         self.scheduler.cancel_scheduled_script(scheduled_ID)
 
     @setting(20, "pause_script", script_ID='w', should_pause='b')
@@ -268,11 +277,11 @@ class ScriptScanner(ScriptSignalsServer):
 
     @setting(30, "register_external_launch", name='s', returns='w')
     def register_external_launch(self, c, name):
-        '''
+        """
         Issues a running ID to a script that is launched externally and not
         through this server. The external script can then update its status, be
         paused or stopped.
-        '''
+        """
         external_scan = scan_methods.experiment_info(name)
         ident = self.scheduler.add_external_scan(external_scan)
         return ident
@@ -306,7 +315,7 @@ class ScriptScanner(ScriptSignalsServer):
         self.scheduler.remove_if_external(script_ID)
 
     @setting(34, "stop_confirmed", script_ID='w')
-    def stop_confiromed(self, c, script_ID):
+    def stop_confirmed(self, c, script_ID):
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
             try_confirm = "Trying to confirm Stop of script with ID {0} but it"
@@ -316,10 +325,10 @@ class ScriptScanner(ScriptSignalsServer):
 
     @setting(35, "pause_or_stop", script_ID='w', returns='b')
     def pause_or_stop(self, c, script_ID):
-        '''
+        """
         Returns the boolean whether or not the script should be stopped. This
         request blocks while the script is to be paused.
-        '''
+        """
         status = self.scheduler.get_running_status(script_ID)
         if status is None:
             try_confirm = "Trying to confirm Pause/Stop of script with ID {0} "
@@ -346,9 +355,9 @@ class ScriptScanner(ScriptSignalsServer):
 
     @inlineCallbacks
     def stopServer(self):
-        '''
+        """
         stop all the running scripts and exit
-        '''
+        """
         yield None
         try:
             # cancel all scheduled scripts
@@ -356,7 +365,7 @@ class ScriptScanner(ScriptSignalsServer):
                 self.scheduler.cancel_scheduled_script(scheduled)
             for ident, scan, priority in self.scheduler.get_queue():
                 self.scheduler.remove_queued_script(ident)
-            # stop all running scipts
+            # stop all running scripts
             for ident, name in self.scheduler.get_running():
                 self.scheduler.stop_running(ident)
             # wait for all deferred to finish
@@ -366,6 +375,7 @@ class ScriptScanner(ScriptSignalsServer):
             # if dictionary doesn't exist yet (i.e bad identification error),
             # do nothing
             pass
+
 
 if __name__ == "__main__":
     from labrad import util
