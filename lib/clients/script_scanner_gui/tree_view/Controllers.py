@@ -5,8 +5,8 @@ from Models import ParametersTreeModel
 from PropertiesEditor import PropertiesEditor
 import os
 
-basepath = os.path.dirname(__file__)
-path = os.path.join(basepath, "..", "Views", "ParametersEditor.ui")
+base_path = os.path.dirname(__file__)
+path = os.path.join(base_path, "..", "Views", "ParametersEditor.ui")
 base, form = uic.loadUiType(path)
 
 
@@ -26,7 +26,7 @@ class ParametersEditor(base, form):
         self._parameter = {}
 
     def clear_all(self):
-        'clears all parameters'
+        """clears all parameters"""
         self._model.clear_model()
         self._collection = {}
         self._parameter = {}
@@ -90,19 +90,19 @@ class ParametersEditor(base, form):
                                             collection_node)
             self._parameter[collection_name, parameter_name] = node
         else:
-            print 'unknown value type', value_type, collection_name, parameter_name
+            print('unknown value type', value_type, collection_name, parameter_name)
 
     def set_parameter(self, collection, name, full_info):
-        '''set value of a parameter stores in the model'''
+        """set value of a parameter stores in the model"""
         index = self._parameter[collection, name]
         self._model.set_parameter(index, full_info[1])
 
     def show_only(self, show):
-        ''' set all parameters hidden except for the ones provided in show'''
+        """ set all parameters hidden except for the ones provided in show"""
         self._proxyModel.show_only(show)
 
     def show_all(self):
-        '''show all hidden parameters'''
+        """show all hidden parameters"""
         self._proxyModel.show_all()
 
     def get_scannable_parameters(self):

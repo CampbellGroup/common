@@ -122,11 +122,13 @@ class BadParameterError(T.Error):
     def __init__(self, name):
         self.msg = "Parameter '%s' not found." % name
 
+
 class ParameterInUseError(T.Error):
     code = 10
 
     def __init__(self, name):
         self.msg = "Already a parameter called '%s'." % name
+
 
 class AdditionalHeaderInUseError(T.Error):
     code = 11
@@ -460,17 +462,19 @@ class Session(object):
         dataTags = [(d, sorted(self.dataset_tags.get(d, []))) for d in datasets]
         return sessTags, dataTags
 
+
 class Image(object):
     def __init__(self, session, filename):
-        '''
+        """
         session.dir is the dataset number to which this image should be attached
-        '''
+        """
         self.filename = os.path.join(session.dir, filename + '.npy')
 
     def add_data(self, data):
         fi = open(self.filename, 'ab')
         numpy.save(fi, data)
         fi.close()
+
 
 class Dataset:
     def __init__(self, session, name, dtype=None, title=None, num=None,
@@ -725,8 +729,8 @@ class Dataset:
             if p['label'] == name:
                 p['data'] = data
                 done = True
-        if (done == False):
-            d = dict(label = name, data = data)
+        if not done:
+            d = dict(label=name, data=data)
             self.parameters.append(d)
         if saveNow:
             self.save()

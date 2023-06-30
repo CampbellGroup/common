@@ -2,15 +2,15 @@ from treedict import TreeDict
 
 
 class experiment_info(object):
-    '''
-    holds informaton about the experiment
+    """
+    holds information about the experiment
 
     Attributes
     ----------
     name: str
     parameters: TreeDict
     required_parameters: list
-    '''
+    """
     required_parameters = []
     name = ''
 

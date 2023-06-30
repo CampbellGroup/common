@@ -1,5 +1,5 @@
-#Created on Aug 12, 2011
-#@author: Michael Ramm
+# Created on Aug 12, 2011
+# @author: Michael Ramm
 
 """
 ### BEGIN NODE INFO
@@ -18,6 +18,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+from __future__ import print_function
 
 from labrad.server import LabradServer, setting, Signal
 from labrad import types as T
@@ -29,10 +30,9 @@ SIGNALID = 331483
 
 
 class NormalPMTFlow(LabradServer):
-
     name = 'NormalPMTFlow'
     onNewCount = Signal(SIGNALID, 'signal: new count', 'v')
-    onNewSetting = Signal(SIGNALID+1, 'signal: new setting', '(ss)')
+    onNewSetting = Signal(SIGNALID + 1, 'signal: new setting', '(ss)')
 
     @inlineCallbacks
     def initServer(self):
@@ -57,9 +57,9 @@ class NormalPMTFlow(LabradServer):
     @inlineCallbacks
     def setupListeners(self):
         yield self.client.manager.subscribe_to_named_message('Server Connect', 9898989, True)
-        yield self.client.manager.subscribe_to_named_message('Server Disconnect', 9898989+1, True)
+        yield self.client.manager.subscribe_to_named_message('Server Disconnect', 9898989 + 1, True)
         yield self.client.manager.addListener(listener=self.followServerConnect, source=None, ID=9898989)
-        yield self.client.manager.addListener(listener=self.followServerDisconnect, source=None, ID=9898989+1)
+        yield self.client.manager.addListener(listener=self.followServerDisconnect, source=None, ID=9898989 + 1)
 
     @inlineCallbacks
     def followServerConnect(self, cntx, serverName):
@@ -89,14 +89,14 @@ class NormalPMTFlow(LabradServer):
                 self.openDataSet = yield self.makeNewDataSet(self.saveFolder,
                                                              self.dataSetName)
                 self.onNewSetting(('dataset', self.openDataSet))
-            print 'Connected: Data Vault'
+            print('Connected: Data Vault')
         except AttributeError:
             self.dv = None
-            print 'Not Connected: Data Vault'
+            print('Not Connected: Data Vault')
 
     @inlineCallbacks
     def disconnect_data_vault(self):
-        print 'Not Connected: Data Vault'
+        print('Not Connected: Data Vault')
         self.dv = None
         yield None
 
@@ -109,14 +109,14 @@ class NormalPMTFlow(LabradServer):
                 yield self.dorecordData()
                 self.onNewSetting(('state', 'on'))
                 self.recordingInterrupted = False
-            print 'Connected: Pulser'
+            print('Connected: Pulser')
         except AttributeError:
             self.pulser = None
-            print 'Not Connected: Pulser'
+            print('Not Connected: Pulser')
 
     @inlineCallbacks
     def disconnect_pulser(self):
-        print 'Not Connected: Pulser'
+        print('Not Connected: Pulser')
         self.pulser = None
         if self.recording.running:
             yield self.recording.stop()
@@ -148,7 +148,7 @@ class NormalPMTFlow(LabradServer):
             self.grapher.plot(ds, 'pmt', False)
         except AttributeError:
             self.grapher = None
-            print "no grapher"
+            print("no grapher")
         returnValue(name)
 
     @inlineCallbacks
@@ -162,10 +162,11 @@ class NormalPMTFlow(LabradServer):
         yield self.dv.cd(folder, True)
         self.saveFolder = folder
 
-    @setting(1, 'Start New Dataset', setName = 's', returns = 's')
-    def setNewDataSet(self, c, setName = None):
+    @setting(1, 'Start New Dataset', setName='s', returns='s')
+    def setNewDataSet(self, c, setName=None):
         """Starts new dataset, if name not provided, it will be the same"""
-        if setName is not None: self.dataSetName = setName
+        if setName is not None:
+            self.dataSetName = setName
         self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
         otherListeners = self.getOtherListeners(c)
         self.onNewSetting(('dataset', self.openDataSet), otherListeners)
@@ -220,7 +221,7 @@ class NormalPMTFlow(LabradServer):
             yield self._programPulserDiff()
         if self.openDataSet is None:
             self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
-        self.recording.start(self.collection_period['s']/2.0)
+        self.recording.start(self.collection_period['s'] / 2.0)
         returnValue(newSet)
 
     @setting(5, returns='')
@@ -248,7 +249,7 @@ class NormalPMTFlow(LabradServer):
     @setting(7, returns='s')
     def currentDataSet(self, c):
         if self.openDataSet is None:
-                return ''
+            return ''
         return self.openDataSet
 
     @setting(8, 'Set Time Length', timelength='v[s]')
@@ -256,7 +257,7 @@ class NormalPMTFlow(LabradServer):
         """Sets the time length for the current mode"""
         mode = self.currentMode
         if not self.collectTimeRange[0] <= timelength['s'] <= self.collectTimeRange[1]:
-                raise Exception('Incorrect Recording Time')
+            raise Exception('Incorrect Recording Time')
         self.collection_period = timelength
         initrunning = self.recording.running  # if recording when the call is made, need to stop and restart
         if initrunning:
@@ -266,7 +267,7 @@ class NormalPMTFlow(LabradServer):
             if mode == 'Differential':
                 yield self._stopPulserDiff()
                 yield self._programPulserDiff()
-            self.recording.start(timelength['s']/2.0)
+            self.recording.start(timelength['s'] / 2.0)
         otherListeners = self.getOtherListeners(c)
         self.onNewSetting(('timelength', str(timelength['s'])), otherListeners)
 
@@ -317,12 +318,12 @@ class NormalPMTFlow(LabradServer):
         yield self.pulser.add_ttl_pulse('DiffCountTrigger',
                                         self.collection_period,
                                         T.Value(10.0, 'us'))
-        yield self.pulser.add_ttl_pulse('866DP',
-                                        T.Value(0.0, 'us'),
-                                        self.collection_period)
-        yield self.pulser.add_ttl_pulse('Internal866',
-                                        T.Value(0.0, 'us'),
-                                        self.collection_period)
+        # yield self.pulser.add_ttl_pulse('866DP',
+        #                                 T.Value(0.0, 'us'),
+        #                                 self.collection_period)
+        # yield self.pulser.add_ttl_pulse('Internal866',
+        #                                 T.Value(0.0, 'us'),
+        #                                 self.collection_period)
         yield self.pulser.extend_sequence_length(2 * self.collection_period)
         yield self.pulser.program_sequence()
         yield self.pulser.start_infinite()
@@ -333,7 +334,7 @@ class NormalPMTFlow(LabradServer):
         yield self.pulser.wait_sequence_done()
         yield self.pulser.stop_sequence()
 
-    class readingRequest():
+    class readingRequest:
         def __init__(self, d, kind, count):
             self.d = d
             self.count = count
@@ -356,18 +357,19 @@ class NormalPMTFlow(LabradServer):
                     req.data.append(dataPoint[3])
                 if req.is_fulfilled():
                     req.d.callback(req.data)
-                    del(self.requestList[item])
+                    del (self.requestList[item])
 
     @inlineCallbacks
     def _record(self):
         try:
             rawdata = yield self.pulser.get_pmt_counts()
         except:
-            print 'Not Able to Get PMT Counts'
+            print('Not Able to Get PMT Counts')
             rawdata = []
         if len(rawdata) != 0:
             if self.currentMode == 'Normal':
-                toDataVault = [[elem[2] - self.startTime, elem[0], 0, 0] for elem in rawdata]  # converting to format [time, normal count, 0 , 0]
+                toDataVault = [[elem[2] - self.startTime, elem[0], 0, 0] for elem in
+                               rawdata]  # converting to format [time, normal count, 0 , 0]
             elif self.currentMode == 'Differential':
                 toDataVault = self.convertDifferential(rawdata)
             self.processRequests(toDataVault)  # if we have any requests, process them
@@ -375,7 +377,7 @@ class NormalPMTFlow(LabradServer):
             try:
                 yield self.dv.add(toDataVault)
             except:
-                print 'Not Able to Save To Data Vault'
+                print('Not Able to Save To Data Vault')
 
     def processSignals(self, data):
         lastPt = data[-1]
@@ -389,10 +391,12 @@ class NormalPMTFlow(LabradServer):
             self.lastDifferential[t] = float(dataPoint[0])
             diff = self.lastDifferential['ON'] - self.lastDifferential['OFF']
             totalData.append([dataPoint[2] - self.startTime,
-                             self.lastDifferential['ON'],
-                             self.lastDifferential['OFF'], diff])
+                              self.lastDifferential['ON'],
+                              self.lastDifferential['OFF'], diff])
         return totalData
+
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(NormalPMTFlow())

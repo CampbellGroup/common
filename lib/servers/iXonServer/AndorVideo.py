@@ -19,6 +19,7 @@ class AndorVideo(QtGui.QWidget):
         self.live_update_loop = LoopingCall(self.live_update)
         self.connect_layout()
         self.saved_data = None
+        self.buffer = list()
 
         self.save_images_state = False
         self.image_path = config.image_path
@@ -156,7 +157,7 @@ class AndorVideo(QtGui.QWidget):
                 self.save_images.isChecked() : self.save_image_data(state))
 
     def save_image_data(self, state):
-        if state >=1:
+        if state >= 1:
             self.save_images_state = True
         elif state == 0:
             self.save_images_state = False
@@ -225,11 +226,20 @@ class AndorVideo(QtGui.QWidget):
         data = yield self.server.getMostRecentImage(None)
         image_data = np.reshape(data, (self.pixels_y, self.pixels_x))
 
-        self.img_view.setImage(image_data.transpose(), autoRange = False, autoLevels = False, pos = [self.startx, self.starty], scale = [self.binx,self.biny], autoHistogramRange = False)
+        self.buffer.append(image_data.transpose())
+        if len(self.buffer) > 5:
+            self.buffer.pop()
+
+        self.img_view.setImage(self.buffer, #image_data.transpose(),
+                               autoRange = False,
+                               autoLevels = False,
+                               pos = [self.startx, self.starty],
+                               scale = [self.binx,self.biny],
+                               autoHistogramRange = False)
 
         if self.save_images_state == True:
             self.save_image(image_data)
-            
+
     def get_image_header(self):
         header = ""
         shutter_time = self.exposureSpinBox.value()

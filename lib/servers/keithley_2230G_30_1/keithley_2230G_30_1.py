@@ -4,9 +4,11 @@
 name = Keithley 2230G Server
 version = 1.3
 description =
+
 [startup]
 cmdline = %PYTHON% %FILE%
 timeout = 20
+
 [shutdown]
 message = 987654321
 timeout = 5

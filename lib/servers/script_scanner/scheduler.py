@@ -1,3 +1,4 @@
+from future.utils import iteritems, itervalues
 from twisted.internet.threads import deferToThread
 from twisted.internet.defer import Deferred, DeferredList
 
@@ -64,7 +65,7 @@ class priority_queue(object):
 
 
 class running_script(object):
-    '''holds information about a script that is currently running'''
+    """holds information about a script that is currently running"""
     def __init__(self, scan, defer_on_done, status, priority=-1,
                  externally_launched=False):
         self.scan = scan
@@ -91,14 +92,14 @@ class scheduler(object):
         self.scan_ID_counter = 0
 
     def running_deferred_list(self):
-        return [script.defer_on_done for script in self.running.itervalues() if not script.externally_launched]
+        return [script.defer_on_done for script in itervalues(self.running) if not script.externally_launched]
 
     def get_running_external(self):
-        return [ident for (ident, script) in self.running.iteritems() if script.externally_launched]
+        return [ident for (ident, script) in iteritems(self.running) if script.externally_launched]
 
     def get_running(self):
         running = []
-        for ident, script in self.running.iteritems():
+        for ident, script in iteritems(self.running):
             running.append((ident, script.name))
         return running
 
@@ -111,7 +112,7 @@ class scheduler(object):
 
     def get_scheduled(self):
         scheduled = []
-        for ident, (scan_name, loop) in self.scheduled.iteritems():
+        for ident, (scan_name, loop) in iteritems(self.scheduled):
             scheduled.append([ident, scan_name, loop.interval])
         return scheduled
 
@@ -165,7 +166,7 @@ class scheduler(object):
 
     def is_higher_priority_than_running(self, priority):
         try:
-            priorities = [running.priority for running in self.running.itervalues()]
+            priorities = [running.priority for running in itervalues(self.running)]
             priorities.sort()
             highest_running = priorities[0]
             return priority < highest_running
@@ -173,12 +174,12 @@ class scheduler(object):
             return False
 
     def get_non_conflicting(self):
-        '''
+        """
         returns a list of experiments that can run concurrently with currently
         running experiments
-        '''
+        """
         non_conflicting = []
-        for running, script in self.running.iteritems():
+        for running, script in iteritems(self.running):
             cls_name = script.scan.script_cls.name
             non_conf = config.allowed_concurrent.get(cls_name, None)
             if non_conf is not None:
@@ -200,7 +201,7 @@ class scheduler(object):
         return scan_id
 
     def remove_from_running(self, deferred_result, running_id):
-        print 'removing from running now', running_id
+        print('removing from running now: {0} - {1}'.format(running_id, self.running[running_id].name))
         del self.running[running_id]
 
     def remove_if_external(self, running_id):
@@ -208,9 +209,9 @@ class scheduler(object):
             self.remove_from_running(None, running_id)
 
     def new_scheduled_scan(self, scan, period, priority, start_now):
-        '''
+        """
         @var period: in seconds
-        '''
+        """
         lc = LoopingCall(self.add_scan_to_queue, scan, priority)
         new_schedule_id = self.scheduled_ID_counter
         self.scheduled[new_schedule_id] = (scan.name, lc)
@@ -278,7 +279,7 @@ class scheduler(object):
     def pause_running(self, result, scan, current_ident):
         paused_idents = []
         paused_deferred = []
-        for ident, script in self.running.iteritems():
+        for ident, script in iteritems(self.running):
             non_conf = config.allowed_concurrent.get(script.name, [])
             if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
                 # don't pause unless it's a conflicting experiment and it's not

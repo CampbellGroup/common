@@ -10,8 +10,8 @@ class pmtWidget(QtGui.QWidget):
     def __init__(self, reactor, cxn=None):
         super(pmtWidget, self).__init__()
         self.reactor = reactor
-        basepath = os.path.dirname(__file__)
-        path = os.path.join(basepath, "pmtfrontend.ui")
+        base_path = os.path.dirname(__file__)
+        path = os.path.join(base_path, "pmtfrontend.ui")
         uic.loadUi(path, self)
         self.cxn = cxn
         self.connect()
@@ -96,8 +96,8 @@ class pmtWidget(QtGui.QWidget):
     def on_toggled(self, state):
         if state:
             yield self.server.record_data()
-            newset = yield self.server.currentdataset()
-            self.lineEdit.setText(newset)
+            new_set = yield self.server.currentdataset()
+            self.lineEdit.setText(new_set)
         else:
             yield self.server.stoprecording()
             self.lcdNumber.display('OFF')
@@ -105,8 +105,8 @@ class pmtWidget(QtGui.QWidget):
 
     @inlineCallbacks
     def onNewSet(self, x):
-        newset = yield self.server.start_new_dataset()
-        self.lineEdit.setText(newset)
+        new_set = yield self.server.start_new_dataset()
+        self.lineEdit.setText(new_set)
 
     @inlineCallbacks
     def onNewMode(self, mode):
@@ -130,6 +130,7 @@ class pmtWidget(QtGui.QWidget):
 
     def closeEvent(self, x):
         self.reactor.stop()
+
 
 if __name__ == "__main__":
     a = QtGui.QApplication([])

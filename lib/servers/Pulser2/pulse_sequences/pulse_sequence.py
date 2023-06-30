@@ -3,21 +3,21 @@ from labrad.units import WithUnit
 from treedict import TreeDict
 
 class pulse_sequence(object):
-	
-	'''
+
+	"""
 	Base class for all Pulse Sequences
 	Version 1.1
-	'''
+	"""
 	required_parameters = []
 	required_subsequences = []
 	replaced_parameters = {}
 	
 	def __init__(self, parameter_dict, start = WithUnit(1.0, 'us')):
-		'''
+		"""
 		The VHDL hardware will not accept a t = 0.0 initial start time.
 		The 1.0 microsecond is added for this reason and only affects the sequence with an initial 1 microsecond
 		offset
-		'''
+		"""
 		if not type(parameter_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
 		self.start = start
 		self.end = start
@@ -29,10 +29,9 @@ class pulse_sequence(object):
 	
 	@classmethod
 	def all_required_parameters(cls):
-
-		'''
+		"""
 		returns a list of all required variables for the current sequence and all used subsequences
-		'''
+		"""
 		required = set(cls.required_parameters)
 		for subsequence in cls.required_subsequences:
 			replaced = set(cls.replaced_parameters.get(subsequence, []))
@@ -41,11 +40,11 @@ class pulse_sequence(object):
 			required = required.union(additional)
 		required = list(required)
 		return required
-	
+
 	def sequence(self):
-		'''
+		"""
 		implemented by subclass
-		'''
+		"""
 	
 	def fill_parameters(self, params, replace):
 		if not len(params) == len(set(params)):
@@ -81,7 +80,7 @@ class pulse_sequence(object):
 		self._ttl_pulses.append((channel, start, duration))
 	
 	def addSequence(self, sequence, replacement_dict = TreeDict(), position = None):
-		'''insert a subsequence, position is either time or None to insert at the end'''
+		"""insert a subsequence, position is either time or None to insert at the end"""
 		if sequence not in self.required_subsequences: raise Exception ("Adding subsequence {0} that is not listed in the required subequences".format(sequence.__class__.__name__))
 		if not type(replacement_dict) == TreeDict: raise Exception ("replacement_dict must be a TreeDict")
 		for replacement_key in replacement_dict.keys():

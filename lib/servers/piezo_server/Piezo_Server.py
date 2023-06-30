@@ -12,24 +12,24 @@ timeout = 20
 
 [shutdown]
 message = 987654321
-timeout = 20
+timeout = 5
 ### END NODE INFO
 """
 
 from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
-from labrad.server import setting, Signal
+from labrad.server import setting
 from twisted.internet.defer import inlineCallbacks, returnValue
-from labrad.units import V
 
-TIMEOUT = Value(1.0, 's')
+TIMEOUT = Value(5.0, 's')
+
 
 class PiezoDevice(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a Piezo device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -73,17 +73,16 @@ class PiezoDevice(DeviceWrapper):
 
 class Piezo_Server(DeviceServer):
     name = 'Piezo_Server'
-    deviceName = 'Piezo_Server'
     deviceWrapper = PiezoDevice
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        self.current_state = {}
+        print('loading config info...')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        yield self.reg.cd(['', 'settings'], True)
+        print(self.serialLinks)
         yield DeviceServer.initServer(self)
-        self.listeners = set()
 
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -96,6 +95,17 @@ class Piezo_Server(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
+
+        # Get output state and last value of current set
+        yield reg.cd(['', 'Servers', 'UCLAPiezo', 'parameters'], True)
+        dirs, keys = yield reg.dir()
+        p = reg.packet()
+        for k in keys:
+            p.get(k, key=k)
+        ans = yield p.send()
+        self.params = dict((k, ans[k]) for k in keys)
+        for key in self.params:
+            self.current_state[key] = list(self.params[key])
 
     @inlineCallbacks
     def findDevices(self):
@@ -112,71 +122,59 @@ class Piezo_Server(DeviceServer):
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    def initContext(self, c):
-        self.listeners.add(c.ID)
+    @setting(100, channel='i', value='v[V]')
+    def set_voltage(self, c, channel, value):
+        """
+        Sets the value of the voltage.
+        """
+        self.voltage = value
+        dev = self.selectDevice(c)
+        self.current_state[str(channel)][0] = value['V']
+        self.update_registry(channel)
+        yield dev.write('vout.w ' + str(channel) + ' ' + str((value['V'])) + '\r\n')
+        yield dev.read()
 
-    def expireContext(self, c):
-        self.listeners.remove(c.ID)
+    @setting(101, channel='i', value='b')
+    def set_output_state(self, c, channel, value):
+        """
+        Turn a channel on or off
+        """
+        self.output = value
+        dev = self.selectDevice(c)
+        yield dev.write('out.w ' + str(channel) + ' ' + str(int(value)) + '\r\n')
+        yield dev.read()
+        self.current_state[str(channel)][1] = int(value)
+        self.update_registry(channel)
 
-    def getOtherListeners(self, c):
-        notified = self.listeners.copy()
-        notified.remove(c.ID)
-        return notified
+    @setting(102, value='b')
+    def set_remote_state(self, c, value):
+        """
+        Turn the remote mode on
+        """
 
-    @setting(100, 'device_info')
-    def device_info(self, c):
         dev = self.selectDevice(c)
-        output = 'id?'
-        yield dev.write(output)
-        device_type = yield dev.read()
-        device_id = yield dev.read()
-        hardware_id = yield dev.read()
-        firmware = yield dev.read()
-        returnValue([device_type, device_id, hardware_id, firmware])
-        
-    @setting(101, 'output_channel', chan = 'i', state = 'i')
-    def output_channel(self, c, chan, state=2):
-        dev = self.selectDevice(c)
-        if state != 2:
-            output = 'out.w ' + str(chan) + ' ' + str(state)
-            yield dev.write(output)
-            yield dev.read() #clear output from the change
-            current_setting = str(state)
-        else:
-            output = 'out.r ' + str(chan)
-            yield dev.write(output)
-            current_setting = yield dev.read()
-        out = [str(chan), current_setting]
-        returnValue(out)
-        
-    @setting(102, 'set_voltage', chan = 'i', voltage = 'v[V]')
-    def set_voltage(self, c, chan, voltage = -1.):
-        dev = self.selectDevice(c)
-        if voltage < 0:
-            output = 'vout.r ' + str(chan)
-            yield dev.write(output)
-            current_volt = yield dev.read()
-        elif 0*V <= voltage <= 150*V:
-            output = 'vout.w ' + str(chan) + ' ' + str(voltage['V'])
-            yield dev.write(output)
-            yield dev.read() #clear output from the change
-            current_volt = str(voltage['V'])
-        out = [str(chan), current_volt]
-        returnValue(out)
-    
-    @setting(103, 'remote_mode', state = 'i')
-    def remote_mode(self, c, state=2):
-        dev = self.selectDevice(c)
-        if state != 2:
-            output = 'remote.w ' + str(state)
-            yield dev.write(output)
-            current_mode = str(state)
-        else:
-            output = 'remote.r'
-            yield dev.write(output)
-            current_mode = yield dev.read()        
+        yield dev.write('remote.w ' + str(int(value)) + '\r\n')
+        current_mode = yield dev.read()
         returnValue(current_mode)
-    
+
+    @setting(200, channel='i', returns='b')
+    def get_output_state(self, c, channel):
+        """
+        Get the output state of the specified channel. State is unknown when
+        server is first started or restarted.
+        """
+
+        return bool(self.current_state[str(channel)][1])
+
+    @setting(201, channel='i', returns='v')
+    def get_voltage(self, c, channel):
+        return self.current_state[str(channel)][0]
+
+    @inlineCallbacks
+    def update_registry(self, chan):
+        yield self.reg.set(str(chan), tuple(self.current_state[str(chan)]))
+
+
 if __name__ == "__main__":
     from labrad import util
     util.runServer(Piezo_Server())

@@ -1,10 +1,10 @@
 """
 ### BEGIN NODE INFO
 [info]
-name = UCLA_piezo
+name = TPI1001B
 version = 1.0
-description =
-instancename = UCLA_piezo
+description = RF Consultants Signal Generator
+instancename = TPI1001B
 
 [startup]
 cmdline = %PYTHON% %FILE%
@@ -12,7 +12,7 @@ timeout = 20
 
 [shutdown]
 message = 987654321
-timeout = 20
+timeout = 5
 ### END NODE INFO
 """
 
@@ -21,21 +21,20 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(1.0, 's')
+TIMEOUT = Value(5.0, 's')
 
-
-class UCLAPiezo_device(DeviceWrapper):
+class TPI1001BDevice(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
-        """Connect to a piezo device."""
-        print('connecting to "%s" on port "%s"...' % (server.name, port))
+        """Connect to a Piezo device."""
+        print 'connecting to "%s" on port "%s"...' % (server.name, port),
         self.server = server
         self.ctx = server.context()
         self.port = port
         p = self.packet()
         p.open(port)
-        p.baudrate(38400)
+        p.baudrate(3000000)
         p.read()  # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
@@ -50,10 +49,8 @@ class UCLAPiezo_device(DeviceWrapper):
 
     @inlineCallbacks
     def write(self, code):
-        """Write a data value"""
-        p = self.packet()
-        p.write_line(code)
-        yield p.send()
+        """Write a data value."""
+        yield self.packet().write_line(code).send()
 
     @inlineCallbacks
     def read(self):
@@ -73,37 +70,30 @@ class UCLAPiezo_device(DeviceWrapper):
         returnValue(ans.read_line)
 
 
-class UCLAPiezo(DeviceServer):
-    name = 'UCLAPiezo'
-    deviceName = 'UCLAPiezo'
-    deviceWrapper = UCLAPiezo_device
-
-    """
-    UCLA piezo controller box (4 channel controller designed by Peter Yu and Christian Schneider)
-    registry should contain a folder called 'settings' with 4 channel key value pairs ex.
-    ucla_piezo_chan_4 (1.4V, false, 'name')
-    
-    """
+class TPI1001B(DeviceServer):
+    name = 'TPI1001B'
+    deviceWrapper = TPI1001BDevice
 
     @inlineCallbacks
     def initServer(self):
-        print('loading config info...')
+        print 'loading config info...',
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        yield self.reg.cd(['', 'settings'], True)
+        print self.serialLinks
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'UCLAPiezo', 'Links'], True)
+        yield reg.cd(['', 'Servers', 'TPI1001B', 'Links'], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
+
 
     @inlineCallbacks
     def findDevices(self):
@@ -120,41 +110,11 @@ class UCLAPiezo(DeviceServer):
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    @setting(100, 'get_device_info')
-    def get_device_info(self, c):
+    @setting(100, 'user_control')
+    def user_control(self, c):
         dev = self.selectDevice(c)
-        output = 'id?'
-        yield dev.write(output)
-        device_type = yield dev.read()
-        device_id = yield dev.read()
-        hardware_id = yield dev.read()
-        firmware = yield dev.read()
-        returnValue([device_type, device_id, hardware_id, firmware])
-
-    @setting(101, 'set_voltage', chan='i', voltage='v[V]')
-    def set_voltage(self, c, chan, voltage):
-        dev = self.selectDevice(c)
-        output = 'vout.w ' + str(chan) + ' ' + str(voltage['V'])
-        yield dev.write(output)
-        setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
-        state = setting[1]
-        name = setting[2]
-        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
-
-    @setting(102, 'piezo_output', chan='i', state='b')
-    def piezo_output(self, c, chan, state):
-        dev = self.selectDevice(c)
-        if state:
-            output = 'out.w ' + str(chan) + ' 1'
-        else:
-            output = 'out.w ' + str(chan) + ' 0'
-        yield dev.write(output)
-        setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
-        voltage = setting[0]
-        name = setting[2]
-        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
-
+        yield dev.write()
 
 if __name__ == "__main__":
     from labrad import util
-    util.runServer(UCLAPiezo())
+    util.runServer(TPI1001B())

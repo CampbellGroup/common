@@ -8,7 +8,7 @@ except:
     from common.lib.config.switch_client_config import switch_config
 
 
-class switchclient(QtGui.QWidget):
+class switchclient(QtGui.QFrame):
     SIGNALID = 219749
 
     def __init__(self, reactor, cxn=None):
@@ -19,6 +19,7 @@ class switchclient(QtGui.QWidget):
         """
         super(switchclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
         self.reactor = reactor
         self.cxn = cxn
         self.d = {}
@@ -44,7 +45,9 @@ class switchclient(QtGui.QWidget):
         try:
             yield self.reg.cd(['', 'settings'])
             self.settings = yield self.reg.dir()
+            #print(self.settings)
             self.settings = self.settings[1]
+            #print(self.settings)
         except:
             self.settings = []
 

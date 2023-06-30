@@ -36,7 +36,7 @@ class evPumpDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a evPump device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port),)
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -99,7 +99,7 @@ class eVPump(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...',)
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -263,6 +263,7 @@ class eVPump(DeviceServer):
         self.powerchanged(self.power)
         self.temperaturechanged(self.temperature)
         self.statuschanged(self.status)
+
 
 __server__ = eVPump()
 

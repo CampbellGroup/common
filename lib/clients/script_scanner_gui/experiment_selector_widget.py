@@ -113,8 +113,8 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         self.updateResolutionSteps()
 
     def updateResolutionSteps(self):
-        '''calculate and update the resolution or the steps depending
-           on which is locked'''
+        """calculate and update the resolution or the steps depending
+           on which is locked"""
         if self.uiLockSteps.isChecked():
             self.onNewSteps()
         else:
@@ -132,7 +132,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         self.updateActualResolution(res)
 
     def onNewResolution(self):
-        '''called when resolution is updated'''
+        """called when resolution is updated"""
         res = self.uiSetResolution.value()
         start = self.uiStart.value()
         stop = self.uiStop.value()
@@ -142,7 +142,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         self.updateActualResolution(final_res)
 
     def _resolution_from_steps(self, start, stop, steps):
-        '''computes the resolution given the number of steps'''
+        """computes the resolution given the number of steps"""
         if steps > 1:
             res = linspace(start, stop, steps, endpoint=True, retstep=True)[1]
         else:
@@ -150,7 +150,7 @@ class scan_dialog(QtGui.QDialog, dialog_ui):
         return res
 
     def _steps_from_resolution(self, start, stop, res):
-        '''computes the number of steps given the resolution'''
+        """computes the number of steps given the resolution"""
         try:
             steps = int(round((stop - start) / res))
         except ZeroDivisionError:
@@ -267,13 +267,13 @@ class experiment_selector_widget(QtGui.QWidget):
         self.schedule_button = QtGui.QPushButton("Schedule")
         self.refresh_button = QtGui.QPushButton()
         self.refresh_button.setIcon(QtGui.QIcon.fromTheme('view-refresh'))
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addWidget(self.dropdown, 0, 1, 1, 3)
-        layout.addWidget(self.refresh_button, 0, 4, 1, 1)
-        layout.addWidget(self.run_button, 1, 1, 1, 1)
-        layout.addWidget(self.repeat_button, 1, 2, 1, 1)
-        layout.addWidget(self.scan_button, 1, 3, 1, 1,)
-        layout.addWidget(self.schedule_button, 1, 4, 1, 1)
+        layout.addWidget(label,                 0, 0, 1, 1)
+        layout.addWidget(self.dropdown,         0, 1, 1, 3)
+        layout.addWidget(self.refresh_button,   0, 4, 1, 1)
+        layout.addWidget(self.run_button,       1, 1, 1, 1)
+        layout.addWidget(self.repeat_button,    1, 2, 1, 1)
+        layout.addWidget(self.scan_button,      1, 3, 1, 1,)
+        layout.addWidget(self.schedule_button,  1, 4, 1, 1)
         self.setLayout(layout)
         self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
                            QtGui.QSizePolicy.Fixed)
