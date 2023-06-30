@@ -2,7 +2,7 @@ from twisted.internet.defer import inlineCallbacks, DeferredLock, Deferred
 
 
 class script_semaphore(object):
-    '''class for storing information about runtime behavior script'''
+    """class for storing information about runtime behavior script"""
     def __init__(self, ident, signals):
         self.pause_lock = DeferredLock()
         self.pause_requests = []
@@ -15,7 +15,7 @@ class script_semaphore(object):
         self.signals = signals
 
     def get_progress(self):
-        return (self.status, self.percentage_complete)
+        return self.status, self.percentage_complete
 
     def set_percentage(self, perc):
         if not 0.0 <= perc <= 100.0:
@@ -31,9 +31,9 @@ class script_semaphore(object):
 
     @inlineCallbacks
     def pause(self):
-        '''
+        """
         gets called by the script to pause.
-        '''
+        """
         if self.pause_lock.locked:
             self.status = 'Paused'
             self.signals.on_running_new_status((self.ident, self.status,
@@ -72,7 +72,7 @@ class script_semaphore(object):
         actually paused'''
         if should_pause:
             request = Deferred()
-            print 'made request', request
+            print('made request', request)
             self.pause_requests.append(request)
             if not self.pause_lock.locked:
                 # if not already paused
@@ -83,7 +83,7 @@ class script_semaphore(object):
                                                     self.percentage_complete))
 
             else:
-                print 'not acquiring because locked'
+                print('not acquiring because locked')
         else:
             if not self.pause_lock.locked:
                 raise Exception("Trying to unpause script that was not paused")

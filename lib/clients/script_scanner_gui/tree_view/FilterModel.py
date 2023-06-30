@@ -1,12 +1,13 @@
 from PyQt4 import QtCore, QtGui
 
+
 class FilterModel(QtGui.QSortFilterProxyModel):
     def __init__(self, parent):
         super(FilterModel, self).__init__(parent)
-        #filtering
+        # filtering
         self.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
-        self.setFilterKeyColumn(-1) #look at all columns while filtering
-        #sorting
+        self.setFilterKeyColumn(-1)  # look at all columns while filtering
+        # sorting
         self.setDynamicSortFilter(True)
         self.setSortCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self._show_only = []
@@ -19,9 +20,11 @@ class FilterModel(QtGui.QSortFilterProxyModel):
         return contains_filter and in_show_only
     
     def _is_in_show_only(self, filter_text):
-        if not len(self._show_only): return True
-        for collection,parameter in self._show_only:
-            if filter_text.contains(collection+parameter): return True
+        if not len(self._show_only):
+            return True
+        for collection, parameter in self._show_only:
+            if filter_text.contains(collection+parameter):
+                return True
         return False
     
     def filterAcceptsColumn(self, column, index):

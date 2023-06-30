@@ -1,8 +1,8 @@
-'''
+"""
 Created on Mar 25, 2016
 
 @author: Anthony Ransford
-'''
+"""
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
 from PyQt4 import QtGui, QtCore
@@ -14,13 +14,13 @@ SIGNALID3 = 123462
 SIGNALID4 = 649731
 
 
-class eVPumpClient(QtGui.QWidget):
+class eVPumpClient(QtGui.QFrame):
 
     def __init__(self, reactor, cxn=None):
         super(eVPumpClient, self).__init__()
         self._max_current = 24.0  # maximum laser diode current in Amps
         self._max_power = 15.2  # maximum laser output power in Watts
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.cxn = cxn
         self.reactor = reactor
         from labrad.units import WithUnit as U
@@ -29,8 +29,8 @@ class eVPumpClient(QtGui.QWidget):
 
     @inlineCallbacks
     def connect(self):
-        """Creates an Asynchronous connection to pumpserver and
-        connects incoming signals to relavent functions
+        """Creates an Asynchronous connection to pump server and
+        connects incoming signals to relevant functions
         """
         if self.cxn is None:
             self.cxn = connection(name='eV Pump Client')
@@ -60,87 +60,88 @@ class eVPumpClient(QtGui.QWidget):
         font.setBold(True)
         font.setPointSize(18)
 
-        self.title = QtGui.QLabel('Millenia eV Pump Laser')
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.title = QtGui.QLabel('Millennia eV Pump Laser')
         self.title.setFont(font)
         self.title.setAlignment(QtCore.Qt.AlignCenter)
 
-        self.templabel = QtGui.QLabel('Diode Temp degC')
-        self.currentlabel = QtGui.QLabel('Current')
-        self.powerlabel = QtGui.QLabel('Power')
-        self.powercontrollabel = QtGui.QLabel('Power Control')
-        self.statuslabel = QtGui.QLabel('Laser Status: ')
-        self.currentcontrollabel = QtGui.QLabel('Current Control (A)')
-        self.controlmodelabel = QtGui.QLabel('Control Mode')
+        self.temp_label = QtGui.QLabel('Diode Temp degC')
+        self.current_label = QtGui.QLabel('Current')
+        self.power_label = QtGui.QLabel('Power')
+        self.power_control_label = QtGui.QLabel('Power Control')
+        self.status_label = QtGui.QLabel('Laser Status: ')
+        self.current_control_label = QtGui.QLabel('Current Control (A)')
+        self.control_mode_label = QtGui.QLabel('Control Mode')
 
-        self.controlcombo = QtGui.QComboBox()
-        self.controlcombo.addItems(['Power Control', 'Current Control'])
+        self.control_combo = QtGui.QComboBox()
+        self.control_combo.addItems(['Power Control', 'Current Control'])
 
-        self.powerspinbox = QtGui.QDoubleSpinBox()
-        self.powerspinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
-        self.powerspinbox.setDecimals(2)
-        self.powerspinbox.setSingleStep(0.01)
-        self.powerspinbox.setRange(0.0, 15.1)
-        self.powerspinbox.valueChanged.connect(self.change_power)
-        self.powerspinbox.setKeyboardTracking(False)
+        self.power_spinbox = QtGui.QDoubleSpinBox()
+        self.power_spinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
+        self.power_spinbox.setDecimals(2)
+        self.power_spinbox.setSingleStep(0.01)
+        self.power_spinbox.setRange(0.0, 15.1)
+        self.power_spinbox.valueChanged.connect(self.change_power)
+        self.power_spinbox.setKeyboardTracking(False)
 
-        self.currentspinbox = QtGui.QDoubleSpinBox()
-        self.currentspinbox.setFont(QtGui.QFont('MS Shell Dlg 2',
-                                                pointSize=16))
-        self.currentspinbox.setDecimals(3)
-        self.currentspinbox.setSingleStep(0.001)
-        self.currentspinbox.setRange(0.0, 8.1)
-        self.currentspinbox.valueChanged.connect(self.change_current)
-        self.currentspinbox.setKeyboardTracking(False)
+        self.current_spinbox = QtGui.QDoubleSpinBox()
+        self.current_spinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
+        self.current_spinbox.setDecimals(3)
+        self.current_spinbox.setSingleStep(0.001)
+        self.current_spinbox.setRange(0.0, 8.1)
+        self.current_spinbox.valueChanged.connect(self.change_current)
+        self.current_spinbox.setKeyboardTracking(False)
 
-        self.tempdisplay = QtGui.QLCDNumber()
-        self.tempdisplay.setDigitCount(5)
+        self.temp_display = QtGui.QLCDNumber()
+        self.temp_display.setDigitCount(5)
 
-        self.currentprogbar = QtGui.QProgressBar()
-        self.currentprogbar.setOrientation(QtCore.Qt.Vertical)
+        self.current_progress_bar = QtGui.QProgressBar()
+        self.current_progress_bar.setOrientation(QtCore.Qt.Vertical)
 
-        self.laserswitch = QCustomSwitchChannel('Laser', ('On', 'Off'))
-        self.shutterswitch = QCustomSwitchChannel('Shutter',
-                                                  ('Open', 'Closed'))
+        self.laser_switch = QCustomSwitchChannel('Laser', ('On', 'Off'))
+        self.laser_switch.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.shutter_switch = QCustomSwitchChannel('Shutter', ('Open', 'Closed'))
+        self.shutter_switch.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
 
-        self.powerprogbar = QtGui.QProgressBar()
-        self.powerprogbar.setOrientation(QtCore.Qt.Vertical)
-        self.powerprogbar.setMaximum(100)
-        self.powerprogbar.setMinimum(0)
 
-        layout.addWidget(self.title,               0, 0, 1, 3)
-        layout.addWidget(self.currentprogbar,      2, 0, 8, 1)
-        layout.addWidget(self.powerprogbar,        2, 1, 8, 1)
-        layout.addWidget(self.currentlabel,        1, 0, 1, 1)
-        layout.addWidget(self.powerlabel,          1, 1, 1, 1)
-        layout.addWidget(self.templabel,          10, 0, 1, 2)
-        layout.addWidget(self.statuslabel,        11, 0, 1, 1)
-        layout.addWidget(self.tempdisplay,         9, 2, 4, 1)
-        layout.addWidget(self.laserswitch,         6, 2)
-        layout.addWidget(self.shutterswitch,       7, 2)
-        layout.addWidget(self.powercontrollabel,   2, 2)
-        layout.addWidget(self.currentcontrollabel, 4, 2)
-        layout.addWidget(self.powerspinbox,        3, 2)
-        layout.addWidget(self.currentspinbox,      5, 2)
-        layout.addWidget(self.controlcombo,        1, 2)
+        self.power_progress_bar = QtGui.QProgressBar()
+        self.power_progress_bar.setOrientation(QtCore.Qt.Vertical)
+        self.power_progress_bar.setMaximum(100)
+        self.power_progress_bar.setMinimum(0)
 
-        self.laserswitch.TTLswitch.toggled.connect(self.on_laser_toggled)
-        self.shutterswitch.TTLswitch.toggled.connect(self.on_shutter_toggled)
-        self.controlcombo.activated[str].connect(self.change_control)
+        layout.addWidget(self.title,                0, 0, 1, 3)
+        layout.addWidget(self.current_progress_bar, 2, 0, 8, 1)
+        layout.addWidget(self.power_progress_bar,   2, 1, 8, 1)
+        layout.addWidget(self.current_label,        1, 0, 1, 1)
+        layout.addWidget(self.power_label,          1, 1, 1, 1)
+        layout.addWidget(self.temp_label,           10, 0, 1, 2)
+        layout.addWidget(self.status_label,         11, 0, 1, 1)
+        layout.addWidget(self.temp_display,         9, 2, 4, 1)
+        layout.addWidget(self.laser_switch,         6, 2)
+        layout.addWidget(self.shutter_switch,       7, 2)
+        layout.addWidget(self.power_control_label,  2, 2)
+        layout.addWidget(self.current_control_label, 4, 2)
+        layout.addWidget(self.power_spinbox,        3, 2)
+        layout.addWidget(self.current_spinbox,      5, 2)
+        layout.addWidget(self.control_combo,        1, 2)
+
+        self.laser_switch.TTLswitch.toggled.connect(self.on_laser_toggled)
+        self.shutter_switch.TTLswitch.toggled.connect(self.on_shutter_toggled)
+        self.control_combo.activated[str].connect(self.change_control)
         self.freeze_mode()
+
         # This initializations need to be at the end so that the widgets
         # connected to active signals are created quickly (indicators)
-        initpower = yield self.server.get_power_setpoint()
-        self.powerspinbox.setValue(initpower['W'])
+        init_power = yield self.server.get_power_setpoint()
+        self.power_spinbox.setValue(init_power['W'])
 
-        initcurrent = yield self.server.get_current_setpoint()
-        self.currentspinbox.setValue(initcurrent['A'])
+        init_current = yield self.server.get_current_setpoint()
+        self.current_spinbox.setValue(init_current['A'])
 
         initOn = yield self.server.diode_status()
-        self.laserswitch.TTLswitch.setChecked(initOn)
+        self.laser_switch.TTLswitch.setChecked(initOn)
 
         initShutter = yield self.server.get_shutter_status()
-        self.shutterswitch.TTLswitch.setChecked(initShutter)
+        self.shutter_switch.TTLswitch.setChecked(initShutter)
 
         self.setLayout(layout)
 
@@ -163,11 +164,11 @@ class eVPumpClient(QtGui.QWidget):
     @inlineCallbacks
     def change_control(self, mode):
 
-        diodestatus = yield self.server.diode_status()
-        if diodestatus is True:
+        diode_status = yield self.server.diode_status()
+        if diode_status is True:
             yield self.freeze_mode()
 
-        elif diodestatus is False:
+        elif diode_status is False:
             if mode == 'Current Control':
                 yield self.server.set_control_mode('current')
                 yield self.freeze_mode()
@@ -180,30 +181,30 @@ class eVPumpClient(QtGui.QWidget):
     @inlineCallbacks
     def freeze_mode(self):
 
-        lastmode = yield self.server.get_control_mode()
-        if lastmode == 'current':
-            self.controlcombo.setCurrentIndex(1)
-            self.powerspinbox.setEnabled(False)
-            self.currentspinbox.setEnabled(True)
-        elif lastmode == 'power':
-            self.controlcombo.setCurrentIndex(0)
-            self.powerspinbox.setEnabled(True)
-            self.currentspinbox.setEnabled(False)
+        last_mode = yield self.server.get_control_mode()
+        if last_mode == 'current':
+            self.control_combo.setCurrentIndex(1)
+            self.power_spinbox.setEnabled(False)
+            self.current_spinbox.setEnabled(True)
+        elif last_mode == 'power':
+            self.control_combo.setCurrentIndex(0)
+            self.power_spinbox.setEnabled(True)
+            self.current_spinbox.setEnabled(False)
         else:
-            self.controlcombo.setCurrentIndex(-1)
+            self.control_combo.setCurrentIndex(-1)
 
     def update_current(self, c, current):
         current_percentage = 100.*current['A']/self._max_current
-        self.currentprogbar.setValue(current_percentage)
-        self.currentprogbar.setFormat(str(current['A']) + 'A')
+        self.current_progress_bar.setValue(current_percentage)
+        self.current_progress_bar.setFormat(str(current['A']) + 'A')
 
     def update_power(self, c, power):
         power_percentage = 100.*power['W']/self._max_power
-        self.powerprogbar.setValue(power_percentage)
-        self.powerprogbar.setFormat(str(power['W']) + 'W')
+        self.power_progress_bar.setValue(power_percentage)
+        self.power_progress_bar.setFormat(str(power['W']) + 'W')
 
     def update_temperature(self, c, temperature):
-        self.tempdisplay.display(str(temperature['degC']))
+        self.temp_display.display(str(temperature['degC']))
 
     def update_system_status(self, c, sys_status):
         css_text = "<span style>Laser Status: <br/></span>"
@@ -211,7 +212,7 @@ class eVPumpClient(QtGui.QWidget):
             css_text += "<span style='color:#00ff00;'>%s</span>" % sys_status
         else:
             css_text += "<span style='color:#ff0000;'>%s</span>" % sys_status
-        self.statuslabel.setText(css_text)
+        self.status_label.setText(css_text)
 
     def closeEvent(self, x):
         self.reactor.stop()

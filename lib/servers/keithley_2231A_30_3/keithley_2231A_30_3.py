@@ -8,11 +8,11 @@ instancename = Keithley_Sever
 
 [startup]
 cmdline = %PYTHON% %FILE%
-timeout = 20
+timeout = 5
 
 [shutdown]
-message = 987654321
-timeout = 20
+message = 987654323
+timeout = 5
 ### END NODE INFO
 """
 
@@ -20,7 +20,6 @@ from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
 import labrad.units as _units
-from labrad.units import V, A
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 TIMEOUT = Value(10.0, 's')
@@ -31,7 +30,7 @@ class KeithleyWrapper(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a Keithley 2231A device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -67,7 +66,7 @@ class KeithleyWrapper(DeviceWrapper):
     def query(self, code):
         """ Write, then read. """
         p = self.packet()
-        p.write_line(code)
+        yield p.write_line(code)
         p.read_line()
         ans = yield p.send()
         returnValue(ans.read_line)
@@ -192,7 +191,7 @@ class KeithleyWrapper(DeviceWrapper):
     @inlineCallbacks
     def applied_voltage_current(self, channel):
         """
-        Gets the channel's applied voltage and curent.
+        Gets the channel's applied voltage and current.
         Not a measurement, output is the voltage and current that
         is set by the user either at the box on via the client
         """
@@ -238,13 +237,14 @@ class KeithleyWrapper(DeviceWrapper):
         """
         Parameters
         ----------
-        channel: int, channel to select
+        :returns: int, channel to select
         """
         command = "INSTrument:SELect?"
         yield self.write(command)
         channel = yield self.read()
         returnValue(channel)
-        
+
+
 class Keithley_Server(DeviceServer):
     name = 'Keithley_Server'
     deviceName = 'Keithley_Server'
@@ -252,12 +252,12 @@ class Keithley_Server(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        yield self.reg.cd(['','settings'], True)
+        # yield self.reg.cd(['','settings'], True)
         yield DeviceServer.initServer(self)
-        self.listeners = set()
+        # self.listeners = set()
 
     @inlineCallbacks
     def loadConfigInfo(self):
@@ -286,37 +286,37 @@ class Keithley_Server(DeviceServer):
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    def initContext(self, c):
-        self.listeners.add(c.ID)
-
-    def expireContext(self, c):
-        self.listeners.remove(c.ID)
-
-    def getOtherListeners(self, c):
-        notified = self.listeners.copy()
-        notified.remove(c.ID)
-        return notified
+    # def initContext(self, c):
+    #     self.listeners.add(c.ID)
+    #
+    # def expireContext(self, c):
+    #     self.listeners.remove(c.ID)
+    #
+    # def getOtherListeners(self, c):
+    #     notified = self.listeners.copy()
+    #     notified.remove(c.ID)
+    #     return notified
 
     @setting(100, 'test_beep')
     def test_beep(self, c):
-        '''
+        """
         Sends a command to the device, telling it to beep.
         This may be useful when testing the connection to LABRAD.
-        Takes no arguments. 
-        '''
+        Takes no arguments.
+        """
         dev = self.selectDevice(c)
         output = 'SYSTem:BEEPer'
         yield dev.write(output)
 
-    @setting(101, 'remote_mode', state = 'i')
+    @setting(101, 'remote_mode', state='i')
     def remote_mode(self, c, state):
-        '''
-        Turn remote mode on or off. 
+        """
+        Turn remote mode on or off.
         Takes an integer input (0 or 1).
         0 will turn remote mode off, and 1 will turn it on.
         You can visualize this on the device, a 'Y' with a bar above
-        it will appear on the left side when remote mode is on. 
-        '''
+        it will appear on the left side when remote mode is on.
+        """
         dev = self.selectDevice(c)
         if state == 0:
             output = 'SYSTem:LOCal'
@@ -363,7 +363,7 @@ class Keithley_Server(DeviceServer):
     def current(self, c, channel, current=None):
         """
         Get or set the Keithley's channel current.
-        Parameters
+        Parameter
         ----------
         channel: int, channel to control
         current: WithUnit Amps, channel output current value, default(None)
@@ -393,27 +393,27 @@ class Keithley_Server(DeviceServer):
         enabled_channel = yield dev.query_channel()
         returnValue(enabled_channel)
 
-    @setting(106, volt ='*v[V]')
+    @setting(106, volt='*v[V]')
     def all_voltage(self, c, volt):
-        '''
-        '''
+        """
+        """
         dev = self.selectDevice(c)
         command = 'APP:VOLT ' + str(volt[0]) + ',' + str(volt[1]) + ',' + str(volt[2])
         yield dev.write(command)
 
-    @setting(107, curr = '*v[A]')
+    @setting(107, curr='*v[A]')
     def all_current(self, c, curr):
-        '''
+        """
         Change to take list of currents
-        '''
+        """
         dev = self.selectDevice(c)
         command = 'APP:CURR ' + str(curr[0]) + ',' + str(curr[1]) + ',' + str(curr[2])
         yield dev.write(command)
 
-    @setting(108, chan = 'i')
+    @setting(108, chan='i')
     def query_initial(self, c, chan):
-        '''
-        '''
+        """
+        """
         dev = self.selectDevice(c)
         command = 'Stat:oper:inst:isum' + str(chan) + ':cond?'
         yield dev.write(command)
@@ -451,7 +451,8 @@ class Keithley_Server(DeviceServer):
             values3 = out3
         
         returnValue([values1, values2, values3])
-            
+
+
 if __name__ == '__main__':
     from labrad import util
     util.runServer(Keithley_Server())

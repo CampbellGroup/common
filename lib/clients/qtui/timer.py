@@ -5,7 +5,7 @@ from PyQt4 import QtGui, QtCore
 class QCustomTimer(QtGui.QFrame):
     def __init__(self, title, show_control=True, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        self.setFrameStyle(0x0001 | 0x0030)
+        # self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(title, show_control)
 
     def makeLayout(self, title, show_control):

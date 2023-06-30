@@ -1,6 +1,6 @@
 # Created on Feb 22, 2012
 # @author: Michael Ramm, Haeffner Lab
-'''
+"""
 ### BEGIN NODE INFO
 [info]
 name = Pulser
@@ -16,7 +16,7 @@ timeout = 20
 message = 987654321
 timeout = 20
 ### END NODE INFO
-'''
+"""
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, Deferred
@@ -25,7 +25,7 @@ import time
 
 try:
     from config.pulser.hardwareConfiguration import hardwareConfiguration
-except:
+except ImportError:
     from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
 from sequence import Sequence
@@ -34,8 +34,8 @@ from api import api
 from linetrigger import LineTrigger
 import numpy
 
-class Pulser(DDS, LineTrigger):
 
+class Pulser(DDS, LineTrigger):
     name = 'Pulser'
     onSwitch = Signal(611051, 'signal: switch toggled', '(ss)')
 
@@ -69,10 +69,10 @@ class Pulser(DDS, LineTrigger):
     def initializeBoard(self):
         connected = self.api.connectOKBoard()
         if not connected:
-            raise Exception ("Pulser Not Found")
+            raise Exception("Pulser Not Found")
 
     def initializeSettings(self):
-        for channel in self.channelDict.itervalues():
+        for channel in iter(self.channelDict.values()):
             channelnumber = channel.channelnumber
             if channel.ismanual:
                 state = self.cnot(channel.manualinv, channel.manualstate)
@@ -85,42 +85,42 @@ class Pulser(DDS, LineTrigger):
         self.remoteConnections = {}
         if len(self.remoteChannels):
             from labrad.wrappers import connectAsync
-            for name,rc in self.remoteChannels.iteritems():
+            for name, rc in iter(self.remoteChannels.items()):
                 try:
                     self.remoteConnections[name] = yield connectAsync(rc.ip)
-                    print 'Connected to {}'.format(name)
+                    print('Connected to {}'.format(name))
                 except:
-                    print 'Not Able to connect to {}'.format(name)
+                    print('Not Able to connect to {}'.format(name))
                     self.remoteConnections[name] = None
 
-    @setting(0, "New Sequence", returns = '')
+    @setting(0, "New Sequence", returns='')
     def newSequence(self, c):
         """
         Create New Pulse Sequence
         """
-        #print "new sequence"
+        # print "new sequence"
         c['sequence'] = Sequence(self)
 
-    @setting(1, "Program Sequence", returns = '')
+    @setting(1, "Program Sequence", returns='')
     def programSequence(self, c, sequence):
         """
         Programs Pulser with the current sequence.
         Saves the current sequence to self.programmed_sequence.
         """
-        #print "program sequence"
+        # print "program sequence"
         sequence = c.get('sequence')
         if not sequence: raise Exception("Please create new sequence first")
         self.programmed_sequence = sequence
-        dds,ttl = sequence.progRepresentation()
+        dds, ttl = sequence.progRepresentation()
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.programBoard, ttl)
         if dds is not None: yield self._programDDSSequence(dds)
         self.inCommunication.release()
         self.isProgrammed = True
 
-    @setting(2, "Start Infinite", returns = '')
-    def startInfinite(self,c):
-        if not self.isProgrammed: raise Exception ("No Programmed Sequence")
+    @setting(2, "Start Infinite", returns='')
+    def startInfinite(self, c):
+        if not self.isProgrammed: raise Exception("No Programmed Sequence")
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.setNumberRepeatitions, 0)
         yield deferToThread(self.api.resetSeqCounter)
@@ -128,23 +128,23 @@ class Pulser(DDS, LineTrigger):
         self.sequenceType = 'Infinite'
         self.inCommunication.release()
 
-    @setting(3, "Complete Infinite Iteration", returns = '')
-    def completeInfinite(self,c):
-        if self.sequenceType != 'Infinite': raise Exception( "Not Running Infinite Sequence")
+    @setting(3, "Complete Infinite Iteration", returns='')
+    def completeInfinite(self, c):
+        if self.sequenceType != 'Infinite': raise Exception("Not Running Infinite Sequence")
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.startSingle)
         self.inCommunication.release()
 
-    @setting(4, "Start Single", returns = '')
+    @setting(4, "Start Single", returns='')
     def start(self, c):
-        if not self.isProgrammed: raise Exception ("No Programmed Sequence")
+        if not self.isProgrammed: raise Exception("No Programmed Sequence")
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetSeqCounter)
         yield deferToThread(self.api.startSingle)
         self.sequenceType = 'One'
         self.inCommunication.release()
 
-    @setting(5, 'Add TTL Pulse', channel = 's', start = 'v[s]', duration = 'v[s]')
+    @setting(5, 'Add TTL Pulse', channel='s', start='v[s]', duration='v[s]')
     def addTTLPulse(self, c, channel, start, duration):
         """
         Add a TTL Pulse to the sequence, times are in seconds
@@ -154,13 +154,15 @@ class Pulser(DDS, LineTrigger):
         sequence = c.get('sequence')
         start = start['s']
         duration = duration['s']
-        #simple error checking
-        if not ( (self.sequenceTimeRange[0] <= start <= self.sequenceTimeRange[1]) and (self.sequenceTimeRange[0] <= start + duration <= self.sequenceTimeRange[1])): raise Exception ("Time boundaries are out of range")
-        if not duration >= self.timeResolution: raise Exception ("Incorrect duration")
-        if not sequence: raise Exception ("Please create new sequence first")
+        # simple error checking
+        if not ((self.sequenceTimeRange[0] <= start <= self.sequenceTimeRange[1]) and (
+                self.sequenceTimeRange[0] <= start + duration <= self.sequenceTimeRange[1])): raise Exception(
+            "Time boundaries are out of range")
+        if not duration >= self.timeResolution: raise Exception("Incorrect duration")
+        if not sequence: raise Exception("Please create new sequence first")
         sequence.addPulse(hardwareAddr, start, duration)
 
-    @setting(6, 'Add TTL Pulses', pulses = '*(sv[s]v[s])')
+    @setting(6, 'Add TTL Pulses', pulses='*(sv[s]v[s])')
     def addTTLPulses(self, c, pulses):
         """
         Add multiple TTL Pulses to the sequence, times are in seconds. The pulses are a list in the same format as 'add ttl pulse'.
@@ -171,14 +173,15 @@ class Pulser(DDS, LineTrigger):
             duration = pulse[2]
             yield self.addTTLPulse(c, channel, start, duration)
 
-    @setting(7, "Extend Sequence Length", timeLength = 'v[s]')
+    @setting(7, "Extend Sequence Length", timeLength='v[s]')
     def extendSequenceLength(self, c, timeLength):
         """
         Allows to optionally extend the total length of the sequence beyond the last TTL pulse.
         """
         sequence = c.get('sequence')
-        if not (self.sequenceTimeRange[0] <= timeLength['s'] <= self.sequenceTimeRange[1]): raise Exception ("Time boundaries are out of range")
-        if not sequence: raise Exception ("Please create new sequence first")
+        if not (self.sequenceTimeRange[0] <= timeLength['s'] <= self.sequenceTimeRange[1]):
+            raise Exception("Time boundaries are out of range")
+        if not sequence: raise Exception("Please create new sequence first")
         sequence.extendSequenceLength(timeLength['s'])
 
     @setting(8, "Stop Sequence")
@@ -186,27 +189,24 @@ class Pulser(DDS, LineTrigger):
         """Stops any currently running sequence"""
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetRam)
-        if self.sequenceType =='Infinite':
+        if self.sequenceType == 'Infinite':
             yield deferToThread(self.api.stopLooped)
-        elif self.sequenceType =='One':
+        elif self.sequenceType == 'One':
             yield deferToThread(self.api.stopSingle)
-        elif self.sequenceType =='Number':
+        elif self.sequenceType == 'Number':
             yield deferToThread(self.api.stopLooped)
         self.inCommunication.release()
         self.sequenceType = None
         self.ddsLock = False
 
-    @setting(9, "Start Number", repetition = 'w')
+    @setting(9, "Start Number", repetition='w')
     def startNumber(self, c, repetition):
         """
         Starts the repetition number of iterations
         """
-        if not self.isProgrammed: raise Exception ("No Programmed Sequence")
-        repeatitions = int(repetition)
+        if not self.isProgrammed: raise Exception("No Programmed Sequence")
 
-        #print "start iterations of ", repetition
-
-        if not 1 <= repetition <= (2**16 - 1): raise Exception ("Incorrect number of pulses")
+        if not 1 <= repetition <= (2 ** 16 - 1): raise Exception("Incorrect number of pulses")
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.setNumberRepeatitions, repetition)
         yield deferToThread(self.api.resetSeqCounter)
@@ -214,8 +214,8 @@ class Pulser(DDS, LineTrigger):
         self.sequenceType = 'Number'
         self.inCommunication.release()
 
-    @setting(10, "Human Readable TTL", getProgrammed = 'b', returns = '*2s')
-    def humanReadableTTL(self, c, getProgrammed = None):
+    @setting(10, "Human Readable TTL", getProgrammed='b', returns='*2s')
+    def humanReadableTTL(self, c, getProgrammed=None):
         """
         Args:
         getProgrammed (bool): False/None(default) to get the sequence added by current context,
@@ -226,12 +226,12 @@ class Pulser(DDS, LineTrigger):
         sequence = c.get('sequence')
         if getProgrammed:
             sequence = self.programmed_sequence
-        if not sequence: raise Exception ("Please create new sequence first")
-        ttl,dds = sequence.humanRepresentation()
+        if not sequence: raise Exception("Please create new sequence first")
+        ttl, dds = sequence.humanRepresentation()
         return ttl.tolist()
 
-    @setting(11, "Human Readable DDS", getProgrammed = 'b', returns = '*(svv)')
-    def humanReadableDDS(self, c, getProgrammed = None):
+    @setting(11, "Human Readable DDS", getProgrammed='b', returns='*(svv)')
+    def humanReadableDDS(self, c, getProgrammed=None):
         """
         Args:
         getProgrammed (bool): False/None(default) to get the sequence added by current context,
@@ -242,11 +242,11 @@ class Pulser(DDS, LineTrigger):
         sequence = c.get('sequence')
         if getProgrammed:
             sequence = self.programmed_sequence
-        if not sequence: raise Exception ("Please create new sequence first")
-        ttl,dds = sequence.humanRepresentation()
+        if not sequence: raise Exception("Please create new sequence first")
+        ttl, dds = sequence.humanRepresentation()
         return dds
 
-    @setting(12, 'Get Channels', returns = '*(sw)')
+    @setting(12, 'Get Channels', returns='*(sw)')
     def getChannels(self, c):
         """
         Returns all available channels, and the corresponding hardware numbers
@@ -254,10 +254,10 @@ class Pulser(DDS, LineTrigger):
         d = self.channelDict
         keys = d.keys()
         numbers = [d[key].channelnumber for key in keys]
-        return zip(keys,numbers)
+        return zip(keys, numbers)
 
-    @setting(13, 'Switch Manual', channelName = 's', state= 'b')
-    def switchManual(self, c, channelName, state = None):
+    @setting(13, 'Switch Manual', channelName='s', state='b')
+    def switchManual(self, c, channelName, state=None):
         """
         Switches the given channel into the manual mode, by default will go into the last remembered state but can also
         pass the argument which state it should go into.
@@ -274,12 +274,12 @@ class Pulser(DDS, LineTrigger):
         yield deferToThread(self.api.setManual, channelNumber, self.cnot(channel.manualinv, state))
         self.inCommunication.release()
         if state:
-            self.notifyOtherListeners(c,(channelName,'ManualOn'), self.onSwitch)
+            self.notifyOtherListeners(c, (channelName, 'ManualOn'), self.onSwitch)
         else:
-            self.notifyOtherListeners(c,(channelName,'ManualOff'), self.onSwitch)
+            self.notifyOtherListeners(c, (channelName, 'ManualOff'), self.onSwitch)
 
-    @setting(14, 'Switch Auto', channelName = 's', invert= 'b')
-    def switchAuto(self, c, channelName, invert = None):
+    @setting(14, 'Switch Auto', channelName='s', invert='b')
+    def switchAuto(self, c, channelName, invert=None):
         """
         Switches the given channel into the automatic mode, with an optional inversion.
         """
@@ -294,26 +294,26 @@ class Pulser(DDS, LineTrigger):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.setAuto, channelNumber, invert)
         self.inCommunication.release()
-        self.notifyOtherListeners(c,(channelName,'Auto'), self.onSwitch)
+        self.notifyOtherListeners(c, (channelName, 'Auto'), self.onSwitch)
 
-    @setting(15, 'Get State', channelName = 's', returns = '(bbbb)')
+    @setting(15, 'Get State', channelName='s', returns='(bbbb)')
     def getState(self, c, channelName):
         """
         Returns the current state of the switch: in the form (Manual/Auto, ManualOn/Off, ManualInversionOn/Off, AutoInversionOn/Off)
         """
         if channelName not in self.channelDict.keys(): raise Exception("Incorrect Channel")
         channel = self.channelDict[channelName]
-        answer = (channel.ismanual,channel.manualstate,channel.manualinv,channel.autoinv)
+        answer = (channel.ismanual, channel.manualstate, channel.manualinv, channel.autoinv)
         return answer
 
-    @setting(16, 'Wait Sequence Done', timeout = 'v', returns = 'b')
-    def waitSequenceDone(self, c, timeout = None):
+    @setting(16, 'Wait Sequence Done', timeout='v', returns='b')
+    def waitSequenceDone(self, c, timeout=None):
         """timeouttimeout
         Returns true if the sequence has completed within a timeout period
         """
-        if timeout is None: timeout = self.sequenceTimeRange[1]
-        #print timeout
-        requestCalls = int(timeout / 0.001 ) #number of request calls
+        if timeout is None:
+            timeout = self.sequenceTimeRange[1]
+        requestCalls = int(timeout / 0.001)  # number of request calls
         for i in range(requestCalls):
             yield self.inCommunication.acquire()
             done = yield deferToThread(self.api.isSeqDone)
@@ -322,62 +322,63 @@ class Pulser(DDS, LineTrigger):
             yield self.wait(0.001)
         returnValue(False)
 
-    @setting(17, 'Repeatitions Completed', returns = 'w')
-    def repeatitionsCompleted(self, c):
+    @setting(17, 'Repetitions Completed', returns='w')
+    def repetitionsCompleted(self, c):
         """Check how many repeatitions have been completed in for the infinite or number modes"""
         yield self.inCommunication.acquire()
         completed = yield deferToThread(self.api.howManySequencesDone)
         self.inCommunication.release()
         returnValue(completed)
 
-
-    @setting(21, 'Set Mode', mode = 's', returns = '')
+    @setting(21, 'Set Mode', mode='s', returns='')
     def setMode(self, c, mode):
         """
         Set the counting mode, either 'Normal' or 'Differential'
         In the Normal Mode, the FPGA automatically sends the counts with a preset frequency
         In the differential mode, the FPGA uses triggers the pulse sequence
-        frequency and to know when the repumping light is swtiched on or off.
+        frequency and to know when the repumping light is switched on or off.
         """
         if mode not in self.collectionTime.keys(): raise Exception("Incorrect mode")
         self.collectionMode = mode
         countRate = self.collectionTime[mode]
         yield self.inCommunication.acquire()
         if mode == 'Normal':
-            #set the mode on the device and set update time for normal mode
-            print 'in conditional'
+            # set the mode on the device and set update time for normal mode
+            # print('in conditional')
             yield deferToThread(self.api.setModeNormal)
             yield deferToThread(self.api.setPMTCountRate, countRate)
         elif mode == 'Differential':
             yield deferToThread(self.api.setModeDifferential)
-        self.clear_next_pmt_counts = 3 #assign to clear next two counts
+        self.clear_next_pmt_counts = 3  # assign to clear next two counts
         self.inCommunication.release()
-        print 'Defer Released'
+        # print('Defer Released')
 
-    @setting(22, 'Set Collection Time', new_time = 'v', mode = 's', returns = '')
+    @setting(22, 'Set Collection Time', new_time='v', mode='s', returns='')
     def setCollectTime(self, c, new_time, mode):
         """
         Sets how long to collect photonslist in either 'Normal' or 'Differential' mode of operation
         """
         new_time = new_time['s']
-        if not self.collectionTimeRange[0]<=new_time<=self.collectionTimeRange[1]: raise Exception('incorrect collection time')
-        if mode not in self.collectionTime.keys(): raise("Incorrect mode")
+        if not self.collectionTimeRange[0] <= new_time <= self.collectionTimeRange[1]:
+            raise Exception('incorrect collection time')
+        if mode not in self.collectionTime.keys():
+            raise Exception("Incorrect mode")
         if mode == 'Normal':
             self.collectionTime[mode] = new_time
             yield self.inCommunication.acquire()
             yield deferToThread(self.api.setPMTCountRate, new_time)
-            self.clear_next_pmt_counts = 3 #assign to clear next two counts
+            self.clear_next_pmt_counts = 3  # assign to clear next two counts
             self.inCommunication.release()
         elif mode == 'Differential':
             self.collectionTime[mode] = new_time
-            self.clear_next_pmt_counts = 3 #assign to clear next two counts
+            self.clear_next_pmt_counts = 3  # assign to clear next two counts
 
-    @setting(23, 'Get Collection Time', returns = '(vv)')
+    @setting(23, 'Get Collection Time', returns='(vv)')
     def getCollectTime(self, c):
         return self.collectionTimeRange
 
-    @setting(24, 'Reset FIFO Normal', returns = '')
-    def resetFIFONormal(self,c):
+    @setting(24, 'Reset FIFO Normal', returns='')
+    def resetFIFONormal(self, c):
         """
         Resets the FIFO on board, deleting all queued counts
         """
@@ -385,7 +386,7 @@ class Pulser(DDS, LineTrigger):
         yield deferToThread(self.api.resetFIFONormal)
         self.inCommunication.release()
 
-    @setting(25, 'Get PMT Counts', returns = '*(vsv)')
+    @setting(25, 'Get PMT Counts', returns='*(vsv)')
     def getALLCounts(self, c):
         """
         Returns the list of counts stored on the FPGA in the form (v,s1,s2) where v is the count rate in KC/SEC
@@ -399,12 +400,19 @@ class Pulser(DDS, LineTrigger):
         self.inCommunication.release()
         returnValue(countlist)
 
-    @setting(26, 'Get Readout Counts', returns = '*v')
+    @setting(26, 'Get Readout Counts', returns='*v')
     def getReadoutCounts(self, c):
         yield self.inCommunication.acquire()
         countlist = yield deferToThread(self.doGetReadoutCounts)
         self.inCommunication.release()
         returnValue(countlist)
+
+    def doGetReadoutCounts(self):
+        inFIFO = self.api.getReadoutTotal()
+        reading = self.api.getReadoutCounts(inFIFO)
+        split = self.split_len(reading, 4)
+        countlist = map(self.infoFromBuf_readout, split)
+        return countlist
 
     @setting(27, 'Reset Readout Counts')
     def resetReadoutCounts(self, c):
@@ -412,20 +420,20 @@ class Pulser(DDS, LineTrigger):
         yield deferToThread(self.api.resetFIFOReadout)
         self.inCommunication.release()
 
-    #debugging settings
-    @setting(90, 'Internal Reset DDS', returns = '')
+    # debugging settings
+    @setting(90, 'Internal Reset DDS', returns='')
     def internal_reset_dds(self, c):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.resetAllDDS)
         self.inCommunication.release()
 
-    @setting(91, 'Internal Advance DDS', returns = '')
+    @setting(91, 'Internal Advance DDS', returns='')
     def internal_advance_dds(self, c):
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.advanceAllDDS)
         self.inCommunication.release()
 
-    @setting(92, "Reinitialize DDS", returns = '')
+    @setting(92, "Reinitialize DDS", returns='')
     def reinitializeDDS(self, c):
         """
         Reprograms the DDS chip to its initial state
@@ -445,7 +453,7 @@ class Pulser(DDS, LineTrigger):
         return countlist
 
     def clear_pmt_counts(self, l):
-        '''removes clear_next_pmt_counts count from the list'''
+        """removes clear_next_pmt_counts count from the list"""
         try:
             while self.clear_next_pmt_counts:
                 cleared = l.pop(0)
@@ -454,40 +462,32 @@ class Pulser(DDS, LineTrigger):
         except IndexError:
             return []
 
-    def doGetReadoutCounts(self):
-        inFIFO = self.api.getReadoutTotal()
-        reading = self.api.getReadoutCounts(inFIFO)
-        split = self.split_len(reading, 4)
-        countlist = map(self.infoFromBuf_readout, split)
-        return countlist
-
     @staticmethod
     def infoFromBuf(buf):
-        #converts the received buffer into useful information
-        #the most significant digit of the buffer indicates wheter 866 is on or off
-        count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
-        if count >= 2**31:
+        # converts the received buffer into useful information
+        # the most significant digit of the buffer indicates whether 866 is on or off
+        count = 65536 * (256 * ord(buf[1]) + ord(buf[0])) + (256 * ord(buf[3]) + ord(buf[2]))
+        if count >= 2 ** 31:
             status = 'OFF'
-            count = count % 2**31
+            count = count % 2 ** 31
         else:
             status = 'ON'
         return [count, status]
 
-    #should make nicer by combining with above.
     @staticmethod
     def infoFromBuf_readout(buf):
-        count = 65536*(256*ord(buf[1])+ord(buf[0]))+(256*ord(buf[3])+ord(buf[2]))
+        count = 65536 * (256 * ord(buf[1]) + ord(buf[0])) + (256 * ord(buf[3]) + ord(buf[2]))
         return count
 
     def convertKCperSec(self, inp):
-        [rawCount,typ] = inp
+        [rawCount, typ] = inp
         countKCperSec = float(rawCount) / self.collectionTime[self.collectionMode] / 1000.
         return [countKCperSec, typ]
 
     def appendTimes(self, l, timeLast):
-        #in the case that we received multiple PMT counts, uses the current time
-        #and the collectionTime to guess the arrival time of the previous readings
-        #i.e ( [[1,2],[2,3]] , timeLAst = 1.0, normalupdatetime = 0.1) ->
+        # in the case that we received multiple PMT counts, uses the current time
+        # and the collectionTime to guess the arrival time of the previous readings
+        # i.e ( [[1,2],[2,3]] , timeLAst = 1.0, normalupdatetime = 0.1) ->
         # ( [(1,2,0.9),(2,3,1.0)])
         collectionTime = self.collectionTime[self.collectionMode]
         for i in range(len(l)):
@@ -495,11 +495,11 @@ class Pulser(DDS, LineTrigger):
             l[-i - 1] = tuple(l[-i - 1])
         return l
 
-    def split_len(self,seq, length):
-        '''useful for splitting a string in length-long pieces'''
-        return [seq[i:i+length] for i in range(0, len(seq), length)]
+    def split_len(self, seq, length):
+        """useful for splitting a string in length-long pieces"""
+        return [seq[i:i + length] for i in range(0, len(seq), length)]
 
-    @setting(28, 'Get Collection Mode', returns = 's')
+    @setting(28, 'Get Collection Mode', returns='s')
     def getMode(self, c):
         return self.collectionMode
 
@@ -510,34 +510,34 @@ class Pulser(DDS, LineTrigger):
         yield deferToThread(self.api.resetFIFOResolved)
         self.inCommunication.release()
 
-    @setting(32, "Get Timetags", returns = '*v')
+    @setting(32, "Get Timetags", returns='*v')
     def getTimetags(self, c):
         """Get the time resolved timetags"""
         yield self.inCommunication.acquire()
         counted = yield deferToThread(self.api.getResolvedTotal)
         raw = yield deferToThread(self.api.getResolvedCounts, counted)
         self.inCommunication.release()
-        arr = numpy.fromstring(raw, dtype = numpy.uint16)
-        del(raw)
-        arr = arr.reshape(-1,2)
-        timetags =( 65536 * arr[:,0] + arr[:,1]) * self.timeResolvedResolution
+        arr = numpy.fromstring(raw, dtype=numpy.uint16)
+        del raw
+        arr = arr.reshape(-1, 2)
+        timetags = (65536 * arr[:, 0] + arr[:, 1]) * self.timeResolvedResolution
         returnValue(timetags)
 
-    @setting(33, "Get TimeTag Resolution", returns = 'v')
+    @setting(33, "Get TimeTag Resolution", returns='v')
     def getTimeTagResolution(self, c):
         return self.timeResolvedResolution
 
-    #Methods relating to using the optional second PMT
-    @setting(36, 'Get Secondary PMT Counts', returns = '*(vsv)')
+    # Methods relating to using the optional second PMT
+    @setting(36, 'Get Secondary PMT Counts', returns='*(vsv)')
     def getAllSecondaryCounts(self, c):
-        if not self.haveSecondPMT: raise Exception ("No Second PMT")
+        if not self.haveSecondPMT: raise Exception("No Second PMT")
         yield self.inCommunication.acquire()
         countlist = yield deferToThread(self.doGetAllSecondaryCounts)
         self.inCommunication.release()
         returnValue(countlist)
 
     def doGetAllSecondaryCounts(self):
-        if not self.haveSecondPMT: raise Exception ("No Second PMT")
+        if not self.haveSecondPMT: raise Exception("No Second PMT")
         inFIFO = self.api.getSecondaryNormalTotal()
         reading = self.api.getSecondaryNormalCounts(inFIFO)
         split = self.split_len(reading, 4)
@@ -545,7 +545,6 @@ class Pulser(DDS, LineTrigger):
         countlist = map(self.convertKCperSec, countlist)
         countlist = self.appendTimes(countlist, time.time())
         return countlist
-
 
     def wait(self, seconds, result=None):
         """Returns a deferred that will be fired later"""
@@ -564,7 +563,7 @@ class Pulser(DDS, LineTrigger):
         """
         notified = self.listeners.copy()
         notified.remove(context.ID)
-        f(message,notified)
+        f(message, notified)
 
     def initContext(self, c):
         """Initialize a new context object."""
@@ -573,6 +572,8 @@ class Pulser(DDS, LineTrigger):
     def expireContext(self, c):
         self.listeners.remove(c.ID)
 
+
 if __name__ == "__main__":
     from labrad import util
-    util.runServer( Pulser() )
+
+    util.runServer(Pulser())

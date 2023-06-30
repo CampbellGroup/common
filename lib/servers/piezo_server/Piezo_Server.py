@@ -18,18 +18,18 @@ timeout = 5
 
 from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
-from labrad.server import setting, Signal
+from labrad.server import setting
 from twisted.internet.defer import inlineCallbacks, returnValue
-from labrad.units import V
 
 TIMEOUT = Value(5.0, 's')
+
 
 class PiezoDevice(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a Piezo device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -78,10 +78,10 @@ class Piezo_Server(DeviceServer):
     @inlineCallbacks
     def initServer(self):
         self.current_state = {}
-        print 'loading config info...',
+        print('loading config info...')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        print self.serialLinks
+        print(self.serialLinks)
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
@@ -124,21 +124,21 @@ class Piezo_Server(DeviceServer):
 
     @setting(100, channel='i', value='v[V]')
     def set_voltage(self, c, channel, value):
-        '''
+        """
         Sets the value of the voltage.
-        '''
+        """
         self.voltage = value
         dev = self.selectDevice(c)
-        yield dev.write('vout.w ' + str(channel) + ' ' + str((value['V'])) + '\r\n')
-        yield dev.read()
         self.current_state[str(channel)][0] = value['V']
         self.update_registry(channel)
+        yield dev.write('vout.w ' + str(channel) + ' ' + str((value['V'])) + '\r\n')
+        yield dev.read()
 
     @setting(101, channel='i', value='b')
     def set_output_state(self, c, channel, value):
-        '''
+        """
         Turn a channel on or off
-        '''
+        """
         self.output = value
         dev = self.selectDevice(c)
         yield dev.write('out.w ' + str(channel) + ' ' + str(int(value)) + '\r\n')
@@ -148,9 +148,9 @@ class Piezo_Server(DeviceServer):
 
     @setting(102, value='b')
     def set_remote_state(self, c, value):
-        '''
+        """
         Turn the remote mode on
-        '''
+        """
 
         dev = self.selectDevice(c)
         yield dev.write('remote.w ' + str(int(value)) + '\r\n')
@@ -159,10 +159,10 @@ class Piezo_Server(DeviceServer):
 
     @setting(200, channel='i', returns='b')
     def get_output_state(self, c, channel):
-        '''
+        """
         Get the output state of the specified channel. State is unknown when
         server is first started or restarted.
-        '''
+        """
 
         return bool(self.current_state[str(channel)][1])
 

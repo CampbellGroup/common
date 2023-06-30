@@ -23,12 +23,13 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 TIMEOUT = Value(1.0, 's')
 
+
 class UCLAPiezo_device(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a piezo device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port))
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -71,6 +72,7 @@ class UCLAPiezo_device(DeviceWrapper):
         ans = yield p.send()
         returnValue(ans.read_line)
 
+
 class UCLAPiezo(DeviceServer):
     name = 'UCLAPiezo'
     deviceName = 'UCLAPiezo'
@@ -85,7 +87,7 @@ class UCLAPiezo(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield self.reg.cd(['', 'settings'], True)
@@ -129,7 +131,7 @@ class UCLAPiezo(DeviceServer):
         firmware = yield dev.read()
         returnValue([device_type, device_id, hardware_id, firmware])
 
-    @setting(101, 'set_voltage', chan = 'i', voltage ='v[V]')
+    @setting(101, 'set_voltage', chan='i', voltage='v[V]')
     def set_voltage(self, c, chan, voltage):
         dev = self.selectDevice(c)
         output = 'vout.w ' + str(chan) + ' ' + str(voltage['V'])
@@ -139,7 +141,7 @@ class UCLAPiezo(DeviceServer):
         name = setting[2]
         yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
 
-    @setting(102, 'piezo_output', chan = 'i', state ='b')
+    @setting(102, 'piezo_output', chan='i', state='b')
     def piezo_output(self, c, chan, state):
         dev = self.selectDevice(c)
         if state:
@@ -151,6 +153,7 @@ class UCLAPiezo(DeviceServer):
         voltage = setting[0]
         name = setting[2]
         yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
+
 
 if __name__ == "__main__":
     from labrad import util

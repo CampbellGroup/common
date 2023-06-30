@@ -2,6 +2,7 @@ from PyQt4 import QtGui, QtCore
 from scheduled_widget import scheduled_combined
 from running_scans_widget import running_combined
 from queued_widget import queued_combined
+from docstring_widget import docstring_widget
 from experiment_selector_widget import experiment_selector_widget
 
 
@@ -22,26 +23,30 @@ class scripting_widget(QtGui.QWidget):
     def __init__(self, reactor, parent):
         super(scripting_widget, self).__init__()
         self.parent = parent
+        self.cxn = self.parent.cxn
         self.reactor = reactor
         self.setupLayout()
 
     def setupLayout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QtGui.QGridLayout()
         self.selector = experiment_selector_widget(self.reactor, parent=self)
+        self.docstring = docstring_widget(self.reactor, parent=self)
         self.running = running_combined(self.reactor)
         self.scheduled = scheduled_combined(self.reactor)
         self.queued = queued_combined(self.reactor)
-        layout.addWidget(self.selector)
-        layout.addWidget(self.scheduled)
-        layout.addWidget(self.queued)
-        layout.addWidget(self.running)
+        layout.addWidget(self.selector,  0, 0, 1, 1)
+        layout.addWidget(self.docstring, 1, 0, 5, 1)
+        layout.addWidget(self.scheduled, 6, 0, 2, 1)
+        layout.addWidget(self.queued,    8, 0, 2, 1)
+        layout.addWidget(self.running,   10, 0, 2, 1)
         self.setLayout(layout)
 
     def get_scannable_parameters(self):
         return self.parent.get_scannable_parameters()
 
     def clear_all(self):
-        '''clears all information'''
+        """clears all information"""
+        # self.docstring.clear_all()
         self.selector.clear_all()
         self.running.clear_all()
         self.scheduled.clear_all()

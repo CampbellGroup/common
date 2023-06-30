@@ -59,7 +59,7 @@ class SerialServer(LabradServer):
     name = '%LABRADNODE% Serial Server'
 
     def initServer(self):
-        print 'Searching for COM ports:'
+        print('Searching for COM ports:')
         self.SerialPorts = []
         ports = list_ports.comports()
         for name, description, hardware in ports:
@@ -67,13 +67,15 @@ class SerialServer(LabradServer):
             try:
                 ser = Serial(name)
                 ser.close()
-            except SerialException, e:
+            except SerialException as e:
+                print('tried', name, description, hardware)
+                print(e)
                 pass
             else:
                 self.SerialPorts += [name]
-                print name
+                print(name)
         if not len(self.SerialPorts):
-            print '  none'
+            print('  none')
 
     def expireContext(self, c):
         if 'PortObject' in c:
@@ -320,7 +322,6 @@ class SerialServer(LabradServer):
 
         if data:
             delim, skip = data, ''
-
         else:
             delim, skip = '\n', '\r'
 

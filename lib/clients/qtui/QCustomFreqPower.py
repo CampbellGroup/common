@@ -5,40 +5,41 @@ from common.lib.clients.qtui.q_custom_text_changing_button import \
 
 
 class QCustomFreqPower(QtGui.QFrame):
-    def __init__(self, title, switchable = True, parent=None):
+    def __init__(self, title, switchable=True, parent=None):
         QtGui.QWidget.__init__(self, parent)
-        self.setFrameStyle(0x0001 | 0x0030)
+        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.makeLayout(title, switchable)
 
     def makeLayout(self, title, switchable):
         layout = QtGui.QGridLayout()
-        #labels
+        # labels
         title = QtGui.QLabel(title)
-        title.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        title.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
         title.setAlignment(QtCore.Qt.AlignCenter)
         freqlabel = QtGui.QLabel('Frequency (MHz)')
         powerlabel = QtGui.QLabel('Power (dBm)')
         if switchable:
-            layout.addWidget(title,0, 0, 1, 3)
+            layout.addWidget(title, 0, 0, 1, 3)
         else:
-            layout.addWidget(title,0, 0, 1, 2)
-        layout.addWidget(freqlabel,1, 0, 1, 1)
-        layout.addWidget(powerlabel,1, 1, 1, 1)
-        #editable fields
+            layout.addWidget(title, 0, 0, 1, 2)
+        layout.addWidget(freqlabel, 1, 0, 1, 1)
+        layout.addWidget(powerlabel, 1, 1, 1, 1)
+        # editable fields
         self.spinFreq = QtGui.QDoubleSpinBox()
-        self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        self.spinFreq.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=14))
         self.spinFreq.setDecimals(3)
         self.spinFreq.setSingleStep(0.1)
         self.spinFreq.setRange(10.0,250.0)
         self.spinFreq.setKeyboardTracking(False)
         self.spinPower = QtGui.QDoubleSpinBox()
-        self.spinPower.setFont(QtGui.QFont('MS Shell Dlg 2',pointSize=16))
+        self.spinPower.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=14))
         self.spinPower.setDecimals(3)
         self.spinPower.setSingleStep(0.1)
         self.spinPower.setRange(-145.0, 30.0)
         self.spinPower.setKeyboardTracking(False)
-        layout.addWidget(self.spinFreq,     2, 0)
-        layout.addWidget(self.spinPower,    2, 1)
+        layout.addWidget(self.spinFreq,  2, 0)
+        layout.addWidget(self.spinPower, 2, 1)
         if switchable:
             self.buttonSwitch = TextChangingButton(("I", "O"))
             layout.addWidget(self.buttonSwitch, 2, 2)
@@ -66,7 +67,8 @@ class QCustomFreqPower(QtGui.QFrame):
         self.buttonSwitch.setAppearance(state)
         self.buttonSwitch.blockSignals(False)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     icon = QCustomFreqPower('Control')
     icon.show()

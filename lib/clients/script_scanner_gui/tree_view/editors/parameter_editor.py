@@ -1,9 +1,10 @@
 from PyQt4 import QtCore, QtGui, uic
 import os
 
-basepath =  os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "ParameterEditor.ui")
+base_path = os.path.dirname(__file__)
+path = os.path.join(base_path, "..", "..", "Views", "ParameterEditor.ui")
 paramBase, paramForm = uic.loadUiType(path)
+
 
 class parameter_delegate(QtGui.QAbstractItemDelegate):
     def __init__(self, parent):
@@ -48,6 +49,7 @@ class parameter_delegate(QtGui.QAbstractItemDelegate):
         else:
             value = editor.value()
         model.setData(index, QtCore.QVariant(value))
+
 
 class ParameterEditor(paramBase, paramForm):
     

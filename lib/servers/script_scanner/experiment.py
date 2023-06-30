@@ -23,28 +23,28 @@ class experiment(experiment_info):
             try:
                 self.cxn = labrad.connect()
             except Exception as error:
-                error_message = error + '\n' + "Not able to connect to LabRAD"
+                error_message = str(error) + '\n' + "Not able to connect to LabRAD"
                 raise Exception(error_message)
         try:
             self.sc = self.cxn.servers['ScriptScanner']
         except KeyError as error:
-            error_message = error + '\n' + "ScriptScanner is not running"
+            error_message = str(error) + '\n' + "ScriptScanner is not running"
             raise KeyError(error_message)
         try:
             self.pv = self.cxn.servers['ParameterVault']
         except KeyError as error:
-            error_message = error + '\n' + "ParameterVault is not running"
+            error_message = str(error) + '\n' + "ParameterVault is not running"
             raise KeyError(error_message)
         try:
             self.context = self.cxn.context()
         except Exception as error:
-            error_message = error + '\n' + "self.cxn.context is not available"
+            error_message = str(error) + '\n' + "self.cxn.context is not available"
             raise Exception(error_message)
 
     def execute(self, ident):
-        '''
+        """
         executes the experiment
-        '''
+        """
         self.ident = ident
         try:
             self._connect()
@@ -53,7 +53,7 @@ class experiment(experiment_info):
             self._finalize(self.cxn, self.context)
         except Exception as e:
             reason = traceback.format_exc()
-            print reason
+            print(reason)
             if hasattr(self, 'sc'):
                 self.sc.error_finish_confirmed(self.ident, reason)
         finally:
@@ -75,34 +75,34 @@ class experiment(experiment_info):
         self.parameters.update(d, overwrite=overwrite)
 
     def _load_parameters_dict(self, params):
-        '''loads the required parameter into a treedict'''
+        """loads the required parameter into a treedict"""
         d = TreeDict()
         for collection, parameter_name in params:
             try:
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
-                print e
+                print(e)
                 message = "In {}: Parameter {} not found among Parameter Vault parameters"
-                raise Exception (message.format(self.name, (collection, parameter_name)))
+                raise Exception(message.format(self.name, (collection, parameter_name)))
             else:
                 d['{0}.{1}'.format(collection, parameter_name)] = value
         return d
 
     def set_parameters(self, parameter_dict):
-        '''
+        """
         can reload all parameter values from parameter_vault or replace
         parameters with values from the provided parameter_dict
-        '''
+        """
         if isinstance(parameter_dict, dict):
-            udpate_dict = TreeDict()
-            for (collection,parameter_name), value in parameter_dict.iteritems():
-                udpate_dict['{0}.{1}'.format(collection, parameter_name)] = value
+            update_dict = TreeDict()
+            for (collection, parameter_name), value in parameter_dict.iteritems():
+                update_dict['{0}.{1}'.format(collection, parameter_name)] = value
         elif isinstance(parameter_dict, TreeDict):
-            udpate_dict = parameter_dict
+            update_dict = parameter_dict
         else:
             message = "Incorrect input type for the replacement dictionary"
             raise Exception(message)
-        self.parameters.update(udpate_dict)
+        self.parameters.update(update_dict)
 
     def reload_some_parameters(self, params):
         d = self._load_parameters_dict(params)
@@ -121,9 +121,9 @@ class experiment(experiment_info):
         return []
 
     def pause_or_stop(self):
-        '''
+        """
         allows to pause and to stop the experiment
-        '''
+        """
         self.should_stop = self.sc.pause_or_stop(self.ident)
         if self.should_stop:
             self.sc.stop_confirmed(self.ident)
@@ -141,16 +141,16 @@ class experiment(experiment_info):
 
     # functions to reimplement in the subclass
     def initialize(self, cxn, context, ident):
-        '''
+        """
         implemented by the subclass
-        '''
+        """
 
-    def run(self, cxn, context, replacement_parameters={}):
-        '''
+    def run(self, cxn, context):  # replacement_parameters should be a dict
+        """
         implemented by the subclass
-        '''
+        """
 
     def finalize(self, cxn, context):
-        '''
+        """
         implemented by the subclass
-        '''
+        """

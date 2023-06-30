@@ -78,9 +78,10 @@ class ParameterVault(LabradServer):
 
     @inlineCallbacks
     def save_parameters(self):
-        '''save the latest parameters into registry'''
+        """save the latest parameters into registry"""
         regDir = self.registryDirectory
         for key, value in self.parameters.iteritems():
+            print('saving parameter {0} in {1}'.format(key[1], key[0]))
             key = list(key)
             parameter_name = key.pop()
             fullDir = regDir + key
@@ -93,7 +94,7 @@ class ParameterVault(LabradServer):
             parameter_bound = "Parameter {} Out of Bound"
             assert item[0] <= value <= item[1], parameter_bound.format(key[1])
             item[2] = value
-            return (t, item)
+            return t, item
         else:
             raise Exception("Can't save, not one of checkable types")
 
@@ -112,7 +113,7 @@ class ParameterVault(LabradServer):
 
         # Error strings
         parameter_bound = "Parameter {} Out of Bound"
-        bad_selection = "Inorrect selection made in {}"
+        bad_selection = "Incorrect selection made in {}"
 
         if param_type == 'parameter' or param_type == 'duration_bandwidth':
             assert item[0] <= item[2] <= item[1], parameter_bound.format(key)
@@ -193,7 +194,7 @@ class ParameterVault(LabradServer):
 
     @setting(5, "Refresh Parameters", returns='')
     def refresh_parameters(self, c):
-        """Saves Parameters To Registry, then realods them"""
+        """Saves Parameters To Registry, then reloads them"""
         yield self.save_parameters()
         yield self.load_parameters()
 
@@ -204,12 +205,15 @@ class ParameterVault(LabradServer):
 
     @inlineCallbacks
     def stopServer(self):
+        print('stop signal received')
         try:
             yield self.save_parameters()
+            print('parameters saved')
         except AttributeError:
             # if values don't exist yet, i.e stopServer was called due to an
             # Identification Error
             pass
+
 
 if __name__ == "__main__":
     from labrad import util

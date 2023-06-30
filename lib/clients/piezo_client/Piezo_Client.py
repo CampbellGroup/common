@@ -1,4 +1,5 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
+from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
 
@@ -8,11 +9,12 @@ except:
     from common.lib.config.piezo_client_config import piezo_config
 
 
-class Piezo_Client(QtGui.QWidget):
+class Piezo_Client(QtGui.QFrame):
 
     def __init__(self, reactor, parent=None):
         super(Piezo_Client, self).__init__()
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.MinimumExpanding)
+        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
         self.reactor = reactor
         self.connect()
 
@@ -22,7 +24,7 @@ class Piezo_Client(QtGui.QWidget):
         self.cxn = yield connectAsync(name="Piezo Client")
         self.server = self.cxn.piezo_server
         self.reg = self.cxn.registry
-        yield self.reg.cd(['', 'Servers', 'UCLAPiezo','parameters'])
+        yield self.reg.cd(['', 'Servers', 'UCLAPiezo', 'parameters'])
         from labrad.units import WithUnit as U
         self.U = U
         self.initializeGUI()
@@ -30,11 +32,11 @@ class Piezo_Client(QtGui.QWidget):
     @inlineCallbacks
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
-        initial_remote_setting = False
-        remote_button = QCustomSwitchChannel('Remote Mode', ('On', 'Off'))
-        remote_button.TTLswitch.setChecked(int(initial_remote_setting))
-        remote_button.TTLswitch.toggled.connect(lambda state=remote_button.TTLswitch.isDown(): self.on_remote_toggled(state))
-        layout.addWidget(remote_button, 0, 0)  # puts remote button at top left
+        # initial_remote_setting = False
+        # remote_button = QCustomSwitchChannel('Remote Mode', ('On', 'Off'))
+        # remote_button.TTLswitch.setChecked(int(initial_remote_setting))
+        # remote_button.TTLswitch.toggled.connect(lambda state=remote_button.TTLswitch.isDown(): self.on_remote_toggled(state))
+        # layout.addWidget(remote_button, 0, 0, 1, 2)  # puts remote button at top left
         channel_info = piezo_config.info
 
         for key in channel_info:
@@ -43,17 +45,16 @@ class Piezo_Client(QtGui.QWidget):
             initial_voltage = yield self.server.get_voltage(channel_info[key][0])
             initial_voltage = float(initial_voltage)
 
-            chan_button = QCustomSwitchChannel(key, ('On', 'Off'))
+            chan_button = QCustomSwitchChannel("Piezo "+str(key), ('On', 'Off'))
+            chan_button.setFrameStyle(QtGui.QFrame.NoFrame)
             chan_button.TTLswitch.setChecked(int(initial_channel_setting))
             chan_button.TTLswitch.toggled.connect(lambda state=chan_button.TTLswitch.isDown(),
                                                   chan=channel_info[key][0]: self.on_chan_toggled(chan, state))
-            voltage_spin_box = QtGui.QDoubleSpinBox()
-            voltage_spin_box.setRange(0.0, 150.0)
-            voltage_spin_box.setSingleStep(0.01)
-            voltage_spin_box.setDecimals(3)
-            voltage_spin_box.setValue(initial_voltage)
-            voltage_spin_box.setKeyboardTracking(False)
-            voltage_spin_box.valueChanged.connect(lambda volt=voltage_spin_box.value(),
+            voltage_spin_box = QCustomSpinBox('Voltage', (0.0, 150.0))
+            voltage_spin_box.setStepSize(0.01)
+            voltage_spin_box.setValues(initial_voltage)
+            voltage_spin_box.spinLevel.setKeyboardTracking(False)
+            voltage_spin_box.spinLevel.valueChanged.connect(lambda volt=voltage_spin_box.spinLevel.value(),
                                                   chan=channel_info[key][0]: self.voltage_changed(chan, volt))
             layout.addWidget(chan_button, channel_info[key][1][0], channel_info[key][1][1])
             #  puts voltage box below it's channel button

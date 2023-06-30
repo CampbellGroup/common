@@ -1,4 +1,4 @@
-from PyQt4 import  uic
+from PyQt4 import uic
 from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, EventNode
 from Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
 from editors.parameter_editor import ParameterEditor
@@ -13,9 +13,10 @@ from editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
 from editors.event_editor import EventEditor
 
 import os
-basepath =  os.path.dirname(__file__)
+basepath = os.path.dirname(__file__)
 path = os.path.join(basepath,"..","Views", "Editors.ui")
 propBase, propForm = uic.loadUiType(path)
+
 
 class PropertiesEditor(propBase, propForm):
     
@@ -23,25 +24,25 @@ class PropertiesEditor(propBase, propForm):
         super(propBase, self).__init__(parent)
         self.setupUi(self)
         self._proxyModel = None
-        #create the edtiors
+        # create the editors
         self._parametersEditor = ParameterEditor(self)
         self._scanEditor = ScanEditor(self)
         self._boolEditor = BoolEditor(self)
         self._stringEditor = StringEditor(self)
         self._selectionSimpleEditor = SelectionSimpleEditor(self)
-        self._lineSelectionEdtior = line_selection_editor(self)
+        self._lineSelectionEditor = line_selection_editor(self)
         self._sideband_selection_editor = sideband_selection_editor(self)
         self._DurationBandwidthEditor = DurationBandwidthEditor(self)
         self._spectrum_sensitivity_editor = spectrum_sensitivity_editor(self)
         self._eventEditor = EventEditor(self)
         self._editors = [self._parametersEditor, self._scanEditor, self._stringEditor, 
-                         self._boolEditor, self._selectionSimpleEditor, self._lineSelectionEdtior,
+                         self._boolEditor, self._selectionSimpleEditor, self._lineSelectionEditor,
                          self._sideband_selection_editor, self._DurationBandwidthEditor, self._spectrum_sensitivity_editor,
                          self._eventEditor]
                          
-        #add editors to layout
+        # add editors to layout
         self.layoutSpecs.addWidget(self._parametersEditor)
-        #hide the edtiors
+        # hide the edtiors
         for edit in self._editors:
             edit.setVisible(False)
                
@@ -59,7 +60,7 @@ class PropertiesEditor(propBase, propForm):
         elif isinstance(node, SelectionSimpleNode):
             self.show_only_editor(self._selectionSimpleEditor, current)    
         elif isinstance(node, LineSelectionNode):
-            self.show_only_editor(self._lineSelectionEdtior, current)    
+            self.show_only_editor(self._lineSelectionEditor, current)
         elif isinstance(node, SidebandElectorNode):
             self.show_only_editor(self._sideband_selection_editor, current)
         elif isinstance(node, DurationBandwidthNode):
@@ -81,9 +82,9 @@ class PropertiesEditor(propBase, propForm):
                 edit.setVisible(False) 
         
     def setModel(self, proxyModel):
-        '''
+        """
         sets the model for all the editors
-        '''
+        """
         self._proxyModel = proxyModel
         for edit in self._editors:
             edit.setModel(proxyModel)
