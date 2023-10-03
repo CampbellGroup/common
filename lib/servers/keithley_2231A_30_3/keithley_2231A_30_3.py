@@ -4,7 +4,7 @@
 name = Keithley 2231A Server
 version = 1.0
 description =
-instancename = Keithley_Sever
+instancename = Keithley_Server
 
 [startup]
 cmdline = %PYTHON% %FILE%
