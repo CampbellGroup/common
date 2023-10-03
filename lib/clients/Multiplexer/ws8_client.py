@@ -143,15 +143,15 @@ class wavemeterclient(QtGui.QWidget):
             freq = signal[1]
 
             if not self.d[chan].measSwitch.isChecked():
-                self.d[chan].currentfrequency.setText('Not Measured')
+                self.d[chan].current_frequency.setText('Not Measured')
             elif freq == -3.0:
-                self.d[chan].currentfrequency.setText('Under Exposed')
+                self.d[chan].current_frequency.setText('Under Exposed')
             elif freq == -4.0:
-                self.d[chan].currentfrequency.setText('Over Exposed')
+                self.d[chan].current_frequency.setText('Over Exposed')
             elif freq == -17.0:
-                self.d[chan].currentfrequency.setText('Data Error')
+                self.d[chan].current_frequency.setText('Data Error')
             else:
-                self.d[chan].currentfrequency.setText(str(freq)[0:10])
+                self.d[chan].current_frequency.setText(str(freq)[0:10])
 
     def toggleMeas(self, c, signal):
         chan = signal[0]
@@ -172,7 +172,7 @@ class wavemeterclient(QtGui.QWidget):
         wmChannel = signal[0]
         value = signal[1]
         if wmChannel in self.d:
-            self.d[wmChannel].powermeter.setValue(value)
+            self.d[wmChannel].power_meter.setValue(value)
 
     def setButtonOff(self, wmChannel):
         self.d[wmChannel].lockChannel.setChecked(False)

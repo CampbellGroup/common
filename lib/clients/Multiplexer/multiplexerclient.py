@@ -12,7 +12,6 @@ except ImportError:
 
 import socket
 import os
-import pyqtgraph as pg
 import numpy as np
 
 SIGNALID1 = 445566
@@ -25,11 +24,10 @@ SIGNALID7 = 148323
 SIGNALID8 = 238883
 SIGNALID9 = 462917
 
-
 # this is the signal for the updated frequencies
 
 
-class wavemeterclient(QtGui.QWidget):
+class WavemeterClient(QtGui.QWidget):
 
     def __init__(self, reactor, parent=None):
         """
@@ -38,8 +36,9 @@ class wavemeterclient(QtGui.QWidget):
         be stored for iteration. also grabs chan info
         from multiplexer_config
         """
-        super(wavemeterclient, self).__init__()
+        super(WavemeterClient, self).__init__()
         self.password = os.environ['LABRADPASSWORD']
+        self.parent = parent
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.name = socket.gethostname() + ' Wave Meter Client'
@@ -49,7 +48,8 @@ class wavemeterclient(QtGui.QWidget):
         self._check_window_size()
         self.pattern_1 = {}
         self.pattern_2 = {}
-    
+        print('client initialized')
+
     def _check_window_size(self):
         """Checks screen size to make sure window fits in the screen. """
         desktop = QtGui.QDesktopWidget()
@@ -82,190 +82,182 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__pidvoltage_changed(SIGNALID6)
         yield self.server.signal__channel_lock_changed(SIGNALID7)
         yield self.server.signal__amplitude_changed(SIGNALID8)
-        yield self.server.signal__pattern_changed(SIGNALID9)
 
-        yield self.server.addListener(listener = self.updateFrequency, source = None, ID = SIGNALID1)
-        yield self.server.addListener(listener = self.toggleMeas, source = None, ID = SIGNALID2)
-        yield self.server.addListener(listener = self.updateexp, source = None, ID = SIGNALID3)
-        yield self.server.addListener(listener = self.toggleLock, source = None, ID = SIGNALID4)
-        yield self.server.addListener(listener = self.updateWLMOutput, source = None, ID = SIGNALID5)
-        yield self.server.addListener(listener = self.updatePIDvoltage, source = None, ID = SIGNALID6)
-        yield self.server.addListener(listener = self.toggleChannelLock, source = None, ID = SIGNALID7)
-        yield self.server.addListener(listener = self.updateAmplitude, source = None, ID = SIGNALID8)
-        yield self.server.addListener(listener = self.updatePattern, source = None, ID = SIGNALID9)
+        yield self.server.addListener(listener=self.update_frequency, source=None, ID=SIGNALID1)
+        yield self.server.addListener(listener=self.toggle_measurement, source=None, ID=SIGNALID2)
+        yield self.server.addListener(listener=self.update_exp, source=None, ID=SIGNALID3)
+        yield self.server.addListener(listener=self.toggle_lock, source=None, ID=SIGNALID4)
+        yield self.server.addListener(listener=self.update_wlm_output, source=None, ID=SIGNALID5)
+        yield self.server.addListener(listener=self.update_pid_voltage, source=None, ID=SIGNALID6)
+        yield self.server.addListener(listener=self.toggle_channel_cock, source=None, ID=SIGNALID7)
+        yield self.server.addListener(listener=self.update_amplitude, source=None, ID=SIGNALID8)
 
-        self.initializeGUI()
+        self.initialize_gui()
 
     @inlineCallbacks
-    def initializeGUI(self):
+    def initialize_gui(self):
 
         layout = QtGui.QGridLayout()
 
         self.setWindowTitle('Multiplexed Wavemeter')
 
-        qBox = QtGui.QGroupBox('Wavelength and Lock settings')
-        subLayout = QtGui.QGridLayout()
-        qBox.setLayout(subLayout)
-        layout.addWidget(qBox, 0, 0)
+        q_box = QtGui.QGroupBox('Wavelength and Lock settings')
+        sub_layout = QtGui.QGridLayout()
+        q_box.setLayout(sub_layout)
+        layout.addWidget(q_box, 0, 0)
 
         self.lockSwitch = TextChangingButton('Lock Wave Meter')
         self.lockSwitch.setMaximumHeight(50)
         self.startSwitch = TextChangingButton('Wavemeter')
         self.startSwitch.setMaximumHeight(50)
-        initstartvalue = yield self.server.get_wlm_output()
-        initlockvalue = yield self.server.get_lock_state()
-        self.lockSwitch.setChecked(initlockvalue)
-        self.startSwitch.setChecked(initstartvalue)
+        init_start_value = yield self.server.get_wlm_output()
+        init_lock_value = yield self.server.get_lock_state()
+        self.lockSwitch.setChecked(init_lock_value)
+        self.startSwitch.setChecked(init_start_value)
 
-        self.lockSwitch.toggled.connect(self.setLock)
-        self.startSwitch.toggled.connect(self.setOutput)
+        self.lockSwitch.toggled.connect(self.set_lock)
+        self.startSwitch.toggled.connect(self.set_output)
 
-        subLayout.addWidget(self.lockSwitch, 0, 2)
-        subLayout.addWidget(self.startSwitch, 0, 0)
-            
+        sub_layout.addWidget(self.lockSwitch, 0, 2)
+        sub_layout.addWidget(self.startSwitch, 0, 0)
 
         for chan in self.chaninfo:
-            wmChannel = self.chaninfo[chan][0]
+            wm_channel = self.chaninfo[chan][0]
             hint = self.chaninfo[chan][1]
             position = self.chaninfo[chan][2]
             stretched = self.chaninfo[chan][3]
-            displayPID = self.chaninfo[chan][4]
-            dacPort = self.chaninfo[chan][5]
-            displayPattern = self.chaninfo[chan][7]
-            widget = QCustomWavemeterChannel(chan, wmChannel, dacPort, hint, stretched, displayPattern, displayPID)
-               
-            if displayPID:
+            display_pid = self.chaninfo[chan][4]
+            dac_port = self.chaninfo[chan][5]
+            widget = QCustomWavemeterChannel(chan, wm_channel, dac_port, hint, stretched, display_pid)
+
+            if display_pid:
                 try:
                     rails = self.chaninfo[chan][6]
-                    widget.PIDindicator.set_rails(rails)
+                    widget.pid_indicator.set_rails(rails)
                 except AttributeError:
                     rails = [-10.0, 10.0]
 
-                    widget.PIDindicator.set_rails(rails)
+                    widget.pid_indicator.set_rails(rails)
             from common.lib.clients.qtui import RGBconverter as RGB
             RGB = RGB.RGBconverter()
             color = int(2.998e8 / (float(hint) * 1e3))
             color = RGB.wav2RGB(color)
             color = tuple(color)
 
-            if dacPort != 0:
-                self.wmChannels[dacPort] = wmChannel
-                initcourse = yield self.getPIDCourse(dacPort, hint)
-                widget.spinFreq.setValue(initcourse)
+            if dac_port != 0:
+                self.wmChannels[dac_port] = wm_channel
+                init_course = yield self.get_pid_course(dac_port, hint)
+                widget.spinFreq.setValue(init_course)
                 widget.spinFreq.valueChanged.connect(
-                    lambda freq=widget.spinFreq.value(), dacPort=dacPort: self.freqChanged(freq, dacPort))
+                    lambda freq=widget.spinFreq.value(), dac_port=dac_port: self.freq_changed(freq, dac_port))
                 widget.setPID.clicked.connect(
-                    lambda state=widget.setPID.isDown(), chan=chan, dacPort=dacPort: self.InitializePIDGUI(dacPort,
-                                                                                                           chan))
-                initLock = yield self.server.get_channel_lock(dacPort, wmChannel)
-                widget.lockChannel.setChecked(bool(initLock))
+                    lambda state=widget.setPID.isDown(), chan=chan, dac_port=dac_port: self.initialize_pid_gui(dac_port,
+                                                                                                               chan))
+                init_lock = yield self.server.get_channel_lock(dac_port, wm_channel)
+                widget.lockChannel.setChecked(bool(init_lock))
                 widget.lockChannel.toggled.connect(
-                    lambda state=widget.lockChannel.isDown(), dacPort=dacPort: self.lockSingleChannel(state, dacPort))
+                    lambda state=widget.lockChannel.isDown(), dac_port=dac_port: self.lock_single_channel(state,
+                                                                                                          dac_port))
             else:
                 widget.spinFreq.setValue(float(hint))
                 widget.lockChannel.toggled.connect(
-                    lambda state=widget.lockChannel.isDown(), wmChannel=wmChannel: self.setButtonOff(wmChannel))
+                    lambda state=widget.lockChannel.isDown(), wm_channel=wm_channel: self.set_button_off(wm_channel))
 
-
-            if displayPattern:
-                # save the widget hanlde in a dictionay here so we don't have to 
-                # keeping recalculating the color later
-                self.pattern_1[wmChannel] = widget.plot1.plot(pen=pg.mkPen(color=color))
-                
-            widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
+            widget.current_frequency.setStyleSheet('color: rgb' + str(color))
             widget.spinExp.valueChanged.connect(
-                lambda exp=widget.spinExp.value(), wmChannel=wmChannel: self.expChanged(exp, wmChannel))
-            initvalue = yield self.server.get_exposure(wmChannel)
-            widget.spinExp.setValue(initvalue)
-            initmeas = yield self.server.get_switcher_signal_state(wmChannel)
-            initmeas = initmeas
-            widget.measSwitch.setChecked(bool(initmeas))
+                lambda exp=widget.spinExp.value(), wm_channel=wm_channel: self.exp_changed(exp, wm_channel))
+            init_value = yield self.server.get_exposure(wm_channel)
+            widget.spinExp.setValue(init_value)
+            init_meas = yield self.server.get_switcher_signal_state(wm_channel)
+            init_meas = init_meas
+            widget.measSwitch.setChecked(bool(init_meas))
             widget.measSwitch.toggled.connect(
-                lambda state=widget.measSwitch.isDown(), wmChannel=wmChannel: self.changeState(state, wmChannel))
+                lambda state=widget.measSwitch.isDown(), wm_channel=wm_channel: self.change_state(state, wm_channel))
             widget.zeroVoltage.clicked.connect(
-                lambda widget=widget, dacPort=dacPort: self.set_voltage_zero(widget, dacPort))
+                lambda widget=widget, dac_port=dac_port: self.set_voltage_zero(widget, dac_port))
 
-            self.d[wmChannel] = widget
-            subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
-                
+            self.d[wm_channel] = widget
+            sub_layout.addWidget(self.d[wm_channel], position[1], position[0], 1, 3)
+
         self.setLayout(layout)
 
     @inlineCallbacks
-    def InitializePIDGUI(self,dacPort,chan):
-        self.pid = QCustomPID(dacPort)
+    def initialize_pid_gui(self, dac_port, chan):
+        self.pid = QCustomPID(dac_port)
         self.pid.setWindowTitle(chan + ' PID settings')
         self.pid.move(self.pos())
-        self.index = {1:0,-1:1}
+        self.index = {1: 0, -1: 1}
 
-        pInit = yield self.server.get_pid_p(dacPort)
-        iInit = yield self.server.get_pid_i(dacPort)
-        dInit = yield self.server.get_pid_d(dacPort)
-        dtInit = yield self.server.get_pid_dt(dacPort)
-        constInit = yield self.server.get_const_dt(dacPort)
-        sensInit = yield self.server.get_pid_sensitivity(dacPort)
-        polInit = yield self.server.get_pid_polarity(dacPort)
+        p_init = yield self.server.get_pid_p(dac_port)
+        i_init = yield self.server.get_pid_i(dac_port)
+        d_init = yield self.server.get_pid_d(dac_port)
+        dt_init = yield self.server.get_pid_dt(dac_port)
+        const_init = yield self.server.get_const_dt(dac_port)
+        sens_init = yield self.server.get_pid_sensitivity(dac_port)
+        pol_init = yield self.server.get_pid_polarity(dac_port)
 
+        self.pid.spinP.setValue(p_init)
+        self.pid.spinI.setValue(i_init)
+        self.pid.spinD.setValue(d_init)
+        self.pid.spinDt.setValue(dt_init)
+        self.pid.useDTBox.setCheckState(bool(const_init))
+        self.pid.spinFactor.setValue(sens_init[0])
+        self.pid.spinExp.setValue(sens_init[1])
+        self.pid.polarityBox.setCurrentIndex(self.index[pol_init])
 
-        self.pid.spinP.setValue(pInit)
-        self.pid.spinI.setValue(iInit)
-        self.pid.spinD.setValue(dInit)
-        self.pid.spinDt.setValue(dtInit)
-        self.pid.useDTBox.setCheckState(bool(constInit))
-        self.pid.spinFactor.setValue(sensInit[0])
-        self.pid.spinExp.setValue(sensInit[1])
-        self.pid.polarityBox.setCurrentIndex(self.index[polInit])
-
-        self.pid.spinP.valueChanged.connect(lambda p=self.pid.spinP.value(), dacPort=dacPort: self.changeP(p, dacPort))
-        self.pid.spinI.valueChanged.connect(lambda i=self.pid.spinI.value(), dacPort=dacPort: self.changeI(i, dacPort))
-        self.pid.spinD.valueChanged.connect(lambda d=self.pid.spinD.value(), dacPort=dacPort: self.changeD(d, dacPort))
+        self.pid.spinP.valueChanged.connect(
+            lambda p=self.pid.spinP.value(), dac_port=dac_port: self.change_p(p, dac_port))
+        self.pid.spinI.valueChanged.connect(
+            lambda i=self.pid.spinI.value(), dac_port=dac_port: self.change_i(i, dac_port))
+        self.pid.spinD.valueChanged.connect(
+            lambda d=self.pid.spinD.value(), dac_port=dac_port: self.change_d(d, dac_port))
         self.pid.spinDt.valueChanged.connect(
-            lambda dt=self.pid.spinDt.value(), dacPort=dacPort: self.changeDt(dt, dacPort))
+            lambda dt=self.pid.spinDt.value(), dac_port=dac_port: self.change_dt(dt, dac_port))
         self.pid.useDTBox.stateChanged.connect(
-            lambda state=self.pid.useDTBox.isChecked(), dacPort=dacPort: self.constDt(state, dacPort))
+            lambda state=self.pid.useDTBox.isChecked(), dac_port=dac_port: self.const_dt(state, dac_port))
         self.pid.spinFactor.valueChanged.connect(
-            lambda factor=self.pid.spinFactor.value(), dacPort=dacPort: self.changeFactor(factor, dacPort))
+            lambda factor=self.pid.spinFactor.value(), dac_port=dac_port: self.change_factor(factor, dac_port))
         self.pid.spinExp.valueChanged.connect(
-            lambda exponent=self.pid.spinExp.value(), dacPort=dacPort: self.changeExponent(exponent, dacPort))
+            lambda exponent=self.pid.spinExp.value(), dac_port=dac_port: self.change_exponent(exponent, dac_port))
         self.pid.polarityBox.currentIndexChanged.connect(lambda index=self.pid.polarityBox.currentIndex(),
-                                                                dacPort=dacPort: self.changePolarity(index, dacPort))
+                                                                dac_port=dac_port: self.change_polarity(index, dac_port))
 
         self.pid.show()
 
     @inlineCallbacks
-    def expChanged(self, exp, chan):
+    def exp_changed(self, exp, chan):
         #  these are switched, don't know why
 
         exp = int(exp)
-        yield self.server.set_exposure_time(chan,exp)
+        yield self.server.set_exposure_time(chan, exp)
 
-
-    def updateFrequency(self , c , signal):
+    def update_frequency(self, c, signal):
         chan = signal[0]
-        if chan in self.d :
+        if chan in self.d:
             freq = signal[1]
 
             if not self.d[chan].measSwitch.isChecked():
-                self.d[chan].currentfrequency.setText('Not Measured')
+                self.d[chan].current_frequency.setText('Not Measured')
             elif freq == -3.0:
-                self.d[chan].currentfrequency.setText('Under Exposed')
+                self.d[chan].current_frequency.setText('Under Exposed')
             elif freq == -4.0:
-                self.d[chan].currentfrequency.setText('Over Exposed')
+                self.d[chan].current_frequency.setText('Over Exposed')
             elif freq == -17.0:
-                self.d[chan].currentfrequency.setText('Data Error')
+                self.d[chan].current_frequency.setText('Data Error')
             else:
-                self.d[chan].currentfrequency.setText(str(freq)[0:10])
+                self.d[chan].current_frequency.setText(str(freq)[0:10])
 
-    def updatePIDvoltage(self, c, signal):
-        dacPort = signal[0]
+    def update_pid_voltage(self, c, signal):
+        dac_port = signal[0]
         value = signal[1]
-        if dacPort in self.wmChannels:
+        if dac_port in self.wmChannels:
             try:
-                self.d[self.wmChannels[dacPort]].PIDvoltage.setText('DAC Voltage (mV)  ' + "{:.1f}".format(value))
-                self.d[self.wmChannels[dacPort]].PIDindicator.update_slider(value / 1000.0)
+                self.d[self.wmChannels[dac_port]].pid_voltage.setText('DAC Voltage (mV)  ' + "{:.1f}".format(value))
+                self.d[self.wmChannels[dac_port]].pid_indicator.update_slider(value / 1000.0)
             except:
                 pass
 
-    def toggleMeas(self, c, signal):
+    def toggle_measurement(self, c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
@@ -273,121 +265,121 @@ class wavemeterclient(QtGui.QWidget):
             self.d[chan].measSwitch.setChecked(value)
             self.d[chan].measSwitch.blockSignals(False)
 
-    def toggleLock(self, c, signal):
+    def toggle_lock(self, c, signal):
         self.lockSwitch.blockSignals(True)
         self.lockSwitch.setChecked(signal)
         self.lockSwitch.blockSignals(False)
-        
-    def toggleChannelLock(self, c, signal):
-        wmChannel = signal[1]
+
+    def toggle_channel_cock(self, c, signal):
+        wm_channel = signal[1]
         state = signal[2]
-        if wmChannel in self.d:
-            self.d[wmChannel].lockChannel.blockSignals(True)
-            self.d[wmChannel].lockChannel.setChecked(bool(state))
-            self.d[wmChannel].lockChannel.blockSignals(False)
-            
-    def updateexp(self,c, signal):
+        if wm_channel in self.d:
+            self.d[wm_channel].lockChannel.blockSignals(True)
+            self.d[wm_channel].lockChannel.setChecked(bool(state))
+            self.d[wm_channel].lockChannel.blockSignals(False)
+
+    def update_exp(self, c, signal):
         chan = signal[0]
         value = signal[1]
-        if chan in self.d :
+        if chan in self.d:
             self.d[chan].spinExp.blockSignals(True)
             self.d[chan].spinExp.setValue(value)
             self.d[chan].spinExp.blockSignals(False)
 
-    def updateWLMOutput(self, c, signal):
+    def update_wlm_output(self, c, signal):
         self.startSwitch.blockSignals(True)
         self.startSwitch.setChecked(signal)
         self.startSwitch.blockSignals(False)
 
-    def updateAmplitude(self, c, signal):
-        wmChannel = signal[0]
+    def update_amplitude(self, c, signal):
+        wm_channel = signal[0]
         value = signal[1]
-        if wmChannel in self.d:
-            self.d[wmChannel].powermeter.blockSignals(True)
-            self.d[wmChannel].powermeter.setValue(value)
-            self.d[wmChannel].powermeter.blockSignals(False)
-            
-    def updatePattern(self, c, signal):
+        if wm_channel in self.d:
+            self.d[wm_channel].power_meter.blockSignals(True)
+            self.d[wm_channel].power_meter.setValue(value)
+            self.d[wm_channel].power_meter.blockSignals(False)
+
+    def update_pattern(self, c, signal):
         chan = signal[0]
-        IF1 = signal[1]
+        if1 = signal[1]
         points = 512
         if chan in self.pattern_1:
-            self.pattern_1[chan].setData(x=np.arange(points), y=IF1)
-            
-    def setButtonOff(self,wmChannel):
-        self.d[wmChannel].lockChannel.setChecked(False)
+            self.pattern_1[chan].setData(x=np.arange(points), y=if1)
+
+    def set_button_off(self, wm_channel):
+        self.d[wm_channel].lockChannel.setChecked(False)
 
     @inlineCallbacks
-    def changeState(self, state, chan):
+    def change_state(self, state, chan):
         yield self.server.set_switcher_signal_state(chan, state)
 
     @inlineCallbacks
-    def lockSingleChannel(self, state, dacPort):
-        wmChannel = self.wmChannels[dacPort]
-        yield self.server.set_channel_lock(dacPort, wmChannel, state)
+    def lock_single_channel(self, state, dac_port):
+        wm_channel = self.wmChannels[dac_port]
+        yield self.server.set_channel_lock(dac_port, wm_channel, state)
 
     @inlineCallbacks
-    def freqChanged(self,freq, dacPort):
-        yield self.server.set_pid_course(dacPort, freq)
+    def freq_changed(self, freq, dac_port):
+        yield self.server.set_pid_course(dac_port, freq)
 
     @inlineCallbacks
-    def setLock(self, state):
+    def set_lock(self, state):
         yield self.server.set_lock_state(state)
 
     @inlineCallbacks
-    def setOutput(self, state):
+    def set_output(self, state):
         yield self.server.set_wlm_output(state)
 
     @inlineCallbacks
-    def getPIDCourse(self, dacPort, hint):
-        course = yield self.server.get_pid_course(dacPort)
+    def get_pid_course(self, dac_port, hint):
+        course = yield self.server.get_pid_course(dac_port)
         try:
             course = float(course)
-        except:
+        except ValueError:
             try:
                 course = float(hint)
-            except:
+            except ValueError:
                 course = 600
         returnValue(course)
 
     @inlineCallbacks
-    def changeP(self, p, dacPort):
-        yield self.server.set_pid_p(dacPort,p)
+    def change_p(self, p, dac_port):
+        yield self.server.set_pid_p(dac_port, p)
 
     @inlineCallbacks
-    def changeI(self, i, dacPort):
-        yield self.server.set_pid_i(dacPort,i)
+    def change_i(self, i, dac_port):
+        yield self.server.set_pid_i(dac_port, i)
 
     @inlineCallbacks
-    def changeD(self, d, dacPort):
-        yield self.server.set_pid_d(dacPort,d)
+    def change_d(self, d, dac_port):
+        yield self.server.set_pid_d(dac_port, d)
 
     @inlineCallbacks
-    def changeDt(self, dt, dacPort):
-        yield self.server.set_pid_dt(dacPort,dt)
+    def change_dt(self, dt, dac_port):
+        yield self.server.set_pid_dt(dac_port, dt)
 
     @inlineCallbacks
-    def constDt(self, state, dacPort):
+    def const_dt(self, state, dac_port):
         if state == 0:
-            yield self.server.set_const_dt(dacPort,False)
+            yield self.server.set_const_dt(dac_port, False)
         else:
-            yield self.server.set_const_dt(dacPort,True)
+            yield self.server.set_const_dt(dac_port, True)
 
     @inlineCallbacks
-    def changeFactor(self, factor, dacPort):
-        yield self.server.set_pid_sensitivity(dacPort, factor, int(self.pid.spinExp.value()))
+    def change_factor(self, factor, dac_port):
+        yield self.server.set_pid_sensitivity(dac_port, factor, int(self.pid.spinExp.value()))
 
     @inlineCallbacks
-    def changeExponent(self, exponent, dacPort):
-        yield self.server.set_pid_sensitivity(dacPort, self.pid.spinFactor.value(), int(exponent))
+    def change_exponent(self, exponent, dac_port):
+        yield self.server.set_pid_sensitivity(dac_port, self.pid.spinFactor.value(), int(exponent))
 
     @inlineCallbacks
-    def changePolarity(self, index, dacPort):
+    def change_polarity(self, index, dac_port):
         if index == 0:
-            yield self.server.set_pid_polarity(dacPort,1)
+            yield self.server.set_pid_polarity(dac_port, 1)
         else:
-            yield self.server.set_pid_polarity(dacPort,-1)
- 
+            yield self.server.set_pid_polarity(dac_port, -1)
+
     def closeEvent(self, x):
         self.reactor.stop()
 
@@ -399,6 +391,6 @@ if __name__ == "__main__":
     qt4reactor.install()
     from twisted.internet import reactor
 
-    wavemeterWidget = wavemeterclient(reactor)
+    wavemeterWidget = WavemeterClient(reactor)
     wavemeterWidget.show()
     reactor.run()
