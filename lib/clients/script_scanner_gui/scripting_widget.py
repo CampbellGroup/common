@@ -6,7 +6,7 @@ from docstring_widget import docstring_widget
 from experiment_selector_widget import experiment_selector_widget
 
 
-class scripting_widget(QtGui.QWidget):
+class ScriptingWidget(QtGui.QWidget):
 
     on_refresh = QtCore.pyqtSignal(bool)
     on_run = QtCore.pyqtSignal(str)
@@ -21,13 +21,13 @@ class scripting_widget(QtGui.QWidget):
     on_experiment_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, reactor, parent):
-        super(scripting_widget, self).__init__()
+        super(ScriptingWidget, self).__init__()
         self.parent = parent
         self.cxn = self.parent.cxn
         self.reactor = reactor
-        self.setupLayout()
+        self.setup_layout()
 
-    def setupLayout(self):
+    def setup_layout(self):
         layout = QtGui.QGridLayout()
         self.selector = experiment_selector_widget(self.reactor, parent=self)
         self.docstring = docstring_widget(self.reactor, parent=self)

@@ -196,7 +196,7 @@ class running_scans_list(QtGui.QTableWidget):
 class running_combined(QtGui.QWidget):
     """
     What does this class do?
-    Instantiated in the scripting_widget class
+    Instantiated in the ScriptingWidget class
     TODO: more descriptive class name
     TODO: rename class with proper syntax
     """
