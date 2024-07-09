@@ -1,16 +1,28 @@
-from PyQt4 import uic
-from Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, EventNode
-from Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
-from editors.parameter_editor import ParameterEditor
-from editors.scan_editor import ScanEditor
-from editors.bool_editor import BoolEditor
-from editors.string_editor import StringEditor
-from editors.selection_editor import SelectionSimpleEditor
-from editors.line_selection_editor import line_selection_editor
-from editors.sideband_selection_editor import sideband_selection_editor
-from editors.duration_bandwidth_editor import DurationBandwidthEditor
-from editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
-from editors.event_editor import EventEditor
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+
+
+
+from PyQt5 import  uic
+from .Data import ParameterNode, ScanNode, BoolNode, StringNode, SelectionSimpleNode, LineSelectionNode, EventNode
+from .Data import SidebandElectorNode, DurationBandwidthNode, SpectrumSensitivityNode
+from .editors.parameter_editor import ParameterEditor
+from .editors.scan_editor import ScanEditor
+from .editors.bool_editor import BoolEditor
+from .editors.string_editor import StringEditor
+from .editors.selection_editor import SelectionSimpleEditor
+from .editors.line_selection_editor import line_selection_editor
+from .editors.sideband_selection_editor import sideband_selection_editor
+from .editors.duration_bandwidth_editor import DurationBandwidthEditor
+from .editors.spectrum_sensitivity_editor import spectrum_sensitivity_editor
+from .editors.event_editor import EventEditor
 
 import os
 basepath = os.path.dirname(__file__)

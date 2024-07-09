@@ -15,7 +15,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-
+import labrad.errors
 from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
@@ -103,6 +103,13 @@ class eVPump(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
+
+    @inlineCallbacks
+    def selectDevice(self, context, key=None):
+        try:
+            super().selectDevice(context, key=key)
+        except labrad.errors.NoDevicesAvailableError:
+            print("Keithley 3320G server has no available devices")
 
     @inlineCallbacks
     def loadConfigInfo(self):

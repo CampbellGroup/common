@@ -11,15 +11,15 @@ cmdline = %PYTHON% %FILE%
 timeout = 5
 
 [shutdown]
-message = 987654323
+message = 987654321
 timeout = 5
 ### END NODE INFO
 """
 
 from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
-from labrad.server import setting, Signal
-import labrad.units as _units
+from labrad.server import setting
+from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 TIMEOUT = Value(10.0, 's')
@@ -80,15 +80,13 @@ class KeithleyWrapper(DeviceWrapper):
         str, channel name for commands with a leading space.
         """
         if channel == 1:
-            channel_str = ' CH1'
+            return ' CH1'
         elif channel == 2:
-            channel_str = ' CH2'
+            return ' CH2'
         elif channel == 3:
-            channel_str = ' CH3'
-        # Why should this else exist? 
+            return ' CH3'
         else:
-            channel_str = ''
-        return channel_str
+            raise ValueError("Channel must be 1, 2, or 3")
 
     @inlineCallbacks
     def set_output(self, channel, output):
@@ -102,6 +100,7 @@ class KeithleyWrapper(DeviceWrapper):
         # First select the appropriate channel
         yield self.set_channel(channel=channel)
         # Explicitly setting the important space in command.
+        # noinspection SpellCheckingInspection
         command = 'CHANnel:OUTPut' + ' ' + str(int(output))
         yield self.write(command)
 
@@ -118,6 +117,7 @@ class KeithleyWrapper(DeviceWrapper):
         """
         # First select the appropriate channel
         yield self.set_channel(channel=channel)
+        # noinspection SpellCheckingInspection
         command = 'CHANnel:OUTPut?'
         yield self.write(command)
         state = yield self.read()
@@ -155,7 +155,7 @@ class KeithleyWrapper(DeviceWrapper):
         command = 'MEAS:VOLT:DC? ' + channel_str
         yield self.write(command)
         voltage = yield self.read()
-        voltage = _units.WithUnit(float(voltage), 'V')
+        voltage = WithUnit(float(voltage), 'V')
         returnValue(voltage)
         
     @inlineCallbacks
@@ -170,7 +170,7 @@ class KeithleyWrapper(DeviceWrapper):
         command = 'MEAS:CURRent:DC? ' + channel_str
         yield self.write(command)
         current = yield self.read()
-        current = _units.WithUnit(float(current), 'A')
+        current = WithUnit(float(current), 'A')
         returnValue(current)
 
     # Source commands.  These commands allow you to output various values.
@@ -185,7 +185,7 @@ class KeithleyWrapper(DeviceWrapper):
         command = 'APPly' + channel_str + ',' + voltage_in_volts + 'V'
         yield self.write(command)
         volts = yield self.measure_voltage(channel=channel)
-        units_volts = _units.WithUnit(volts, 'V')
+        units_volts = WithUnit(volts, 'V')
         returnValue(units_volts)
 
     @inlineCallbacks
@@ -196,6 +196,7 @@ class KeithleyWrapper(DeviceWrapper):
         is set by the user either at the box on via the client
         """
         channel_str = self.parse_channel(channel)
+        # noinspection SpellCheckingInspection
         command = 'APPL?' + channel_str
         yield self.write(command)
         out = yield self.read()
@@ -216,7 +217,7 @@ class KeithleyWrapper(DeviceWrapper):
         command = 'CURRent' + ' ' + current_in_amps + 'A'
         yield self.write(command)
         current = yield self.measure_current(channel=channel)
-        units_current = _units.WithUnit(current, 'A')
+        units_current = WithUnit(current, 'A')
         returnValue(units_current)
 
     # Instrument commands.
@@ -229,6 +230,7 @@ class KeithleyWrapper(DeviceWrapper):
         channel: int, channel to select
         """
         channel_str = self.parse_channel(channel)
+        # noinspection SpellCheckingInspection
         command = "INSTrument:SELect" + channel_str
         yield self.write(command)
 
@@ -239,6 +241,7 @@ class KeithleyWrapper(DeviceWrapper):
         ----------
         :returns: int, channel to select
         """
+        # noinspection SpellCheckingInspection
         command = "INSTrument:SELect?"
         yield self.write(command)
         channel = yield self.read()
@@ -252,15 +255,12 @@ class Keithley_Server(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print('loading config info...')
         self.reg = self.client.registry()
-        yield self.loadConfigInfo()
-        # yield self.reg.cd(['','settings'], True)
+        yield self.load_config_info()
         yield DeviceServer.initServer(self)
-        # self.listeners = set()
 
     @inlineCallbacks
-    def loadConfigInfo(self):
+    def load_config_info(self):
         """Load configuration information from the registry."""
         reg = self.reg
         yield reg.cd(['', 'Servers', 'KeithleyBField', 'Links'], True)
@@ -282,26 +282,15 @@ class Keithley_Server(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
-            devs += [(devName, (server, port))]
+            dev_name = '%s - %s' % (serServer, port)
+            devs += [(dev_name, (server, port))]
         returnValue(devs)
-
-    # def initContext(self, c):
-    #     self.listeners.add(c.ID)
-    #
-    # def expireContext(self, c):
-    #     self.listeners.remove(c.ID)
-    #
-    # def getOtherListeners(self, c):
-    #     notified = self.listeners.copy()
-    #     notified.remove(c.ID)
-    #     return notified
 
     @setting(100, 'test_beep')
     def test_beep(self, c):
         """
         Sends a command to the device, telling it to beep.
-        This may be useful when testing the connection to LABRAD.
+        This may be useful when testing the connection to LabRAD.
         Takes no arguments.
         """
         dev = self.selectDevice(c)
@@ -415,37 +404,43 @@ class Keithley_Server(DeviceServer):
         """
         """
         dev = self.selectDevice(c)
+        # noinspection SpellCheckingInspection
+        success = False
         command = 'Stat:oper:inst:isum' + str(chan) + ':cond?'
         yield dev.write(command)
         out = yield dev.read()
+        if out == "":
+            returnValue(0)
+
         returnValue(int(out))
         
     @setting(109, out_set='i', returns='?')
     def get_applied_voltage_current(self, c, out_set=None):
         dev = self.selectDevice(c)
-        
+
         out1 = yield dev.applied_voltage_current(1)
         out1 = out1.split(', ')
+        out1 = out1 if len(out1) != 0 else ["0", "0"]
         out2 = yield dev.applied_voltage_current(2)
         out2 = out2.split(', ')
+        out2 = out2 if len(out2) != 0 else ["0", "0"]
         out3 = yield dev.applied_voltage_current(3)
         out3 = out3.split(', ')
-            
-        if out_set is not None:
-            if out_set == 1:
-                values1 = _units.WithUnit(float(out1[0]), 'V')
-                values2 = _units.WithUnit(float(out2[0]), 'V')
-                values3 = _units.WithUnit(float(out3[0]), 'V')
-            elif out_set == 2:
-                values1 = _units.WithUnit(float(out1[1]), 'A')
-                values2 = _units.WithUnit(float(out2[1]), 'A')
-                values3 = _units.WithUnit(float(out3[1]), 'A')
+        out3 = out3 if len(out3) != 0 else ["0", "0"]
+
+        if out_set == 1:
+            values1 = WithUnit(float(out1[0]), 'V')
+            values2 = WithUnit(float(out2[0]), 'V')
+            values3 = WithUnit(float(out3[0]), 'V')
+        elif out_set == 2:
+            values1 = WithUnit(float(out1[1]), 'A')
+            values2 = WithUnit(float(out2[1]), 'A')
+            values3 = WithUnit(float(out3[1]), 'A')
         else:
-            for i in range(2):
+            for i in (0, 1):
                 out1[i] = float(out1[i])
                 out2[i] = float(out2[i])
                 out3[i] = float(out3[i])
-                
             values1 = out1
             values2 = out2
             values3 = out3

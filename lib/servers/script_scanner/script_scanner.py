@@ -26,6 +26,7 @@ except ImportError:
 import scan_methods
 from scheduler import scheduler
 import sys
+from importlib import reload, import_module, __import__
 
 
 class script_class_parameters(object):
@@ -77,11 +78,14 @@ class ScriptScanner(ScriptSignalsServer):
         for import_path, class_name in config.scripts:
             module = None
             try:
-                __import__(import_path)
+                # imports the file
+                import_module(import_path)
+                # gets the file
                 module = sys.modules[import_path]
+                # gets the experiment class from the module
                 cls = getattr(module, class_name)
             except ImportError as e:
-                print('Script Control Error importing: ', e)
+                print('Script Control Error importing: ', str(e))
             except AttributeError as e:
                 print('There is no class {0} in module {1}: {2}'.format(class_name, module, e))
             except SyntaxError as e:
@@ -101,7 +105,7 @@ class ScriptScanner(ScriptSignalsServer):
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
-        return self.script_parameters.keys()
+        return list(self.script_parameters.keys())
 
     @setting(1, "get_script_parameters", script='s', returns='*(ss)')
     def get_script_parameters(self, c, script):
@@ -131,7 +135,7 @@ class ScriptScanner(ScriptSignalsServer):
         duration
         """
         scheduled = self.scheduler.get_scheduled()
-        scheduled = [(ident, name, WithUnit(dur, 's')) for (ident, name, dur) in scheduled]
+        scheduled = [(ident, name, WithUnit(dur,'s') ) for (ident, name, dur) in scheduled]
         return scheduled
 
     @setting(4, "get_queue", returns='*(wsw)')
@@ -245,7 +249,7 @@ class ScriptScanner(ScriptSignalsServer):
              duration='v[s]')
     def change_scheduled_duration(self, c, scheduled_ID, duration):
         """
-        Change duration of the scheduled script executation
+        Change duration of the scheduled script execution
         """
         self.scheduler.change_period_scheduled_script(scheduled_ID,
                                                       duration['s'])

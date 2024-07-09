@@ -1,9 +1,11 @@
 from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
 from common.lib.clients.qtui.multiplexerPID import QCustomPID
-from common.lib.clients.qtui.q_custom_text_changing_button import \
-    TextChangingButton
+from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
 from twisted.internet.defer import inlineCallbacks, returnValue
-from PyQt4 import QtGui
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 try:
     from config.multiplexerclient_config import multiplexer_config
@@ -13,6 +15,9 @@ except ImportError:
 import socket
 import os
 import numpy as np
+
+import logging
+logger = logging.getLogger(__name__)
 
 SIGNALID1 = 445566
 SIGNALID2 = 143533
@@ -27,7 +32,7 @@ SIGNALID9 = 462917
 # this is the signal for the updated frequencies
 
 
-class WavemeterClient(QtGui.QWidget):
+class WavemeterClient(QWidget):
 
     def __init__(self, reactor, parent=None):
         """
@@ -39,7 +44,7 @@ class WavemeterClient(QtGui.QWidget):
         super(WavemeterClient, self).__init__()
         self.password = os.environ['LABRADPASSWORD']
         self.parent = parent
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.reactor = reactor
         self.name = socket.gethostname() + ' Wave Meter Client'
         self.d = {}
@@ -48,11 +53,11 @@ class WavemeterClient(QtGui.QWidget):
         self._check_window_size()
         self.pattern_1 = {}
         self.pattern_2 = {}
-        print('client initialized')
+        logger.info('client initialized')
 
     def _check_window_size(self):
         """Checks screen size to make sure window fits in the screen. """
-        desktop = QtGui.QDesktopWidget()
+        desktop = QDesktopWidget()
         screensize = desktop.availableGeometry()
         width = screensize.width()
         height = screensize.height()
@@ -82,6 +87,7 @@ class WavemeterClient(QtGui.QWidget):
         yield self.server.signal__pidvoltage_changed(SIGNALID6)
         yield self.server.signal__channel_lock_changed(SIGNALID7)
         yield self.server.signal__amplitude_changed(SIGNALID8)
+        # yield self.server.signal__pattern_changed(SIGNALID9)
 
         yield self.server.addListener(listener=self.update_frequency, source=None, ID=SIGNALID1)
         yield self.server.addListener(listener=self.toggle_measurement, source=None, ID=SIGNALID2)
@@ -92,17 +98,17 @@ class WavemeterClient(QtGui.QWidget):
         yield self.server.addListener(listener=self.toggle_channel_cock, source=None, ID=SIGNALID7)
         yield self.server.addListener(listener=self.update_amplitude, source=None, ID=SIGNALID8)
 
-        self.initialize_gui()
+        self.initializeGUI()
 
     @inlineCallbacks
-    def initialize_gui(self):
+    def initializeGUI(self):
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
 
         self.setWindowTitle('Multiplexed Wavemeter')
 
-        q_box = QtGui.QGroupBox('Wavelength and Lock settings')
-        sub_layout = QtGui.QGridLayout()
+        q_box = QGroupBox('Wavelength and Lock settings')
+        sub_layout = QGridLayout()
         q_box.setLayout(sub_layout)
         layout.addWidget(q_box, 0, 0)
 
@@ -296,7 +302,7 @@ class WavemeterClient(QtGui.QWidget):
         value = signal[1]
         if wm_channel in self.d:
             self.d[wm_channel].power_meter.blockSignals(True)
-            self.d[wm_channel].power_meter.setValue(value)
+            self.d[wm_channel].power_meter.setValue(int(value))
             self.d[wm_channel].power_meter.blockSignals(False)
 
     def update_pattern(self, c, signal):
@@ -385,10 +391,10 @@ class WavemeterClient(QtGui.QWidget):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
+    a = QApplication([])
+    import qt5reactor
 
-    qt4reactor.install()
+    qt5reactor.install()
     from twisted.internet import reactor
 
     wavemeterWidget = WavemeterClient(reactor)

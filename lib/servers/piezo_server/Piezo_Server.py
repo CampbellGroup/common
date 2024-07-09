@@ -78,7 +78,6 @@ class Piezo_Server(DeviceServer):
     @inlineCallbacks
     def initServer(self):
         self.current_state = {}
-        print('loading config info...')
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         print(self.serialLinks)
@@ -131,6 +130,7 @@ class Piezo_Server(DeviceServer):
         dev = self.selectDevice(c)
         self.current_state[str(channel)][0] = value['V']
         self.update_registry(channel)
+        # noinspection SpellCheckingInspection
         yield dev.write('vout.w ' + str(channel) + ' ' + str((value['V'])) + '\r\n')
         yield dev.read()
 

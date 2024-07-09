@@ -1,26 +1,32 @@
-from PyQt4 import QtCore
-from Data import ParameterNode, CollectionNode, ScanNode, BoolNode
-from Data import StringNode, SelectionSimpleNode, LineSelectionNode, SidebandElectorNode, EventNode
-from Data import DurationBandwidthNode, SpectrumSensitivityNode
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal, QAbstractItemModel
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
 
-class ParametersTreeModel(QtCore.QAbstractItemModel):
+from .Data import *
+
+class ParametersTreeModel(QAbstractItemModel):
     
-    filterRole  = QtCore.Qt.UserRole
-    on_new_parameter = QtCore.pyqtSignal(tuple, tuple)
+    filterRole  = Qt.UserRole
+    on_new_parameter = pyqtSignal(tuple, tuple)
     
     def __init__(self, root, parent=None):
         super(ParametersTreeModel, self).__init__(parent)
         self._rootNode = root
         
     def rowCount(self, parent):
-        '''
-        returns the count
-        '''
+        """
+        Returns the count.
+        """
         if not parent.isValid():
-            parentNode = self._rootNode
+            return self._rootNode.childCount()
         else:
-            parentNode = parent.internalPointer()
-        return parentNode.childCount()
+            return parent.internalPointer().childCount()
 
     def columnCount(self, parent):
         return 2
@@ -31,16 +37,16 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
 
         node = index.internalPointer()
 
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
+        if role == Qt.DisplayRole or role == Qt.EditRole:
             return node.data(index.column())
         
         if role == ParametersTreeModel.filterRole:
             return node.filter_text()
 
-    def setData(self, index, value, role=QtCore.Qt.EditRole):
+    def setData(self, index, value, role=Qt.EditRole):
         if index.isValid():
             node = index.internalPointer()
-            if role == QtCore.Qt.EditRole:
+            if role == Qt.EditRole:
                 node.setData(index.column(), value)
                 textIndex = self.createIndex(index.row(), 1, index.internalPointer())
                 self.dataChanged.emit(index, index)
@@ -51,14 +57,14 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         return False
 
     def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
+        if role == Qt.DisplayRole:
             if section == 0:
                 return "Collection"
             else:
                 return "Value"
 
     def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
 
     def parent(self, index):      
         '''
@@ -67,7 +73,7 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         node = self.getNode(index)
         parentNode = node.parent()
         if parentNode == self._rootNode:
-            return QtCore.QModelIndex()
+            return QModelIndex()
         return self.createIndex(parentNode.row(), 0, parentNode)
         
     def index(self, row, column, parent): 
@@ -79,7 +85,7 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         if childItem:
             return self.createIndex(row, column, childItem)
         else:
-            return QtCore.QModelIndex()
+            return QModelIndex()
 
     def getNode(self, index):
         '''
@@ -91,7 +97,7 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
                 return node            
         return self._rootNode
 
-    def insert_collection(self, name, parent_index=QtCore.QModelIndex()):
+    def insert_collection(self, name, parent_index=QModelIndex()):
         parentNode = self.getNode(parent_index)
         row_count = self.rowCount(parent_index)
         self.beginInsertRows(parent_index, row_count, row_count)
@@ -199,6 +205,6 @@ class ParametersTreeModel(QtCore.QAbstractItemModel):
         
     def clear_model(self):
         rows = self._rootNode.childCount()
-        self.beginRemoveRows(QtCore.QModelIndex(), 0, rows)
+        self.beginRemoveRows(QModelIndex(), 0, rows)
         self._rootNode.clear_data()
         self.endRemoveRows()

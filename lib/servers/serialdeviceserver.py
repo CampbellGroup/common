@@ -188,8 +188,8 @@ class SerialDeviceServer(LabradServer):
                 raise PortRegError(1)
             portStrVal = yield reg.get(portStrKey)
             reg.cd(tmp)
-            returnValue(portStrVal)
-        except Error, e:
+            returnValue( portStrVal )
+        except Error as e:
             reg.cd(tmp)
             if e.code == 17:
                 raise PortRegError(0)
@@ -224,13 +224,11 @@ class SerialDeviceServer(LabradServer):
                 print('Select the number corresponding to the device you are using:')
                 selection = raw_input('')
                 if selection in keyDict:
-                    portStr = yield reg.get(keyDict[selection])
-                    returnValue(portStr)
-        except Error, e:
-            if e.code == 13:
-                raise PortRegError(0)
-            else:
-                raise
+                    portStr = yield reg.get( keyDict[selection] )
+                    returnValue( portStr )
+        except Error as e:
+            if e.code == 13: raise PortRegError( 0 )
+            else: raise
 
     @inlineCallbacks
     def findSerial(self, serNode=None):

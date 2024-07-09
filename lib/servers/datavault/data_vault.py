@@ -30,26 +30,25 @@ timeout = 20
 ### END NODE INFO
 """
 
-from __future__ import with_statement
-
-from labrad import types as T, util
+from labrad import types
 from labrad.server import LabradServer, Signal, setting
 
 from twisted.internet import reactor
-from twisted.internet.reactor import callLater
-from twisted.internet.defer import inlineCallbacks, Deferred, returnValue, DeferredList
+from twisted.internet.defer import inlineCallbacks, Deferred, returnValue
 
-from ConfigParser import SafeConfigParser
-import os, re, sys
+from configparser import ConfigParser as SafeConfigParser
+import os
+import re
+import sys
 from datetime import datetime
 
 try:
     import numpy
-    print "Numpy imported."
+    print("Numpy imported.")
     useNumpy = True
-except ImportError, e:
-    print e
-    print "Numpy not imported.  The DataVault will operate, but will be slower."
+except ImportError:
+    numpy = False
+    print("Numpy not imported.  The DataVault will operate, but will be slower.")
     useNumpy = False
 
 # TODO: tagging
@@ -71,30 +70,30 @@ TIME_FORMAT = '%Y-%m-%d, %H:%M:%S'
 # error messages
 
 
-class NoDatasetError(T.Error):
+class NoDatasetError(types.Error):
     """Please open a dataset first."""
     code = 2
 
 
-class DatasetNotFoundError(T.Error):
+class DatasetNotFoundError(types.Error):
     code = 3
 
     def __init__(self, name):
         self.msg = "Dataset '%s' not found!" % name
 
 
-class DirectoryExistsError(T.Error):
+class DirectoryExistsError(types.Error):
     code = 4
 
     def __init__(self, name):
         self.msg = "Directory '%s' already exists!" % name
 
 
-class DirectoryNotFoundError(T.Error):
+class DirectoryNotFoundError(types.Error):
     code = 5
 
 
-class EmptyNameError(T.Error):
+class EmptyNameError(types.Error):
     """Names of directories or keys cannot be empty"""
     code = 6
 
@@ -102,13 +101,13 @@ class EmptyNameError(T.Error):
         self.msg = "Directory %s does not exist!" % (path,)
 
 
-class ReadOnlyError(T.Error):
+class ReadOnlyError(types.Error):
     """Points can only be added to datasets created with 'new' or opened with
     'open_appendable'."""
     code = 7
 
 
-class BadDataError(T.Error):
+class BadDataError(types.Error):
     code = 8
 
     def __init__(self, varcount, gotcount):
@@ -116,28 +115,28 @@ class BadDataError(T.Error):
         self.msg = requires_message % (varcount, gotcount)
 
 
-class BadParameterError(T.Error):
+class BadParameterError(types.Error):
     code = 9
 
     def __init__(self, name):
         self.msg = "Parameter '%s' not found." % name
 
 
-class ParameterInUseError(T.Error):
+class ParameterInUseError(types.Error):
     code = 10
 
     def __init__(self, name):
         self.msg = "Already a parameter called '%s'." % name
 
 
-class AdditionalHeaderInUseError(T.Error):
+class AdditionalHeaderInUseError(types.Error):
     code = 11
 
     def __init__(self, header_name, name):
         self.msg = "Already a value called '%s' in header '%s'." % (name, header_name)
 
 
-class BadAdditionalHeaderError(T.Error):
+class BadAdditionalHeaderError(types.Error):
     code = 12
 
     def __init__(self, header_name, name):
@@ -189,7 +188,7 @@ def timeFromStr(s):
 # variable parsing
 re_label = re.compile(r'^([^\[(]*)')  # matches up to the first [ or (
 re_legend = re.compile(r'\((.*)\)')  # matches anything inside ()
-re_units = re.compile(r'\[(.*)\]')  # matches anything inside [ ]
+re_units = re.compile(r'\[(.*)]')  # matches anything inside [ ]
 
 
 def getMatch(pat, s, default=None):
@@ -391,14 +390,14 @@ class Session(object):
 
     def openDataset(self, name):
         # first lookup by number if necessary
-        if isinstance(name, (int, long)):
+        if isinstance(name, (int)):
             for oldName in self.listDatasets():
                 num = int(oldName[:5])
                 if name == num:
                     name = oldName
                     break
         # if it's still a number, we didn't find the set
-        if isinstance(name, (int, long)):
+        if isinstance(name, (int)):
             raise DatasetNotFoundError(name)
 
         filename = dsEncode(name)
@@ -548,7 +547,7 @@ class Dataset:
             sec = 'Parameter %d' % (i + 1)
             label = S.get(sec, 'Label', raw=True)
             # TODO: big security hole! eval can execute arbitrary code
-            data = T.evalLRData(S.get(sec, 'Data', raw=True))
+            data = types.evalLRData(S.get(sec, 'Data', raw=True))
             return dict(label=label, data=data)
         count = S.getint(gen, 'Parameters')
         self.parameters = [getPar(i) for i in range(count)]
@@ -557,7 +556,7 @@ class Dataset:
             sec = header_name + ' %d' % (i + 1)
             label = S.get(sec, 'Label', raw=True)
             # TODO: big security hole! eval can execute arbitrary code
-            data = T.evalLRData(S.get(sec, 'Data', raw=True))
+            data = types.evalLRData(S.get(sec, 'Data', raw=True))
             return dict(label=label, data=data)
         self.additional_headers = {}
         for header in additional_header_names:
@@ -643,7 +642,7 @@ class Dataset:
         """
         if not hasattr(self, '_file'):
             self._file = open(self.datafile, 'a+')  # append data
-            self._fileTimeoutCall = callLater(FILE_TIMEOUT, self._fileTimeout)
+            self._fileTimeoutCall = reactor.callLater(FILE_TIMEOUT, self._fileTimeout)
         else:
             self._fileTimeoutCall.reset(FILE_TIMEOUT)
         return self._file
@@ -666,7 +665,7 @@ class Dataset:
         if not hasattr(self, '_data'):
             self._data = []
             self._datapos = 0
-            self._dataTimeoutCall = callLater(DATA_TIMEOUT, self._dataTimeout)
+            self._dataTimeoutCall = reactor.callLater(DATA_TIMEOUT, self._dataTimeout)
         else:
             self._dataTimeoutCall.reset(DATA_TIMEOUT)
         f = self.file
@@ -882,7 +881,7 @@ class NumpyDataset(Dataset):
                 # this error is raised by numpy 1.3
                 self.file.seek(0)
                 self._data = numpy.array([[]])
-            self._dataTimeoutCall = callLater(DATA_TIMEOUT, self._dataTimeout)
+            self._dataTimeoutCall = reactor.callLater(DATA_TIMEOUT, self._dataTimeout)
         else:
             self._dataTimeoutCall.reset(DATA_TIMEOUT)
         return self._data
@@ -956,6 +955,7 @@ class NumpyDataset(Dataset):
         else:
             self.listeners.add(context)
 
+
 if useNumpy:
     Dataset = NumpyDataset
 
@@ -987,9 +987,9 @@ class DataVault(LabradServer):
             gotLocation = True
         except:
             try:
-                print 'Could not load repository location from registry.'
-                print 'Please enter data storage directory or hit enter to use the current directory:'
-                DATADIR = raw_input('>>>')
+                print('Could not load repository location from registry.')
+                print('Please enter data storage directory or hit enter to use the current directory:')
+                DATADIR = input('>>>')
                 if DATADIR == '':
                     DATADIR = os.path.join(os.path.split(__file__)[0], '__data__')
                 if not os.path.exists(DATADIR):
@@ -1000,17 +1000,15 @@ class DataVault(LabradServer):
                 p.set(nodename, DATADIR)
                 p.set('__default__', DATADIR)
                 yield p.send()
-                print DATADIR, "has been saved in the registry",
-                print "as the data location."
-                print "To change this, stop this server,"
-                print "edit the registry keys at", path,
-                print "and then restart."
-            except Exception, E:
-                print
-                print E
-                print
-                print "Press [Enter] to continue..."
-                raw_input()
+                print(DATADIR, "has been saved in the registry")
+                print("as the data location.")
+                print("To change this, stop this server,")
+                print("edit the registry keys at", path)
+                print("and then restart.")
+            except Exception as E:
+                print(E)
+                print("Press [Enter] to continue...")
+                input()
                 sys.exit()
         # create root session
         # root = Session([''], self)
@@ -1064,7 +1062,7 @@ class DataVault(LabradServer):
     @setting(6, tagFilters=['s', '*s'], includeTags='b',
              returns=['*s{subdirs}, *s{datasets}',
                       '*(s*s){subdirs}, *(s*s){datasets}'])
-    def dir(self, c, tagFilters=['-trash'], includeTags=None):
+    def dir(self, c, tagFilters=('-trash'), includeTags=None):
         """Get subdirectories and datasets in the current directory."""
         # print 'dir:', tagFilters, includeTags
         if isinstance(tagFilters, str):
@@ -1092,7 +1090,7 @@ class DataVault(LabradServer):
             return c['path']
 
         temp = c['path'][:]  # copy the current path
-        if isinstance(path, (int, long)):
+        if isinstance(path, (int)):
             if path > 0:
                 temp = temp[:-path]
                 if not len(temp):
@@ -1117,7 +1115,7 @@ class DataVault(LabradServer):
 
     @setting(8, name='s', returns='*s')
     def mkdir(self, c, name):
-        """Make a new sub-directory in the current directory.
+        """Make a new subdirectory in the current directory.
 
         The current directory remains selected.  You must use the
         'cd' command to select the newly-created directory.
@@ -1125,7 +1123,7 @@ class DataVault(LabradServer):
         created directory.
         """
         if name == '':
-            raise EmptyNameError()
+            raise EmptyNameError(path=None)
         path = c['path'] + [name]
         self.onNewDirectory(str(path), self.root.listeners)  # MK
         if Session.exists(path):
@@ -1148,7 +1146,8 @@ class DataVault(LabradServer):
         a legend entry that should be unique for each trace.
         Returns the path and name for this dataset.
         """
-        if len(dtype) != 1 or dtype not in 'fs': raise TypeError("dtype keyword only accepts 'f' or 's'")
+        if len(dtype) != 1 or dtype not in 'fs':
+            raise TypeError("dtype keyword only accepts 'f' or 's'")
         session = self.getSession(c)
         dataset = session.newDataset(name or 'untitled', independents, dependents, dtype)
         self.onNewDatasetDir((dataset.name, session.path), self.root.listeners)  # MR
@@ -1201,7 +1200,7 @@ class DataVault(LabradServer):
         """
         session = self.getSession(c)
         dataset = session.openDataset(name)
-        c['dataset'] = dataset.name # not the same as name; has number prefixed
+        c['dataset'] = dataset.name  # not the same as name; has number prefixed
         c['filepos'] = 0
         c['commentpos'] = 0
         c['writing'] = True
@@ -1240,9 +1239,9 @@ class DataVault(LabradServer):
         dataset.keepStreaming(c.ID, c['filepos'])
         return data
 
-    ### Add in saving camera images as a .npy with the dataset
+    # Add in saving camera images as a .npy with the dataset
 
-    @setting(22, data='*i', image_size='*i', repetitions='i', filename='s', returns = '')
+    @setting(22, data='*i', image_size='*i', repetitions='i', filename='s', returns='')
     def save_image(self, c, data, image_size, repetitions, filename):
         """
         Save a CCD image of the open dataest to a .npy file
@@ -1405,7 +1404,7 @@ class DataVault(LabradServer):
         If a tag begins with a minus sign '-' then the tag (everything
         after the minus sign) will be removed.  If a tag begins with '^'
         then it will be toggled from its current state for each entry
-        in the list.  Otherwise it will be added.
+        in the list. Otherwise, it will be added.
 
         The directories and datasets must be in the current directory.
         """

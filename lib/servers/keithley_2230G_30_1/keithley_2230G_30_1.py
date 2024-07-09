@@ -23,7 +23,8 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 class KeithleyWrapper(GPIBDeviceWrapper):
 
     def initialize(self):
-        pass
+        command = 'SYSTem:REMote'
+        yield self.write(command)
 
     def parse_channel(self, channel=None):
         """
@@ -160,6 +161,26 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         units_current = _units.WithUnit(current, 'A')
         returnValue(units_current)
 
+    @inlineCallbacks
+    def set_parallel(self, channels):
+        """
+        Set which channels should be in parallel. Acceptabole inputs are:
+        "", "12", "23", "123"
+        """
+        channel_str = "NONE"
+        if channels == "12":
+            channel_str = " CH1CH2"
+        elif channels == "23":
+            channel_str = " CH2CH3"
+        elif channels == "123":
+            channel_str = " CH1CH2CH3"
+        command_par = 'OUTPut:PARallel' + channel_str
+        yield self.write(command_par)
+        command_comb = 'INSTrument:COMBine:' + ("PARallel " + channel_str if channel_str != "NONE" else "OFF")
+        yield self.write(command_comb)
+        par = yield self.write('OUTPut:PARallel ?')
+        returnValue(par)
+
     # Instrument commands.
     @inlineCallbacks
     def set_channel(self, channel):
@@ -176,7 +197,7 @@ class KeithleyWrapper(GPIBDeviceWrapper):
     @inlineCallbacks
     def query_channel(self):
         """
-        Parameters
+        Returns
         ----------
         channel: int, channel to select
         """
@@ -261,9 +282,23 @@ class KeithleyServer(GPIBManagedServer):
         enabled_channel = yield dev.query_channel()
         returnValue(enabled_channel)
 
+    @setting(9, channels='s', returns='?')
+    def parallel(self, c, channels=""):
+        """
+        Set which channels should be in parallel.
+        Parameters
+        ----------
+        channels: a string in ["", "12", "23", "123"] or None (default: None)
+        Returns
+        ----------
+        a string in ["NONE", "CH1CH2", "CH2CH3", "CH1CH2CH3"]
+        """
+        dev = self.selectedDevice(c)
+        par = yield dev.set_parallel(channels)
+        returnValue(par)
+
 
 __server__ = KeithleyServer()
-
 
 if __name__ == '__main__':
     from labrad import util

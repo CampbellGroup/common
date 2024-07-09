@@ -48,8 +48,8 @@ class LineTrigger(LabradServer):
     @inlineCallbacks
     def _enableLineTrigger(self, delay):
         delay = int(delay['us'])
-        yield deferToThread(self.api.enableLineTrigger, delay)
+        yield deferToThread(self.api.enable_line_trigger, delay)
 
     @inlineCallbacks
     def _disableLineTrigger(self):
-        yield deferToThread(self.api.disableLineTrigger)
+        yield deferToThread(self.api.disable_line_trigger)
