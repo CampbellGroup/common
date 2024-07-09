@@ -67,9 +67,9 @@ class DDS(LabradServer):
     
     @setting(45, 'Add DDS Pulses',  values = ['*(sv[s]v[s]v[MHz]v[dBm]v[deg])'])
     def addDDSPulses(self, c, values):
-        '''
+        """
         input in the form of a list [(name, start, duration, frequency, amplitude, phase)]
-        '''
+        """
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
         for value in values:
@@ -88,8 +88,8 @@ class DDS(LabradServer):
             ampl = ampl['dBm']
             phase = phase['deg']
             freq_off, ampl_off = channel.off_parameters
-            if freq == 0 or ampl == 0: #off state
-                freq, ampl = freq_off,ampl_off
+            if freq == 0 or ampl == 0:  # off state
+                freq, ampl = freq_off, ampl_off
             else:
                 self._checkRange('frequency', channel, freq)
                 self._checkRange('amplitude', channel, ampl)
@@ -97,15 +97,16 @@ class DDS(LabradServer):
             if not channel.phase_coherent_model:
                 num_off = self.settings_to_num(channel, freq_off, ampl_off)
             else:
-                #note that keeping the frequency the same when switching off to preserve phase coherence
+                # note that keeping the frequency the same when switching off to preserve phase coherence
                 num_off = self.settings_to_num(channel, freq, ampl_off, phase) 
-            #note < sign, because start can not be 0. 
-            #this would overwrite the 0 position of the ram, and cause the dds to change before pulse sequence is launched
+            # note < sign, because start can not be 0.
+            # this would overwrite the 0 position of the ram,
+            # and cause the dds to change before pulse sequence is launched
             if not self.sequenceTimeRange[0] < start <= self.sequenceTimeRange[1]: 
                 raise Exception ("DDS start time out of acceptable input range for channel {0} at time {1}".format(name, start))
             if not self.sequenceTimeRange[0] < start + dur <= self.sequenceTimeRange[1]: 
                 raise Exception ("DDS start time out of acceptable input range for channel {0} at time {1}".format(name, start + dur))
-            if not dur == 0:#0 length pulses are ignored
+            if not dur == 0:  # 0 length pulses are ignored
                 sequence.add_dds(name, start, num, 'start')
                 sequence.add_dds(name, start + dur, num_off, 'stop')
         
@@ -142,7 +143,8 @@ class DDS(LabradServer):
             r = channel.allowedamplrange
         elif t == 'frequency':
             r = channel.allowedfreqrange
-        if not r[0]<= val <= r[1]: raise Exception ("channel {0} : {1} of {2} is outside the allowed range".format(channel.name, t, val))
+        if not r[0]<= val <= r[1]:
+            raise Exception("channel {0} : {1} of {2} is outside the allowed range".format(channel.name, t, val))
     
     def _getChannel(self,c, name):
         try:
@@ -171,7 +173,7 @@ class DDS(LabradServer):
     
     @inlineCallbacks
     def _programDDSSequence(self, dds):
-        '''takes the parsed dds sequence and programs the board with it'''
+        """takes the parsed dds sequence and programs the board with it"""
         self.ddsLock = True
         for name,channel in self.ddsDict.iteritems():
             buf = dds[name]
@@ -220,17 +222,17 @@ class DDS(LabradServer):
             yield cxn.servers[server][reset]()
             yield cxn.servers[server][program]([(channel.channelnumber, buf)])
         except (KeyError,AttributeError):
-            print 'Not programing remote channel {}'.format(channel.remote)
+            print('Not programing remote channel {}'.format(channel.remote))
     
     def _getCurrentDDS(self):
-        '''
+        """
         Returns a dictionary {name:num} with the reprsentation of the current dds state
-        '''
+        """
         d = dict([(name,self._channel_to_num(channel)) for (name,channel) in self.ddsDict.iteritems()])
         return d
     
     def _channel_to_num(self, channel):
-        '''returns the current state of the channel in the num represenation'''
+        """returns the current state of the channel in the num represenation"""
         if channel.state:
             #if on, use current values. else, use off values
             freq,ampl = (channel.frequency, channel.amplitude)
@@ -242,11 +244,11 @@ class DDS(LabradServer):
         return num
         
     def _valToInt(self, channel, freq, ampl):
-        '''
+        """
         takes the frequency and amplitude values for the specific channel and returns integer representation of the dds setting
         freq is in MHz
         power is in dbm
-        '''
+        """
         ans = 0
         for val,r,m in [(freq,channel.boardfreqrange, 256**2), (ampl,channel.boardamplrange, 1)]:
             minim, maxim = r
@@ -256,9 +258,9 @@ class DDS(LabradServer):
         return ans
     
     def _intToBuf(self, num):
-        '''
+        """
         takes the integer representing the setting and returns the buffer string for dds programming
-        '''
+        """
         #converts value to buffer string, i.e 128 -> \x00\x00\x00\x80
         a, b = num // 256**2, num % 256**2
         arr = array.array('B', [a % 256 ,a // 256, b % 256, b // 256])
@@ -266,11 +268,11 @@ class DDS(LabradServer):
         return ans
     
     def _valToInt_coherent(self, channel, freq, ampl, phase = 0):
-        '''
+        """
         takes the frequency and amplitude values for the specific channel and returns integer representation of the dds setting
         freq is in MHz
         power is in dbm
-        '''
+        """
         ans = 0
         for val,r,m, precision in [(freq,channel.boardfreqrange, 1, 32), (ampl,channel.boardamplrange, 2 ** 32,  16), (phase,channel.boardphaserange, 2 ** 48,  16)]:
             minim, maxim = r
