@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from PyQt4 import QtGui, QtCore
-
-class SlideIndicator(QtGui.QWidget):
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+class SlideIndicator(QWidget):
     
     def __init__(self, limits):
         super(SlideIndicator, self).__init__()
@@ -28,21 +30,21 @@ class SlideIndicator(QtGui.QWidget):
         
     def draw_grid(self, qp):
       
-        pen = QtGui.QPen(QtCore.Qt.gray, 2, QtCore.Qt.SolidLine)
+        pen = QPen(Qt.gray, 2, QtCore.Qt.PenStyle.SolidLine)
         qp.setPen(pen)
         qp.drawLine(0, self.height() - 1, self.width(), self.height() - 1)
-        pen.setStyle(QtCore.Qt.CustomDashLine)
+        pen.setStyle(QtCore.Qt.PenStyle.CustomDashLine)
         pen.setDashPattern([1,self.width()/8.1 - 1])
         qp.setPen(pen)
         qp.drawLine(0, self.height() - 2, self.width(), self.height() - 2)
         qp.drawLine(0, self.height() - 3, self.width(), self.height() - 3)
         
     def draw_pointer(self, qp):
-        pen = QtGui.QPen(QtCore.Qt.red, 2, QtCore.Qt.SolidLine)
+        pen = QtGui.QPen(Qt.red, 2, QtCore.Qt.PenStyle.SolidLine)
         qp.setPen(pen)
         if self.value is not None:
-            xpos = (self.value - self.minvalue)/self.span * self.width()
-            qp.drawLine(xpos, self.height() - 15, xpos, self.height() -2)
+            xpos = int((self.value - self.minvalue)/self.span * self.width())
+            qp.drawLine(xpos, self.height() - 15, xpos, self.height() - 2)
             
     def set_rails(self, rails):
         self.minvalue = rails[0]
@@ -59,8 +61,8 @@ class SlideIndicator(QtGui.QWidget):
         self.repaint()
         
         
-if __name__=="__main__":
-    app = QtGui.QApplication(sys.argv)
-    icon = SlideIndicator([-5.0,5.0])
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    icon = SlideIndicator([-5.0, 5.0])
     icon.show()
     app.exec_()

@@ -1,20 +1,19 @@
 from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
-from PyQt4 import QtGui
-from common.lib.clients.qtui.q_custom_text_changing_button import \
-    TextChangingButton
-import time as time
+from PyQt5.QtWidgets import *
+import logging
+logger = logging.getLogger(__name__)
 
 
-class keithleyclient(QtGui.QFrame):
+class keithleyclient(QFrame):
 
     def __init__(self, reactor, parent=None):
         """initializes the GUI creates the reactor
         """
         super(keithleyclient, self).__init__()
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.connect()
         self.reactor = reactor
 
@@ -32,10 +31,10 @@ class keithleyclient(QtGui.QFrame):
 
     @inlineCallbacks
     def initializeGUI(self):
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
         self.setWindowTitle('Keithley Power Supply: 2231A-30-3')
-        qBox = QtGui.QGroupBox('Keithley 2231A: Magnetic Field Coils')
-        subLayout = QtGui.QGridLayout()
+        qBox = QGroupBox('Keithley 2231A: Magnetic Field Coils')
+        subLayout = QGridLayout()
         qBox.setLayout(subLayout)
         layout.addWidget(qBox, 0, 0)
 
@@ -49,7 +48,7 @@ class keithleyclient(QtGui.QFrame):
         # If you press the button, it switches it on/off
         self.remotewidget.TTLswitch.toggled.connect(
             lambda state=self.remotewidget.TTLswitch.isDown(): self.remote_toggled(state))
-        self.remotewidget.setFrameStyle(QtGui.QFrame.NoFrame)
+        self.remotewidget.setFrameStyle(QFrame.NoFrame)
 
         # Finds the output setting of each channel
         # Sets the initial condition
@@ -87,13 +86,13 @@ class keithleyclient(QtGui.QFrame):
         # Makes widget for the output of each channel
         self.output1widget = QCustomSwitchChannel('Output Channel 1', ('On', 'Off'))
         self.output1widget.TTLswitch.setChecked(int(initial_output1))
-        self.output1widget.setFrameStyle(QtGui.QFrame.NoFrame)
+        self.output1widget.setFrameStyle(QFrame.NoFrame)
         self.output2widget = QCustomSwitchChannel('Output Channel 2', ('On', 'Off'))
         self.output2widget.TTLswitch.setChecked(int(initial_output2))
-        self.output2widget.setFrameStyle(QtGui.QFrame.NoFrame)
+        self.output2widget.setFrameStyle(QFrame.NoFrame)
         self.output3widget = QCustomSwitchChannel('Output Channel 3', ('On', 'Off'))
         self.output3widget.TTLswitch.setChecked(int(initial_output3))
-        self.output3widget.setFrameStyle(QtGui.QFrame.NoFrame)
+        self.output3widget.setFrameStyle(QFrame.NoFrame)
 
         # Updates widgets when values are changed through the gui
         self.volt1widget.spinLevel.valueChanged.connect(
@@ -163,10 +162,10 @@ class keithleyclient(QtGui.QFrame):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
+    a = QApplication([])
+    import qt5reactor
 
-    qt4reactor.install()
+    qt5reactor.install()
     from twisted.internet import reactor
 
     keithleyWidget = keithleyclient(reactor)

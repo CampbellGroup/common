@@ -1,8 +1,19 @@
-from PyQt4 import QtCore, uic
-from Data import Node
-from FilterModel import FilterModel
-from Models import ParametersTreeModel
-from PropertiesEditor import PropertiesEditor
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+
+
+from PyQt5 import uic
+from . Data import Node
+from .FilterModel import FilterModel
+from .Models import ParametersTreeModel
+from .PropertiesEditor import PropertiesEditor
 import os
 
 base_path = os.path.dirname(__file__)

@@ -51,7 +51,8 @@ class Node(object):
             return self._parent._children.index(self)
 
     def data(self, column):
-        if column is 0: return self.name()
+        if column == 0:
+            return self.name()
     
     def setData(self, column, value):
         pass
@@ -121,7 +122,8 @@ class ParameterNode(Node):
         return '{0} {1}'.format(self._value, self._units)
         
     def setData(self, column, value):
-        value = value.toPyObject()
+        print('value', value)
+        value = value.value()
         if column == 3:
             self._min = value
         elif column == 4:

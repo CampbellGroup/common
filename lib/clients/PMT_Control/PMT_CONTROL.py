@@ -1,12 +1,16 @@
-from PyQt4 import QtGui, uic
+from PyQt5.QtWidgets import *
+from PyQt5 import uic
+
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
 import os
+import logging
+logger = logging.getLogger(__name__)
 
 SIGNALID = 874193
 
 
-class pmtWidget(QtGui.QWidget):
+class pmtWidget(QWidget):
     def __init__(self, reactor, cxn=None):
         super(pmtWidget, self).__init__()
         self.reactor = reactor
@@ -18,8 +22,8 @@ class pmtWidget(QtGui.QWidget):
 
     @inlineCallbacks
     def connect(self):
-        from labrad import types as T
-        self.T = T
+        from labrad import types as t
+        self.T = t
         if self.cxn is None:
             self.cxn = connection(name='PMT Client')
             yield self.cxn.connect()
@@ -43,20 +47,19 @@ class pmtWidget(QtGui.QWidget):
 
     @inlineCallbacks
     def initializeContent(self):
-        dataset = yield self.server.currentdataset()
+        dataset = yield self.server.current_dataset()
         self.lineEdit.setText(dataset)
-        running = yield self.server.isrunning()
+        running = yield self.server.is_running()
         self.pushButton.setChecked(running)
         self.setText(self.pushButton)
         duration = yield self.server.get_time_length()
         try:
             ran = yield self.server.get_time_length_range()
-        except Exception:
-            # not able to obtain
-            pass
+        except Exception as e:
+            logger.error(e)
         else:
             self.doubleSpinBox.setRange(*ran)
-        mode = yield self.server.getcurrentmode()
+        mode = yield self.server.get_current_mode()
         index = self.comboBox.findText(mode)
         self.comboBox.setCurrentIndex(index)
         self.lcdNumber.display('OFF')
@@ -64,7 +67,6 @@ class pmtWidget(QtGui.QWidget):
         self.doubleSpinBox.setValue(duration['s'])
 
     def followSignal(self, signal, value):
-        # print signal,value
         self.lcdNumber.display(value)
 
     def followSetting(self, signal, message):
@@ -94,12 +96,15 @@ class pmtWidget(QtGui.QWidget):
 
     @inlineCallbacks
     def on_toggled(self, state):
+        logger.info("on_toggled called")
         if state:
+            logger.info("PMT toggled on")
             yield self.server.record_data()
-            new_set = yield self.server.currentdataset()
+            new_set = yield self.server.current_dataset()
             self.lineEdit.setText(new_set)
         else:
-            yield self.server.stoprecording()
+            logger.info("PMT toggled off")
+            yield self.server.stop_recording()
             self.lcdNumber.display('OFF')
         self.setText(self.pushButton)
 
@@ -133,9 +138,9 @@ class pmtWidget(QtGui.QWidget):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
+    a = QApplication([])
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     pmtWidget = pmtWidget(reactor)
     pmtWidget.show()

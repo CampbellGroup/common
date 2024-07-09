@@ -1,14 +1,17 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
-from PyQt4 import QtGui
+from PyQt5.QtWidgets import *
+import logging
+logger = logging.getLogger(__name__)
+
 try:
     from config.switch_client_config import switch_config
 except:
     from common.lib.config.switch_client_config import switch_config
 
 
-class switchclient(QtGui.QFrame):
+class switchclient(QFrame):
     SIGNALID = 219749
 
     def __init__(self, reactor, cxn=None):
@@ -18,8 +21,8 @@ class switchclient(QtGui.QFrame):
             from switch_config file
         """
         super(switchclient, self).__init__()
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.reactor = reactor
         self.cxn = cxn
         self.d = {}
@@ -45,9 +48,7 @@ class switchclient(QtGui.QFrame):
         try:
             yield self.reg.cd(['', 'settings'])
             self.settings = yield self.reg.dir()
-            #print(self.settings)
             self.settings = self.settings[1]
-            #print(self.settings)
         except:
             self.settings = []
 
@@ -57,10 +58,10 @@ class switchclient(QtGui.QFrame):
     @inlineCallbacks
     def initializeGUI(self):
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
 
-        qBox = QtGui.QGroupBox('Laser Shutters')
-        subLayout = QtGui.QGridLayout()
+        qBox = QGroupBox('Laser Shutters')
+        subLayout = QGridLayout()
         qBox.setLayout(subLayout)
         layout.addWidget(qBox, 0, 0)
 
@@ -111,9 +112,9 @@ class switchclient(QtGui.QFrame):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
+    a = QApplication([])
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     switchWidget = switchclient(reactor)
     switchWidget.show()

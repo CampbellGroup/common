@@ -1,14 +1,20 @@
 import sys
 import os
-from PyQt4 import QtGui
-from PyQt4 import QtCore, uic
+
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore
+from PyQt5 import uic
 
 
-class QCustomSpinBox(QtGui.QWidget):
+# noinspection PyUnresolvedReferences
+class QCustomSpinBox(QWidget):
     onNewValues = QtCore.pyqtSignal()
 
     def __init__(self, title, levelRange, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QWidget.__init__(self, parent)
+        # these attributes are set by the UI file, but this makes the linter happy.
+        self.spinLevel = None
+        self.title = None
         basepath = os.path.dirname(__file__)
         path = os.path.join(basepath, 'titlespin.ui')
         uic.loadUi(path, self)
@@ -16,7 +22,7 @@ class QCustomSpinBox(QtGui.QWidget):
         self.levelRange = levelRange
         self.spinLevel.setRange(*levelRange)
         self.spinLevel.setDecimals(3)
-        self.spinLevel.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.spinLevel.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.level = 0
         self.spinLevel.valueChanged.connect(self.spinLevelChanged)
 
@@ -46,6 +52,7 @@ class QCustomSpinBox(QtGui.QWidget):
 
     def suggestLevel(self, level):
         # if spin box value selected too high, goes to the highest possible value
+        suggestion = None
         if level < self.levelRange[0]:
             suggestion = self.levelRange[0]
         if level > self.levelRange[1]:
@@ -80,7 +87,7 @@ class QCustomSpinBox(QtGui.QWidget):
 
 
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     icon = QCustomSpinBox('Control', (-10.0, 10.0))
     icon.show()
     app.exec_()

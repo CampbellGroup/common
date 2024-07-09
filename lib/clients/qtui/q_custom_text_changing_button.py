@@ -1,12 +1,17 @@
-from PyQt4 import QtGui, QtCore
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 
-class TextChangingButton(QtGui.QPushButton):
-    """Button that changes its text to ON or OFF and colors when it's pressed.
+class TextChangingButton(QPushButton):
     """
+    Button that changes its text to ON or OFF and colors when it's pressed.
+    """
+
     def __init__(self, button_text, parent=None):
         """
-        NOTE: when both labels and addtext are not None, labels take
+        NOTE: when both labels and add text are not None, labels take
         precedence.
 
         Parameters
@@ -19,33 +24,29 @@ class TextChangingButton(QtGui.QPushButton):
             "OFF".
             When it's None, then the text gets displayed are "On" or "Off".
         """
-        super(TextChangingButton, self).__init__(parent)
+
+        super().__init__()
         self.button_text = button_text
         self.setCheckable(True)
-        self.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=10))
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum,
-                           QtGui.QSizePolicy.Minimum)
+        self.setFont(QFont('MS Shell Dlg 2', pointSize=10))
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         # connect signal for appearance changing
-        self.toggled.connect(self.setAppearance)
-        self.setAppearance(self.isDown())
+        self.toggled.connect(self.set_appearance)
+        self.set_appearance(self.isDown())
 
-    def setAppearance(self, down):
+    def set_appearance(self, down):
         on_text, off_text = self._set_button_texts()
         if down:
             self.setText(on_text)
-            self.setPalette(QtGui.QPalette(QtCore.Qt.darkGreen))
-            self.setStyleSheet("color: black;")
         else:
             self.setText(off_text)
-            self.setPalette(QtGui.QPalette(QtCore.Qt.black))
-            self.setStyleSheet("color: black;")
 
     def _set_button_texts(self):
         """Return button texts when they are on or off."""
-        if type(self.button_text) == str:
+        if isinstance(self.button_text, str):
             on_text = self.button_text + "   On"
             off_text = self.button_text + "   Off"
-        elif type(self.button_text) == tuple:
+        elif isinstance(self.button_text, tuple):
             on_text = self.button_text[0]
             off_text = self.button_text[1]
         elif self.button_text is None:
@@ -57,4 +58,4 @@ class TextChangingButton(QtGui.QPushButton):
         return on_text, off_text
 
     def sizeHint(self):
-        return QtCore.QSize(37, 26)
+        return QSize(37, 26)

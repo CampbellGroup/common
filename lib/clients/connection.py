@@ -1,4 +1,6 @@
 from twisted.internet.defer import inlineCallbacks, returnValue
+import logging
+logger = logging.getLogger(__name__)
 
 """
 The shared connection object allows multiple asynchronous clients to share a single connection to the manager
@@ -75,20 +77,20 @@ class connection(object):
         # print 'server connected'
         server_name = server_name[1]
         if server_name in self._servers.keys():
-            print('{} Connected'.format(server_name))
+            print('{} connected'.format(server_name))
             yield self.cxn.refresh()
             self._servers[server_name] = yield self.cxn[server_name]
             actions = self._on_connect[server_name]
             for action in actions:
                 yield action()
         else:
-            print('Server Connected')
-    
+            logger.info('{} connected'.format(server_name))
+
     @inlineCallbacks
     def followServerDisconnect(self, cntx, server_name):
         server_name = server_name[1]
         if server_name in self._servers.keys():
-            print('{} Disconnected'.format(server_name))
+            logger.info('{} Disconnected'.format(server_name))
             self._servers[server_name] = None
             actions = self._on_disconnect[server_name]
             for action in actions:

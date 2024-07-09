@@ -1,7 +1,15 @@
-from PyQt4 import QtCore, QtGui
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
 
 
-class FilterModel(QtGui.QSortFilterProxyModel):
+class FilterModel(QSortFilterProxyModel):
     def __init__(self, parent):
         super(FilterModel, self).__init__(parent)
         # filtering
@@ -14,8 +22,8 @@ class FilterModel(QtGui.QSortFilterProxyModel):
     
     def filterAcceptsRow(self, row, index):
         model_index = self.sourceModel().index(row, 0, index)
-        filter_text = QtCore.QString(self.sourceModel().data(model_index, self.filterRole()))
-        contains_filter = filter_text.contains(self.filterRegExp())
+        filter_text = str(self.sourceModel().data(model_index, self.filterRole()))
+        contains_filter = self.filterRegExp().pattern() in filter_text
         in_show_only = self._is_in_show_only(filter_text)
         return contains_filter and in_show_only
     
@@ -23,10 +31,11 @@ class FilterModel(QtGui.QSortFilterProxyModel):
         if not len(self._show_only):
             return True
         for collection, parameter in self._show_only:
-            if filter_text.contains(collection+parameter):
+            if (collection + parameter) in filter_text:
                 return True
         return False
-    
+
+
     def filterAcceptsColumn(self, column, index):
         return True
     

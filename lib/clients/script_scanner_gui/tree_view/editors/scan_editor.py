@@ -1,4 +1,14 @@
-from PyQt4 import QtCore, QtGui, uic
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+import os
+from PyQt5 import uic
 from numpy import linspace
 import os
 
@@ -6,7 +16,7 @@ basepath =  os.path.dirname(__file__)
 path = os.path.join(basepath,"..","..","Views", "ScanEditor.ui")
 scanBase, scanForm = uic.loadUiType(path)
 
-class scan_delegate(QtGui.QAbstractItemDelegate):
+class scan_delegate(QAbstractItemDelegate):
     def __init__(self, parent):
         super(scan_delegate, self).__init__()
         self.parent = parent
@@ -47,7 +57,7 @@ class scan_delegate(QtGui.QAbstractItemDelegate):
     def setModelData(self, editor, model, index):
         if index.column() == 8:
             return
-        elif isinstance(editor, QtGui.QLineEdit):
+        elif isinstance(editor, QLineEdit):
             value = editor.text()
         else:
             value = editor.value()
@@ -159,7 +169,7 @@ class ScanWidget(scanBase, scanForm):
 class ScanEditor(ScanWidget):
     def __init__(self, parent=None):
         super(ScanEditor, self).__init__(parent)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QDataWidgetMapper(self)
         self._dataMapper.setItemDelegate(scan_delegate(self))
 
     def setModel(self, proxyModel):
@@ -172,7 +182,7 @@ class ScanEditor(ScanWidget):
         self._dataMapper.addMapping(self.uiStart, 5)
         self._dataMapper.addMapping(self.uiStop, 6)
         self._dataMapper.addMapping(self.uiSteps, 7)
-        self._dataMapper.addMapping(QtGui.QWidget(self), 8)
+        self._dataMapper.addMapping(QWidget(self), 8)
      
     def setSelection(self, current):
         parent = current.parent()

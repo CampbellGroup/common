@@ -1,20 +1,21 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks
-from PyQt4 import QtGui
-
+from PyQt5.QtWidgets import *
 try:
     from config.piezo_client_config import piezo_config
 except:
     from common.lib.config.piezo_client_config import piezo_config
+import logging
+logger = logging.getLogger(__name__)
 
 
-class Piezo_Client(QtGui.QFrame):
+class Piezo_Client(QFrame):
 
     def __init__(self, reactor, parent=None):
         super(Piezo_Client, self).__init__()
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.MinimumExpanding)
-        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
+        self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.reactor = reactor
         self.connect()
 
@@ -31,7 +32,7 @@ class Piezo_Client(QtGui.QFrame):
 
     @inlineCallbacks
     def initializeGUI(self):
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
         # initial_remote_setting = False
         # remote_button = QCustomSwitchChannel('Remote Mode', ('On', 'Off'))
         # remote_button.TTLswitch.setChecked(int(initial_remote_setting))
@@ -46,7 +47,7 @@ class Piezo_Client(QtGui.QFrame):
             initial_voltage = float(initial_voltage)
 
             chan_button = QCustomSwitchChannel("Piezo "+str(key), ('On', 'Off'))
-            chan_button.setFrameStyle(QtGui.QFrame.NoFrame)
+            chan_button.setFrameStyle(QFrame.NoFrame)
             chan_button.TTLswitch.setChecked(int(initial_channel_setting))
             chan_button.TTLswitch.toggled.connect(lambda state=chan_button.TTLswitch.isDown(),
                                                   chan=channel_info[key][0]: self.on_chan_toggled(chan, state))
@@ -57,7 +58,7 @@ class Piezo_Client(QtGui.QFrame):
             voltage_spin_box.spinLevel.valueChanged.connect(lambda volt=voltage_spin_box.spinLevel.value(),
                                                   chan=channel_info[key][0]: self.voltage_changed(chan, volt))
             layout.addWidget(chan_button, channel_info[key][1][0], channel_info[key][1][1])
-            #  puts voltage box below it's channel button
+            #  puts voltage box below its channel button
             layout.addWidget(voltage_spin_box, channel_info[key][1][0]+1, channel_info[key][1][1])
         self.setLayout(layout)
 
@@ -78,9 +79,9 @@ class Piezo_Client(QtGui.QFrame):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
+    a = QApplication([])
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     piezoWidget = Piezo_Client(reactor)
     piezoWidget.show()

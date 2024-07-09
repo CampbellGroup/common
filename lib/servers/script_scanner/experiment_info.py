@@ -1,4 +1,3 @@
-from treedict import TreeDict
 
 
 class experiment_info(object):
@@ -19,4 +18,4 @@ class experiment_info(object):
             self.name = name
         if required_parameters is not None:
             self.required_parameters = required_parameters
-        self.parameters = TreeDict()
+        self.parameters = dict()

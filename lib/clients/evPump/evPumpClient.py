@@ -5,8 +5,14 @@ Created on Mar 25, 2016
 """
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import connection
-from PyQt4 import QtGui, QtCore
+from labrad import errors
+
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
+import logging
+logger = logging.getLogger(__name__)
 
 SIGNALID1 = 421956
 SIGNALID2 = 444296
@@ -14,28 +20,39 @@ SIGNALID3 = 123462
 SIGNALID4 = 649731
 
 
-class eVPumpClient(QtGui.QFrame):
+class eVPumpClient(QFrame):
 
     def __init__(self, reactor, cxn=None):
         super(eVPumpClient, self).__init__()
         self._max_current = 24.0  # maximum laser diode current in Amps
         self._max_power = 15.2  # maximum laser output power in Watts
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.cxn = cxn
         self.reactor = reactor
         from labrad.units import WithUnit as U
         self.U = U
-        self.connect()
+        try:
+            self.connect()
+            self.connected = True
+        except AttributeError as e:
+            logger.error(e)
 
     @inlineCallbacks
     def connect(self):
-        """Creates an Asynchronous connection to pump server and
+        """
+        Creates an Asynchronous connection to pump server and
         connects incoming signals to relevant functions
         """
         if self.cxn is None:
             self.cxn = connection(name='eV Pump Client')
             yield self.cxn.connect()
-        self.server = yield self.cxn.get_server('evpump')
+
+        try:
+            self.server = yield self.cxn.get_server('evpump')
+        except Exception as e:
+            logger.error("EVPump Server failed to connect. Aborting initialization")
+            logger.error(e)
+            return
 
         yield self.server.signal__current_changed(SIGNALID1)
         yield self.server.signal__power_changed(SIGNALID2)
@@ -50,32 +67,33 @@ class eVPumpClient(QtGui.QFrame):
                                       source=None, ID=SIGNALID3)
         yield self.server.addListener(listener=self.update_system_status,
                                       source=None, ID=SIGNALID4)
+        self.initialize_gui()
 
-        self.initialize_GUI()
-
+    # noinspection PyArgumentList
     @inlineCallbacks
-    def initialize_GUI(self):
-        layout = QtGui.QGridLayout()
+    def initialize_gui(self):
+        layout = QGridLayout()
         font = QtGui.QFont()
         font.setBold(True)
         font.setPointSize(18)
 
-        self.title = QtGui.QLabel('Millennia eV Pump Laser')
+        self.title = QLabel('Millennia eV Pump Laser')
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.title.setFont(font)
         self.title.setAlignment(QtCore.Qt.AlignCenter)
 
-        self.temp_label = QtGui.QLabel('Diode Temp degC')
-        self.current_label = QtGui.QLabel('Current')
-        self.power_label = QtGui.QLabel('Power')
-        self.power_control_label = QtGui.QLabel('Power Control')
-        self.status_label = QtGui.QLabel('Laser Status: ')
-        self.current_control_label = QtGui.QLabel('Current Control (A)')
-        self.control_mode_label = QtGui.QLabel('Control Mode')
+        self.temp_label = QLabel('Diode Temp degC')
+        self.current_label = QLabel('Current')
+        self.power_label = QLabel('Power')
+        self.power_control_label = QLabel('Power Control')
+        self.status_label = QLabel('Laser Status: ')
+        self.current_control_label = QLabel('Current Control (A)')
+        self.control_mode_label = QLabel('Control Mode')
 
-        self.control_combo = QtGui.QComboBox()
+        self.control_combo = QComboBox()
         self.control_combo.addItems(['Power Control', 'Current Control'])
 
-        self.power_spinbox = QtGui.QDoubleSpinBox()
+        self.power_spinbox = QDoubleSpinBox()
         self.power_spinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
         self.power_spinbox.setDecimals(2)
         self.power_spinbox.setSingleStep(0.01)
@@ -83,7 +101,7 @@ class eVPumpClient(QtGui.QFrame):
         self.power_spinbox.valueChanged.connect(self.change_power)
         self.power_spinbox.setKeyboardTracking(False)
 
-        self.current_spinbox = QtGui.QDoubleSpinBox()
+        self.current_spinbox = QDoubleSpinBox()
         self.current_spinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
         self.current_spinbox.setDecimals(3)
         self.current_spinbox.setSingleStep(0.001)
@@ -91,58 +109,57 @@ class eVPumpClient(QtGui.QFrame):
         self.current_spinbox.valueChanged.connect(self.change_current)
         self.current_spinbox.setKeyboardTracking(False)
 
-        self.temp_display = QtGui.QLCDNumber()
+        self.temp_display = QLCDNumber()
         self.temp_display.setDigitCount(5)
 
-        self.current_progress_bar = QtGui.QProgressBar()
+        self.current_progress_bar = QProgressBar()
         self.current_progress_bar.setOrientation(QtCore.Qt.Vertical)
 
         self.laser_switch = QCustomSwitchChannel('Laser', ('On', 'Off'))
-        self.laser_switch.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.laser_switch.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.shutter_switch = QCustomSwitchChannel('Shutter', ('Open', 'Closed'))
-        self.shutter_switch.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.shutter_switch.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
-
-        self.power_progress_bar = QtGui.QProgressBar()
+        self.power_progress_bar = QProgressBar()
         self.power_progress_bar.setOrientation(QtCore.Qt.Vertical)
         self.power_progress_bar.setMaximum(100)
         self.power_progress_bar.setMinimum(0)
 
-        layout.addWidget(self.title,                0, 0, 1, 3)
-        layout.addWidget(self.current_progress_bar, 2, 0, 8, 1)
-        layout.addWidget(self.power_progress_bar,   2, 1, 8, 1)
-        layout.addWidget(self.current_label,        1, 0, 1, 1)
-        layout.addWidget(self.power_label,          1, 1, 1, 1)
-        layout.addWidget(self.temp_label,           10, 0, 1, 2)
-        layout.addWidget(self.status_label,         11, 0, 1, 1)
-        layout.addWidget(self.temp_display,         9, 2, 4, 1)
-        layout.addWidget(self.laser_switch,         6, 2)
-        layout.addWidget(self.shutter_switch,       7, 2)
-        layout.addWidget(self.power_control_label,  2, 2)
-        layout.addWidget(self.current_control_label, 4, 2)
-        layout.addWidget(self.power_spinbox,        3, 2)
-        layout.addWidget(self.current_spinbox,      5, 2)
-        layout.addWidget(self.control_combo,        1, 2)
+        layout.addWidget(self.title,                 0,  0, 1, 3)
+        layout.addWidget(self.current_progress_bar,  2,  0, 8, 1)
+        layout.addWidget(self.power_progress_bar,    2,  1, 8, 1)
+        layout.addWidget(self.current_label,         1,  0, 1, 1)
+        layout.addWidget(self.power_label,           1,  1, 1, 1)
+        layout.addWidget(self.temp_label,            10, 0, 1, 2)
+        layout.addWidget(self.status_label,          11, 0, 1, 1)
+        layout.addWidget(self.temp_display,          9,  2, 4, 1)
+        layout.addWidget(self.laser_switch,          6,  2)
+        layout.addWidget(self.shutter_switch,        7,  2)
+        layout.addWidget(self.power_control_label,   2,  2)
+        layout.addWidget(self.current_control_label, 4,  2)
+        layout.addWidget(self.power_spinbox,         3,  2)
+        layout.addWidget(self.current_spinbox,       5,  2)
+        layout.addWidget(self.control_combo,         1,  2)
 
         self.laser_switch.TTLswitch.toggled.connect(self.on_laser_toggled)
         self.shutter_switch.TTLswitch.toggled.connect(self.on_shutter_toggled)
         self.control_combo.activated[str].connect(self.change_control)
         self.freeze_mode()
 
-        # This initializations need to be at the end so that the widgets
+        # These initializations need to be at the end so that the widgets
         # connected to active signals are created quickly (indicators)
-        init_power = yield self.server.get_power_setpoint()
-        self.power_spinbox.setValue(init_power['W'])
+        if self.connected:
+                init_power = yield self.server.get_power_setpoint()
+                self.power_spinbox.setValue(init_power['W'])
 
-        init_current = yield self.server.get_current_setpoint()
-        self.current_spinbox.setValue(init_current['A'])
+                init_current = yield self.server.get_current_setpoint()
+                self.current_spinbox.setValue(init_current['A'])
 
-        initOn = yield self.server.diode_status()
-        self.laser_switch.TTLswitch.setChecked(initOn)
+                init_on = yield self.server.diode_status()
+                self.laser_switch.TTLswitch.setChecked(init_on)
 
-        initShutter = yield self.server.get_shutter_status()
-        self.shutter_switch.TTLswitch.setChecked(initShutter)
-
+                init_shutter = yield self.server.get_shutter_status()
+                self.shutter_switch.TTLswitch.setChecked(init_shutter)
         self.setLayout(layout)
 
     @inlineCallbacks
@@ -163,35 +180,35 @@ class eVPumpClient(QtGui.QFrame):
 
     @inlineCallbacks
     def change_control(self, mode):
-
-        diode_status = yield self.server.diode_status()
-        if diode_status is True:
-            yield self.freeze_mode()
-
-        elif diode_status is False:
-            if mode == 'Current Control':
-                yield self.server.set_control_mode('current')
+        if self.connected:
+            diode_status = yield self.server.diode_status()
+            if diode_status:
                 yield self.freeze_mode()
-            elif mode == 'Power Control':
-                yield self.server.set_control_mode('power')
-                yield self.freeze_mode()
-            else:
-                yield None
+
+            elif not diode_status:
+                if mode == 'Current Control':
+                    yield self.server.set_control_mode('current')
+                    yield self.freeze_mode()
+                elif mode == 'Power Control':
+                    yield self.server.set_control_mode('power')
+                    yield self.freeze_mode()
+                else:
+                    yield None
 
     @inlineCallbacks
     def freeze_mode(self):
-
-        last_mode = yield self.server.get_control_mode()
-        if last_mode == 'current':
-            self.control_combo.setCurrentIndex(1)
-            self.power_spinbox.setEnabled(False)
-            self.current_spinbox.setEnabled(True)
-        elif last_mode == 'power':
-            self.control_combo.setCurrentIndex(0)
-            self.power_spinbox.setEnabled(True)
-            self.current_spinbox.setEnabled(False)
-        else:
-            self.control_combo.setCurrentIndex(-1)
+        if self.connected:
+            last_mode = yield self.server.get_control_mode()
+            if last_mode == 'current':
+                self.control_combo.setCurrentIndex(1)
+                self.power_spinbox.setEnabled(False)
+                self.current_spinbox.setEnabled(True)
+            elif last_mode == 'power':
+                self.control_combo.setCurrentIndex(0)
+                self.power_spinbox.setEnabled(True)
+                self.current_spinbox.setEnabled(False)
+            else:
+                self.control_combo.setCurrentIndex(-1)
 
     def update_current(self, c, current):
         current_percentage = 100.*current['A']/self._max_current
@@ -219,10 +236,11 @@ class eVPumpClient(QtGui.QFrame):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
+    a = QApplication([])
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
     PumpWidget = eVPumpClient(reactor)
     PumpWidget.show()
-    run = reactor.run()  # @UndefinedVariable
+    # noinspection PyUnresolvedReferences
+    run = reactor.run()

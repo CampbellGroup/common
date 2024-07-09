@@ -1,11 +1,19 @@
-from PyQt4 import QtGui, QtCore
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout, QProgressBar
 
 
-class progress_bar(QtGui.QProgressBar):
+class progress_bar(QProgressBar):
     def __init__(self, reactor, parent=None):
         super(progress_bar, self).__init__(parent)
         self.reactor = reactor
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.set_status('', 0.0)
 
     def set_status(self, status_name, percentage):
@@ -16,17 +24,17 @@ class progress_bar(QtGui.QProgressBar):
         self.reactor.stop()
 
 
-class fixed_width_button(QtGui.QPushButton):
+class fixed_width_button(QPushButton):
     def __init__(self, text, size):
         super(fixed_width_button, self).__init__(text)
         self.size = size
-        self.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
     def sizeHint(self):
         return QtCore.QSize(*self.size)
 
 
-class script_status_widget(QtGui.QWidget):
+class script_status_widget(QWidget):
 
     on_pause = QtCore.pyqtSignal()
     on_continue = QtCore.pyqtSignal()
@@ -38,25 +46,25 @@ class script_status_widget(QtGui.QWidget):
         self.ident = ident
         self.name = name
         self.parent = parent
-        self.font = QtGui.QFont(self.font().family(), pointSize=10)
+        self.font = QFont(self.font().family(), pointSize=10)
         if self.font is None:
-            self.font = QtGui.QFont()
+            self.font = QFont()
         self.setup_layout()
         self.connect_layout()
         self.finished = False
 
     def setup_layout(self):
-        layout = QtGui.QHBoxLayout()
-        self.id_label = QtGui.QLabel('{0}'.format(self.ident))
+        layout = QHBoxLayout()
+        self.id_label = QLabel('{0}'.format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setMinimumHeight(15)
         self.id_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.id_label.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
-        self.name_label = QtGui.QLabel(self.name)
+        self.id_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.name_label = QLabel(self.name)
         self.name_label.setFont(self.font)
         self.name_label.setAlignment(QtCore.Qt.AlignLeft)
-        self.name_label.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        self.name_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
         self.progress_bar = progress_bar(self.reactor, self.parent)
@@ -95,7 +103,7 @@ class script_status_widget(QtGui.QWidget):
         self.reactor.stop()
 
 
-class running_scans_list(QtGui.QTableWidget):
+class running_scans_list(QTableWidget):
 
     on_pause = QtCore.pyqtSignal(int, bool)
     on_stop = QtCore.pyqtSignal(int)
@@ -106,10 +114,10 @@ class running_scans_list(QtGui.QTableWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QtGui.QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont('MS Shell Dlg 2', pointSize=12)
         self.setupLayout()
         self.d = {}
-        self.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
+        self.setSelectionMode(QAbstractItemView.NoSelection)
         self.mapper_pause = QtCore.QSignalMapper()
         self.mapper_pause.mapped.connect(self.emit_pause)
         self.mapper_continue = QtCore.QSignalMapper()
@@ -124,13 +132,13 @@ class running_scans_list(QtGui.QTableWidget):
         self.on_pause.emit(ident, False)
 
     def setupLayout(self):
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.setColumnCount(1)
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding,
-                           QtGui.QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding,
+                           QSizePolicy.MinimumExpanding)
 
     def add(self, ident, name):
         ident = int(ident)
@@ -155,7 +163,7 @@ class running_scans_list(QtGui.QTableWidget):
         try:
             widget = self.d[ident]
         except KeyError:
-            print "trying set status of experiment that's not there"
+            print("trying set status of experiment that's not there")
         else:
             widget.set_status(status, percentage)
 
@@ -163,7 +171,7 @@ class running_scans_list(QtGui.QTableWidget):
         try:
             widget = self.d[ident]
         except KeyError:
-            print "trying set pause experiment that's not there"
+            print("trying set pause experiment that's not there")
         else:
             widget.set_paused(is_paused)
 
@@ -187,16 +195,16 @@ class running_scans_list(QtGui.QTableWidget):
         try:
             self.remove(ident)
         except KeyError:
-            print "trying remove experiment {0} that's not there".format(ident)
+            print("trying remove experiment {0} that's not there".format(ident))
 
     def closeEvent(self, x):
         self.reactor.stop()
 
 
-class running_combined(QtGui.QWidget):
+class running_combined(QWidget):
     """
     What does this class do?
-    Instantiated in the ScriptingWidget class
+    Instantiated in the scripting_widget class
     TODO: more descriptive class name
     TODO: rename class with proper syntax
     """
@@ -213,16 +221,16 @@ class running_combined(QtGui.QWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QtGui.QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont('MS Shell Dlg 2', pointSize=12)
         self.setupLayout()
 
     def clear_all(self):
         self.scans_list.clear()
 
     def setupLayout(self):
-        layout = QtGui.QGridLayout()
-        title = QtGui.QLabel("Running", font=self.font)
-        title.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        layout = QGridLayout()
+        title = QLabel("Running", font=self.font)
+        title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         title.setAlignment(QtCore.Qt.AlignLeft)
         self.scans_list = running_scans_list(self.reactor, self.parent)
         layout.addWidget(title, 0, 0, 1, 3)

@@ -1,9 +1,29 @@
 import traceback
 import labrad
-from treedict import TreeDict
-from common.lib.servers.script_scanner.experiment_info import experiment_info
 
 
+
+class experiment_info(object):
+    '''
+    holds informaton about the experiment
+
+    Attributes
+    ----------
+    name: str
+    parameters: TreeDict
+    required_parameters: list
+    '''
+    required_parameters = []
+    name = ''
+
+    def __init__(self, name=None, required_parameters=None):
+        if name is not None:
+            self.name = name
+        if required_parameters is not None:
+            self.required_parameters = required_parameters
+        self.parameters = dict()
+
+        
 class experiment(experiment_info):
 
     def __init__(self, name=None, required_parameters=None, cxn=None,
@@ -23,22 +43,22 @@ class experiment(experiment_info):
             try:
                 self.cxn = labrad.connect()
             except Exception as error:
-                error_message = str(error) + '\n' + "Not able to connect to LabRAD"
+                error_message = error + '\n' + "Not able to connect to LabRAD"
                 raise Exception(error_message)
         try:
             self.sc = self.cxn.servers['ScriptScanner']
         except KeyError as error:
-            error_message = str(error) + '\n' + "ScriptScanner is not running"
+            error_message = error + '\n' + "ScriptScanner is not running"
             raise KeyError(error_message)
         try:
             self.pv = self.cxn.servers['ParameterVault']
         except KeyError as error:
-            error_message = str(error) + '\n' + "ParameterVault is not running"
+            error_message = error + '\n' + "ParameterVault is not running"
             raise KeyError(error_message)
         try:
             self.context = self.cxn.context()
         except Exception as error:
-            error_message = str(error) + '\n' + "self.cxn.context is not available"
+            error_message = error + '\n' + "self.cxn.context is not available"
             raise Exception(error_message)
 
     def execute(self, ident):
@@ -76,7 +96,7 @@ class experiment(experiment_info):
 
     def _load_parameters_dict(self, params):
         """loads the required parameter into a treedict"""
-        d = TreeDict()
+        d = dict()
         for collection, parameter_name in params:
             try:
                 value = self.pv.get_parameter(collection, parameter_name)

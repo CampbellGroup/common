@@ -1,37 +1,39 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
-
-class QCustomTimer(QtGui.QFrame):
+class QCustomTimer(QFrame):
     def __init__(self, title, show_control=True, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QWidget.__init__(self, parent)
         # self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(title, show_control)
 
     def makeLayout(self, title, show_control):
-        layout = QtGui.QGridLayout()
-        title = QtGui.QLabel(title)
+        layout = QGridLayout()
+        title = QLabel(title)
         title.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
         layout.addWidget(title, 0, 0, 1, 3)
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.tick)
         self.time = 0
-        self.timerlabel = QtGui.QLabel('00:00:00')
-        self.last_timer = QtGui.QLabel('')
+        self.timerlabel = QLabel('00:00:00')
+        self.last_timer = QLabel('')
         self.timerlabel.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=35))
         self.last_timer.setFont(QtGui.QFont('MS_Shell Dlg 2', pointSize=20))
 
         if show_control:
-            self.start_button = QtGui.QPushButton('Start')
+            self.start_button = QPushButton('Start')
             self.start_button.clicked.connect(self.start)
             layout.addWidget(self.start_button, 2, 0)
 
-            self.stop_button = QtGui.QPushButton('Stop')
+            self.stop_button = QPushButton('Stop')
             self.stop_button.clicked.connect(self.stop)
             layout.addWidget(self.stop_button, 2, 1)
 
-            self.reset_button = QtGui.QPushButton('Reset')
+            self.reset_button = QPushButton('Reset')
             self.reset_button.clicked.connect(self.reset)
             layout.addWidget(self.reset_button, 2, 2)
 
@@ -79,7 +81,7 @@ class QCustomTimer(QtGui.QFrame):
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     icon = QCustomTimer('Load Time')
     icon.show()
     app.exec_()

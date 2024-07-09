@@ -1,19 +1,22 @@
-from PyQt4 import QtGui
-from twisted.internet.defer import inlineCallbacks, returnValue
-from connection import connection
+from PyQt5.QtWidgets import *
 
-'''
+from twisted.internet.defer import inlineCallbacks, returnValue
+from common.lib.clients.connection import connection
+import logging
+logger = logging.getLogger(__name__)
+
+"""
 The Switch Control GUI lets the user control the TTL channels of the Pulser
 
 Version 1.0
-'''
+"""
 
 SIGNALID = 378902
 
 
-class switchWidget(QtGui.QFrame):
+class switchWidget(QFrame):
     def __init__(self, reactor, cxn=None, parent=None):
-        super(switchWidget, self).__init__(parent)
+        super(switchWidget, self).__init__(parent=parent)
         self.initialized = False
         self.reactor = reactor
         self.cxn = cxn
@@ -32,8 +35,8 @@ class switchWidget(QtGui.QFrame):
             yield self.initializeGUI(displayed_channels)
             yield self.setupListeners()
         except Exception as e:
-            print(e)
-            print('SWITCH CONTROL: Pulser not available')
+            logger.error(e)
+            logger.error('Pulser not available')
             self.setDisabled(True)
         self.cxn.add_on_connect('Pulser', self.reinitialize)
         self.cxn.add_on_disconnect('Pulser', self.disable)
@@ -90,30 +93,30 @@ class switchWidget(QtGui.QFrame):
         server = yield self.cxn.get_server('Pulser')
         self.d = {}
         # set layout
-        layout = QtGui.QVBoxLayout()
-        qBox = QtGui.QGroupBox('Pulser TTL Control')
-        sublayout = QtGui.QHBoxLayout()
-        self.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
-        self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Fixed)
+        layout = QVBoxLayout()
+        qBox = QGroupBox('Pulser TTL Control')
+        sublayout = QHBoxLayout()
+        self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         # get switch names and add them to the layout, and connect their function
         for order, name in enumerate(channels):
             # setting up physical container
-            groupBox = QtGui.QWidget()
-            groupBoxLayout = QtGui.QVBoxLayout()
+            groupBox = QWidget()
+            groupBoxLayout = QVBoxLayout()
 
-            buttonOn = QtGui.QPushButton('ON')
+            buttonOn = QPushButton('ON')
             buttonOn.setAutoExclusive(True)
             buttonOn.setCheckable(True)
 
-            buttonOff = QtGui.QPushButton('OFF')
+            buttonOff = QPushButton('OFF')
             buttonOff.setCheckable(True)
             buttonOff.setAutoExclusive(True)
 
-            buttonAuto = QtGui.QPushButton('Auto')
+            buttonAuto = QPushButton('Auto')
             buttonAuto.setCheckable(True)
             buttonAuto.setAutoExclusive(True)
 
-            groupBoxLayout.addWidget(QtGui.QLabel(name))
+            groupBoxLayout.addWidget(QLabel(name))
             groupBoxLayout.addWidget(buttonOn)
             groupBoxLayout.addWidget(buttonOff)
             groupBoxLayout.addWidget(buttonAuto)
@@ -181,7 +184,8 @@ class switchWidget(QtGui.QFrame):
         yield server.signal__switch_toggled(SIGNALID, context=self.context)
         yield server.addListener(listener=self.followSignal, source=None, ID=SIGNALID, context=self.context)
 
-    def followSignal(self, x, (switchName, state)):
+    def followSignal(self, x, state_tuple):
+        (switchName, state) = state_tuple
         if switchName not in self.d.keys(): return None
         if state == 'Auto':
             button = self.d[switchName]['AUTO']
@@ -201,12 +205,10 @@ class switchWidget(QtGui.QFrame):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
-
-    qt4reactor.install()
+    a = QApplication([])
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
-
     triggerWidget = switchWidget(reactor)
     triggerWidget.show()
     reactor.run()

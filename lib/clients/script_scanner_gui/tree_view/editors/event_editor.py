@@ -1,4 +1,16 @@
-from PyQt4 import QtGui, uic
+import sys
+from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import *
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QThread, QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+import os
+from PyQt5 import uic
+
+
 import os
 
 basepath =  os.path.dirname(__file__)
@@ -9,7 +21,7 @@ class EventEditor(base, form):
     def __init__(self, parent=None):
         super(EventEditor, self).__init__(parent)
         self.setupUi(self)
-        self._dataMapper = QtGui.QDataWidgetMapper(self)
+        self._dataMapper = QDataWidgetMapper(self)
         self.connect_layout()
         
     def connect_layout(self):
@@ -52,7 +64,7 @@ class EventEditor(base, form):
         self._dataMapper.addMapping(self.uiBool, 3)
         self._dataMapper.addMapping(self.uiChan, 4)
         self._dataMapper.addMapping(self.uiTime, 5)
-        self._dataMapper.addMapping(QtGui.QWidget(self), 8)
+        self._dataMapper.addMapping(QWidget(self), 8)
 
     def setSelection(self, current):
         parent = current.parent()
