@@ -86,9 +86,9 @@ class Pulser(DDS, LineTrigger):
             for name,rc in self.remoteChannels.iteritems():
                 try:
                     self.remoteConnections[name] = yield connectAsync(rc.ip)
-                    print 'Connected to {}'.format(name)
+                    print('Connected to {}'.format(name))
                 except:
-                    print 'Not Able to connect to {}'.format(name)
+                    print('Not Able to connect to {}'.format(name))
                     self.remoteConnections[name] = None
 
     @setting(0, "New Sequence", returns = '')
@@ -105,7 +105,7 @@ class Pulser(DDS, LineTrigger):
         """
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
-        dds,ttl = sequence.progRepresentation()
+        dds,ttl = sequence.prog_representation()
         yield self.inCommunication.acquire()
         yield deferToThread(self.api.programBoard, ttl)
         if dds is not None: yield self._programDDSSequence(dds)
@@ -152,7 +152,7 @@ class Pulser(DDS, LineTrigger):
         if not ( (self.sequenceTimeRange[0] <= start <= self.sequenceTimeRange[1]) and (self.sequenceTimeRange[0] <= start + duration <= self.sequenceTimeRange[1])): raise Exception ("Time boundaries are out of range")
         if not duration >= self.timeResolution: raise Exception ("Incorrect duration")
         if not sequence: raise Exception ("Please create new sequence first")
-        sequence.addPulse(hardwareAddr, start, duration)
+        sequence.add_pulse(hardwareAddr, start, duration)
 
     @setting(6, 'Add TTL Pulses', pulses = '*(sv[s]v[s])')
     def addTTLPulses(self, c, pulses):
@@ -173,7 +173,7 @@ class Pulser(DDS, LineTrigger):
         sequence = c.get('sequence')
         if not (self.sequenceTimeRange[0] <= timeLength['s'] <= self.sequenceTimeRange[1]): raise Exception ("Time boundaries are out of range")
         if not sequence: raise Exception ("Please create new sequence first")
-        sequence.extendSequenceLength(timeLength['s'])
+        sequence.extend_sequence_length(timeLength['s'])
 
     @setting(8, "Stop Sequence")
     def stopSequence(self, c):
@@ -212,7 +212,7 @@ class Pulser(DDS, LineTrigger):
         """
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
-        ttl,dds = sequence.humanRepresentation()
+        ttl,dds = sequence.human_representation()
         return ttl.tolist()
 
     @setting(11, "Human Readable DDS", returns = '*(svv)')
@@ -222,7 +222,7 @@ class Pulser(DDS, LineTrigger):
         """
         sequence = c.get('sequence')
         if not sequence: raise Exception ("Please create new sequence first")
-        ttl,dds = sequence.humanRepresentation()
+        ttl,dds = sequence.human_representation()
         return dds
 
     @setting(12, 'Get Channels', returns = '*(sw)')

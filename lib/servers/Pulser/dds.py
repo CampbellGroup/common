@@ -14,7 +14,7 @@ class DDS(LabradServer):
     @inlineCallbacks
     def initializeDDS(self):
         self.ddsLock = False
-        self.api.initializeDDS()
+        self.api.initialize_dds()
         for name,channel in self.ddsDict.iteritems():
             channel.name = name
             freq,ampl = (channel.frequency, channel.amplitude)
@@ -106,8 +106,8 @@ class DDS(LabradServer):
             if not self.sequenceTimeRange[0] < start + dur <= self.sequenceTimeRange[1]: 
                 raise Exception ("DDS start time out of acceptable input range for channel {0} at time {1}".format(name, start + dur))
             if not dur == 0:#0 length pulses are ignored
-                sequence.addDDS(name, start, num, 'start')
-                sequence.addDDS(name, start + dur, num_off, 'stop')
+                sequence.add_dds(name, start, num, 'start')
+                sequence.add_dds(name, start + dur, num_off, 'stop')
         
     @setting(46, 'Get DDS Amplitude Range', name = 's', returns = '(vv)')
     def getDDSAmplRange(self, c, name = None):
@@ -207,9 +207,9 @@ class DDS(LabradServer):
             yield self._setDDSRemote(channel, addr, buf)
     
     def _setDDSLocal(self, addr, buf):
-        self.api.resetAllDDS()
-        self.api.setDDSchannel(addr)  
-        self.api.programDDS(buf)
+        self.api.reset_all_dds()
+        self.api.set_dds_channel(addr)
+        self.api.program_dds(buf)
     
     @inlineCallbacks
     def _setDDSRemote(self, channel, addr, buf):

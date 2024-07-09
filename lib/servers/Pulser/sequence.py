@@ -89,7 +89,7 @@ class Sequence():
     def parseDDS(self):
         if not self.userAddedDDS():
             return None
-        state = self.parent._getCurrentDDS()
+        state = self.parent.get_current_dds()
         # time / boolean whether in a middle of a pulse
         pulses_end = {}.fromkeys(state, (0, 'stop'))
         dds_program = {}.fromkeys(state, '')
@@ -153,7 +153,7 @@ class Sequence():
             if not hardwareConfiguration.ddsDict[name].phase_coherent_model:
                 buf = self.parent._intToBuf(num)
             else:
-                buf = self.parent._intToBuf_coherent(num)
+                buf = self.parent.int_to_buf_coherent(num)
             prog[name] += buf
 
     def parseTTL(self):
