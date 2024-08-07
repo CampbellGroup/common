@@ -94,7 +94,7 @@ class Sequence:
             return None
         state = self.parent.get_current_dds()
         pulses_end = {}.fromkeys(state, (0, 'stop'))  # time / boolean whether in a middle of a pulse
-        dds_program = {}.fromkeys(state, '')
+        dds_program = {}.fromkeys(state, bytearray())
         last_time = 0
         start = None
         entries = sorted(self.ddsSettingList, key=lambda t: t[1])  # sort by starting time
@@ -110,7 +110,7 @@ class Sequence:
                     self._add_new_switch(last_time + self.resetstepDuration, self.advanceDDS, -1)
                 # add termination
                 for name in dds_program.keys():
-                    dds_program[name] += '\x00\x00'
+                    dds_program[name] += b'\x00\x00'
                 # at the end of the sequence, reset dds
                 last_ttl = max(self.switchingTimes.keys())
                 self._add_new_switch(last_ttl, self.resetDDS, 1)
@@ -143,7 +143,7 @@ class Sequence:
                 pulses_end[name] = (start, typ)
 
     def add_to_program(self, prog, state):
-        for name, num in state.iteritems():
+        for name, num in state.items():
             # if not hardwareConfiguration.ddsDict[name].phase_coherent_model:
             #     buf = self.parent._intToBuf(num)
             # else:
@@ -176,7 +176,7 @@ class Sequence:
     def dds_human_representation(self, dds):
         program = []
         print(dds)
-        for name, buf in dds.iteritems():
+        for name, buf in dds.items():
             arr = array.array('B', buf)
             arr = arr[:-2]  # remove termination
             channel = hardwareConfiguration.ddsDict[name]
