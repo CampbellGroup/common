@@ -1,11 +1,8 @@
-import sys
 from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5 import QtCore
 
-from common.lib.clients.script_scanner_gui.scheduled_widget import scheduled_combined
-from common.lib.clients.script_scanner_gui.running_scans_widget import running_combined
+from common.lib.clients.script_scanner_gui.scheduled_widget import ScheduledCombined
+from common.lib.clients.script_scanner_gui.running_scans_widget import RunningCombined
 from common.lib.clients.script_scanner_gui.queued_widget import queued_combined
 from common.lib.clients.script_scanner_gui.docstring_widget import docstring_widget
 from common.lib.clients.script_scanner_gui.experiment_selector_widget import experiment_selector_widget
@@ -36,8 +33,8 @@ class ScriptingWidget(QWidget):
         layout = QGridLayout()
         self.selector = experiment_selector_widget(self.reactor, parent=self)
         self.docstring = docstring_widget(self.reactor, parent=self)
-        self.running = running_combined(self.reactor)
-        self.scheduled = scheduled_combined(self.reactor)
+        self.running = RunningCombined(self.reactor)
+        self.scheduled = ScheduledCombined(self.reactor)
         self.queued = queued_combined(self.reactor)
         layout.addWidget(self.selector,  0, 0, 1, 1)
         layout.addWidget(self.docstring, 1, 0, 5, 1)

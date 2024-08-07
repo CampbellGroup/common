@@ -1,27 +1,13 @@
-import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
-
-class fixed_width_button(QPushButton):
-    def __init__(self, text, size):
-        super(fixed_width_button, self).__init__(text)
-        self.size = size
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
-    def sizeHint(self):
-        return QtCore.QSize(*self.size)
+from common.lib.clients.script_scanner_gui.qtui import FixedWidthButton
 
 
-class scheduled_widget(QWidget):
+class ScheduledWidget(QWidget):
 
     def __init__(self, reactor, ident, name, duration, font=None, parent=None):
-        super(scheduled_widget, self).__init__(parent)
+        super(ScheduledWidget, self).__init__(parent)
         self.reactor = reactor
         self.parent = parent
         self.ident = ident
@@ -53,31 +39,32 @@ class scheduled_widget(QWidget):
         self.scheduled_duration.setKeyboardTracking(False)
         self.scheduled_duration.setSuffix(' sec')
         self.scheduled_duration.setValue(self.duration)
-        self.cancel_button = fixed_width_button("Cancel", (75, 23))
+        self.cancel_button = FixedWidthButton("Cancel", (75, 23))
         layout.addWidget(self.id_label)
         layout.addWidget(self.name_label)
         layout.addWidget(self.scheduled_duration)
         layout.addWidget(self.cancel_button)
+        layout.setSizeConstraint(layout.SetMinimumSize)
         self.setLayout(layout)
 
     def closeEvent(self, x):
         self.reactor.stop()
 
 
-class scheduled_list(QTableWidget):
+class ScheduledList(QTableWidget):
 
     on_cancel = QtCore.pyqtSignal(int)
     on_new_duration = QtCore.pyqtSignal(int, float)
 
     def __init__(self, reactor, font=None, parent=None):
-        super(scheduled_list, self).__init__(parent)
+        super(ScheduledList, self).__init__(parent)
         self.reactor = reactor
         self.parent = parent
         self.font = font
         if self.font is None:
             self.font = QFont('MS Shell Dlg 2', pointSize=12)
         self.setSelectionMode(QAbstractItemView.NoSelection)
-        self.setupLayout()
+        self.setup_layout()
         self.d = {}  # stores identification: corresponding widget
         self.mapper_cancel = QtCore.QSignalMapper()
         self.mapper_cancel.mapped.connect(self.on_user_cancel)
@@ -92,7 +79,7 @@ class scheduled_list(QTableWidget):
         duration = widget.scheduled_duration.value()
         self.on_new_duration.emit(ident, duration)
 
-    def setupLayout(self):
+    def setup_layout(self):
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
@@ -101,12 +88,13 @@ class scheduled_list(QTableWidget):
         self.setSizePolicy(QSizePolicy.MinimumExpanding,
                            QSizePolicy.MinimumExpanding)
 
+    # noinspection PyUnresolvedReferences
     def add(self, ident, name, duration):
         ident = int(ident)
         row_count = self.rowCount()
         self.setRowCount(row_count + 1)
-        widget = scheduled_widget(self.reactor, parent=self.parent,
-                                  ident=ident, name=name, duration=duration)
+        widget = ScheduledWidget(self.reactor, parent=self.parent,
+                                 ident=ident, name=name, duration=duration)
         self.mapper_cancel.setMapping(widget.cancel_button, ident)
         widget.cancel_button.pressed.connect(self.mapper_cancel.map)
         self.mapper_duration.setMapping(widget.scheduled_duration, ident)
@@ -147,15 +135,15 @@ class scheduled_list(QTableWidget):
         self.reactor.stop()
 
 
-class scheduled_combined(QWidget):
+class ScheduledCombined(QWidget):
     def __init__(self, reactor, font=None, parent=None):
-        super(scheduled_combined, self).__init__(parent)
+        super(ScheduledCombined, self).__init__(parent)
         self.reactor = reactor
         self.parent = parent
         self.font = font
         if self.font is None:
             self.font = QFont('MS Shell Dlg 2', pointSize=12)
-        self.setupLayout()
+        self.setup_layout()
         self.connect_layout()
 
     def clear_all(self):
@@ -170,17 +158,19 @@ class scheduled_combined(QWidget):
     def change(self, ident, duration):
         self.sl.update_duration(ident, duration)
 
-    def setupLayout(self):
+    def setup_layout(self):
         layout = QGridLayout()
+        # noinspection PyArgumentList
         title = QLabel("Scheduled", font=self.font)
         title.setAlignment(QtCore.Qt.AlignLeft)
-        self.sl = scheduled_list(self.reactor, self.parent)
+        self.sl = ScheduledList(self.reactor, self.parent)
         self.cancel_all = QPushButton("Cancel All")
         layout.addWidget(title, 0, 0, 1, 2)
         layout.addWidget(self.cancel_all, 0, 2, 1, 1)
         layout.addWidget(self.sl, 1, 0, 3, 3)
         self.setLayout(layout)
 
+    # noinspection PyUnresolvedReferences
     def connect_layout(self):
         self.cancel_all.pressed.connect(self.sl.cancel_all)
 

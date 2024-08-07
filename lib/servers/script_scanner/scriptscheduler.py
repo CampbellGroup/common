@@ -3,18 +3,18 @@ from twisted.internet.defer import Deferred, DeferredList
 
 try:
     from config.scriptscanner_config import config
-except:
+except ImportError:
     from common.lib.config.scriptscanner_config import config
 
 from twisted.internet.task import LoopingCall
 from script_status import script_semaphore
 
 
-class priority_queue(object):
-    '''
+class PriorityQueue:
+    """
     priority queue with a few levels of priority
     focus on ease of use, not speed
-    '''
+    """
     priorities = [0, 1]
 
     def __init__(self):
@@ -22,7 +22,7 @@ class priority_queue(object):
         for priority in self.priorities:
             self.d[priority] = []
 
-    def put_last(self,  priority, obj):
+    def put_last(self, priority, obj):
         insert_order = 0
         for i in range(priority + 1):
             insert_order += len(self.d[i])
@@ -63,8 +63,9 @@ class priority_queue(object):
         raise ValueError("Object not found")
 
 
-class running_script(object):
+class RunningScript:
     """holds information about a script that is currently running"""
+
     def __init__(self, scan, defer_on_done, status, priority=-1,
                  externally_launched=False):
         self.scan = scan
@@ -75,23 +76,19 @@ class running_script(object):
         self.externally_launched = externally_launched
 
 
-class scheduler(object):
-    """
-
-    TODO: proper class name
-    """
+class ScriptScheduler:
     def __init__(self, signals):
         self.signals = signals
         # dict[identification] = running_script_instance
         self.running = {}
-        self.queue = priority_queue()  # queue of tasks
+        self.queue = PriorityQueue()  # queue of tasks
         self._paused_by_script = []
         self.scheduled = {}
         self.scheduled_ID_counter = 0
         self.scan_ID_counter = 0
 
     def running_deferred_list(self):
-        return [script.defer_on_done for script in self.running.itervalues() if not script.externally_launched]
+        return [script.defer_on_done for script in self.running.values() if not script.externally_launched]
 
     def get_running_external(self):
         return [ident for (ident, script) in self.running.items() if script.externally_launched]
@@ -121,15 +118,15 @@ class scheduler(object):
             queue.append((ident, scan.name, order))
         return queue
 
-    def remove_queued_script(self, script_ID):
+    def remove_queued_script(self, script_id):
         removed = False
         for ident, scan, priority in self.queue.get_all():
-            if script_ID == ident:
+            if script_id == ident:
                 removed = True
-                self.queue.remove_object((script_ID, scan, priority))
-                self.signals.on_queued_removed(script_ID)
+                self.queue.remove_object((script_id, scan, priority))
+                self.signals.on_queued_removed(script_id)
         if not removed:
-            raise Exception("Tring to remove scirpt ID {0} from queue but it's not in the queue".format(script_ID))
+            raise Exception("Tring to remove scirpt ID {0} from queue but it's not in the queue".format(script_id))
 
     def add_scan_to_queue(self, scan, priority='Normal'):
         """
@@ -152,7 +149,7 @@ class scheduler(object):
         self.scan_ID_counter += 1
         # add to queue
         if priority == 'Normal':
-            order = self.queue.put_last(1, (scan_id, scan,  1))
+            order = self.queue.put_last(1, (scan_id, scan, 1))
         elif priority == 'First in Queue':
             order = self.queue.put_first(1, (scan_id, scan, 1))
         elif priority == 'Pause All Others':
@@ -165,7 +162,7 @@ class scheduler(object):
 
     def is_higher_priority_than_running(self, priority):
         try:
-            priorities = [running.priority for running in self.running.itervalues()]
+            priorities = [running.priority for running in self.running.values()]
             priorities.sort()
             highest_running = priorities[0]
             return priority < highest_running
@@ -187,14 +184,13 @@ class scheduler(object):
             return set.intersection(*non_conflicting)
         else:
             return set()
-        return non_conflicting
 
     def add_external_scan(self, scan):
         scan_id = self.scan_ID_counter
         self.scan_ID_counter += 1
         status = script_semaphore(scan_id, self.signals)
-        self.running[scan_id] = running_script(scan, Deferred(), status,
-                                               externally_launched=True)
+        self.running[scan_id] = RunningScript(scan, Deferred(), status,
+                                              externally_launched=True)
 
         self.signals.on_running_new_script((scan_id, scan.name))
         return scan_id
@@ -219,25 +215,25 @@ class scheduler(object):
         self.signals.on_scheduled_new_script((new_schedule_id, scan.name, period))
         return new_schedule_id
 
-    def change_period_scheduled_script(self, scheduled_ID, period):
+    def change_period_scheduled_script(self, scheduled_id, period):
         try:
-            name, lc = self.scheduled[scheduled_ID]
+            name, lc = self.scheduled[scheduled_id]
         except KeyError:
-            raise Exception ("Schedule Script {0} with {1} ID does not exist".format(name, scheduled_ID))
+            raise Exception("Schedule Script {0} with {1} ID does not exist".format(name, scheduled_id))
         else:
             lc.stop()
             lc.start(period, now=False)
-            self.signals.on_scheduled_new_duration((scheduled_ID, period))
+            self.signals.on_scheduled_new_duration((scheduled_id, period))
 
-    def cancel_scheduled_script(self, scheduled_ID):
+    def cancel_scheduled_script(self, scheduled_id):
         try:
-            name, lc = self.scheduled[scheduled_ID]
+            name, lc = self.scheduled[scheduled_id]
         except KeyError:
-            raise Exception ("Scheduled Script with ID {0} does not exist".format(scheduled_ID))
+            raise Exception("Scheduled Script with ID {0} does not exist".format(scheduled_id))
         else:
             lc.stop()
-            del self.scheduled[scheduled_ID]
-            self.signals.on_scheduled_removed(scheduled_ID)
+            del self.scheduled[scheduled_id]
+            self.signals.on_scheduled_removed(scheduled_id)
 
     def launch_scripts(self, result=None):
         try:
@@ -280,9 +276,8 @@ class scheduler(object):
         paused_deferred = []
         for ident, script in self.running.items():
             non_conf = config.allowed_concurrent.get(script.name, [])
-            if not scan.script_cls.name in non_conf and not script.status.status == 'Paused':
-                # don't pause unless it's a conflicting experiment and it's not
-                # already paused
+            if scan.script_cls.name not in non_conf and not script.status.status == 'Paused':
+                # don't pause unless it's a conflicting experiment, and it's not already paused
                 if not ident == current_ident:
                     paused_idents.append(ident)
                     d = script.status.set_pausing(True)
@@ -294,7 +289,7 @@ class scheduler(object):
     def unpause_on_finish(self, result):
         unpaused_defers = []
         for ident in self._paused_by_script:
-            if not ident in self.running.keys():
+            if ident not in self.running.keys():
                 # if the previously paused experiment is no longer running
                 self._paused_by_script.remove(ident)
                 break
@@ -312,4 +307,4 @@ class scheduler(object):
         return d
 
     def _add_to_running(self, ident, scan, d, status, priority):
-        self.running[ident] = running_script(scan, d, status, priority)
+        self.running[ident] = RunningScript(scan, d, status, priority)

@@ -1,20 +1,8 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
-class fixed_width_button(QPushButton):
-    def __init__(self, text, size):
-        super(fixed_width_button, self).__init__(text)
-        self.size = size
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
-    def sizeHint(self):
-        return QtCore.QSize(*self.size)
+from common.lib.clients.script_scanner_gui.qtui  import FixedWidthButton
 
 
 class queued_widget(QWidget):
@@ -45,10 +33,11 @@ class queued_widget(QWidget):
                                       QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
-        self.cancel_button = fixed_width_button("Cancel", (75, 23))
+        self.cancel_button = FixedWidthButton("Cancel", (75, 23))
         layout.addWidget(self.id_label)
         layout.addWidget(self.name_label)
         layout.addWidget(self.cancel_button)
+        layout.setSizeConstraint(layout.SetMinimumSize)
         self.setLayout(layout)
 
     def closeEvent(self, x):

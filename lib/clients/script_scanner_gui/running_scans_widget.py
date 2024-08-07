@@ -1,47 +1,17 @@
-import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
 from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout, QProgressBar
+from common.lib.clients.script_scanner_gui.qtui import FixedWidthButton, ProgressBar
 
 
-class progress_bar(QProgressBar):
-    def __init__(self, reactor, parent=None):
-        super(progress_bar, self).__init__(parent)
-        self.reactor = reactor
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.set_status('', 0.0)
-
-    def set_status(self, status_name, percentage):
-        self.setValue(percentage)
-        self.setFormat('{0} %p%'.format(status_name))
-
-    def closeEvent(self, x):
-        self.reactor.stop()
-
-
-class fixed_width_button(QPushButton):
-    def __init__(self, text, size):
-        super(fixed_width_button, self).__init__(text)
-        self.size = size
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
-    def sizeHint(self):
-        return QtCore.QSize(*self.size)
-
-
-class script_status_widget(QWidget):
+class ScriptStatusWidget(QWidget):
 
     on_pause = QtCore.pyqtSignal()
     on_continue = QtCore.pyqtSignal()
     on_stop = QtCore.pyqtSignal()
 
     def __init__(self, reactor, ident, name, font=None, parent=None):
-        super(script_status_widget, self).__init__(parent)
+        super(ScriptStatusWidget, self).__init__(parent)
         self.reactor = reactor
         self.ident = ident
         self.name = name
@@ -67,16 +37,18 @@ class script_status_widget(QWidget):
         self.name_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
-        self.progress_bar = progress_bar(self.reactor, self.parent)
-        self.pause_button = fixed_width_button("Pause", (75, 23))
-        self.stop_button = fixed_width_button("Stop", (75, 23))
+        self.progress_bar = ProgressBar(self.reactor, self.parent)
+        self.pause_button = FixedWidthButton("Pause", (75, 15))
+        self.stop_button = FixedWidthButton("Stop", (75, 15))
         layout.addWidget(self.id_label)
         layout.addWidget(self.name_label)
         layout.addWidget(self.progress_bar)
         layout.addWidget(self.pause_button)
         layout.addWidget(self.stop_button)
+        layout.setSizeConstraint(layout.SetMinimumSize)
         self.setLayout(layout)
 
+    # noinspection PyUnresolvedReferences
     def connect_layout(self):
         self.stop_button.pressed.connect(self.on_user_stop)
         self.pause_button.pressed.connect(self.on_user_pause)
@@ -103,19 +75,19 @@ class script_status_widget(QWidget):
         self.reactor.stop()
 
 
-class running_scans_list(QTableWidget):
+class RunningScansList(QTableWidget):
 
     on_pause = QtCore.pyqtSignal(int, bool)
     on_stop = QtCore.pyqtSignal(int)
 
     def __init__(self, reactor, font=None, parent=None):
-        super(running_scans_list, self).__init__(parent)
+        super(RunningScansList, self).__init__(parent)
         self.reactor = reactor
         self.parent = parent
         self.font = font
         if self.font is None:
             self.font = QFont('MS Shell Dlg 2', pointSize=12)
-        self.setupLayout()
+        self.setup_layout()
         self.d = {}
         self.setSelectionMode(QAbstractItemView.NoSelection)
         self.mapper_pause = QtCore.QSignalMapper()
@@ -131,7 +103,7 @@ class running_scans_list(QTableWidget):
     def emit_continue(self, ident):
         self.on_pause.emit(ident, False)
 
-    def setupLayout(self):
+    def setup_layout(self):
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.setColumnCount(1)
         self.horizontalHeader().hide()
@@ -144,9 +116,9 @@ class running_scans_list(QTableWidget):
         ident = int(ident)
         row_count = self.rowCount()
         self.setRowCount(row_count + 1)
-        widget = script_status_widget(self.reactor,
-                                      parent=self.parent,
-                                      ident=ident, name=name)
+        widget = ScriptStatusWidget(self.reactor,
+                                    parent=self.parent,
+                                    ident=ident, name=name)
         # set up signal mapping
         self.mapper_continue.setMapping(widget, ident)
         widget.on_continue.connect(self.mapper_continue.map)
@@ -201,7 +173,7 @@ class running_scans_list(QTableWidget):
         self.reactor.stop()
 
 
-class running_combined(QWidget):
+class RunningCombined(QWidget):
     """
     What does this class do?
     Instantiated in the scripting_widget class
@@ -216,7 +188,7 @@ class running_combined(QWidget):
         font: ?
         parent: ?
         """
-        super(running_combined, self).__init__(parent)
+        super(RunningCombined, self).__init__(parent)
         self.reactor = reactor
         self.parent = parent
         self.font = font
@@ -232,7 +204,7 @@ class running_combined(QWidget):
         title = QLabel("Running", font=self.font)
         title.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         title.setAlignment(QtCore.Qt.AlignLeft)
-        self.scans_list = running_scans_list(self.reactor, self.parent)
+        self.scans_list = RunningScansList(self.reactor, self.parent)
         layout.addWidget(title, 0, 0, 1, 3)
         layout.addWidget(self.scans_list, 1, 0, 3, 3)
         self.setLayout(layout)

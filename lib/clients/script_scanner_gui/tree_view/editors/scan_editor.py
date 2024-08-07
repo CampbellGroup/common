@@ -61,6 +61,7 @@ class scan_delegate(QAbstractItemDelegate):
             value = editor.text()
         else:
             value = editor.value()
+
         model.setData(index, QtCore.QVariant(value))
 
 class ScanWidget(scanBase, scanForm):

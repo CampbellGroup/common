@@ -36,7 +36,7 @@ class scan_dialog(QDialog, dialog_ui):
 
     def get_parameter(self):
         index = self.parameter.currentIndex()
-        collection, parameter = self.parameter.itemData(index).toPyObject()
+        collection, parameter = self.parameter.itemData(index).value()
         return (collection, parameter)
 
     def keyPressEvent(self, event):
@@ -71,7 +71,7 @@ class scan_dialog(QDialog, dialog_ui):
         self.buttons.rejected.connect(self.reject)
 
     def on_parameter_picked(self, index):
-        collection, parameter = self.parameter.itemData(index).toPyObject()
+        collection, parameter = self.parameter.itemData(index).value()
         minim, maxim, units = self.parameter_info[(collection, parameter)]
         self.set_suffix(units)
         self.uiMin.setValue(minim)

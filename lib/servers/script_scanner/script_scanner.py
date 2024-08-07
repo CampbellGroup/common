@@ -24,19 +24,14 @@ try:
 except ImportError:
     import common.lib.config.scriptscanner_config as sc_config
 import scan_methods
-from scheduler import scheduler
+from scriptscheduler import ScriptScheduler
 import sys
-from importlib import reload, import_module, __import__
+from importlib import reload, import_module
 
 
-class script_class_parameters(object):
+class ScriptInfo:
     """
     storage class for information about the launchable script
-
-    TODO: rename this something meaningful.  Give it proper object syntax.
-    ExperimentPackage?  Ah, script_class_parameters describes the three
-    attributes of this class.  Maybe change to name or string instead
-    of script.
     """
     def __init__(self, name, cls, parameters):
         """
@@ -67,7 +62,7 @@ class ScriptScanner(ScriptSignalsServer):
         # script_class_parameters instances are the values.
         self.script_parameters = {}
         # Instance of a complicated object
-        self.scheduler = scheduler(ScriptSignalsServer)
+        self.scheduler = ScriptScheduler(ScriptSignalsServer)
         self.load_scripts()
 
     def load_scripts(self):
@@ -101,7 +96,7 @@ class ScriptScanner(ScriptSignalsServer):
                     name_not_provided += ' module {1}'
                     print(name_not_provided.format(class_name, module))
                 else:
-                    self.script_parameters[name] = script_class_parameters(name, cls, parameters)
+                    self.script_parameters[name] = ScriptInfo(name, cls, parameters)
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
@@ -135,7 +130,7 @@ class ScriptScanner(ScriptSignalsServer):
         duration
         """
         scheduled = self.scheduler.get_scheduled()
-        scheduled = [(ident, name, WithUnit(dur,'s') ) for (ident, name, dur) in scheduled]
+        scheduled = [(ident, name, WithUnit(dur, 's')) for (ident, name, dur) in scheduled]
         return scheduled
 
     @setting(4, "get_queue", returns='*(wsw)')
@@ -145,20 +140,20 @@ class ScriptScanner(ScriptSignalsServer):
         """
         return self.scheduler.get_queue()
 
-    @setting(5, "remove_queued_script", script_ID='w')
-    def remove_queued_script(self, c, script_ID):
-        self.scheduler.remove_queued_script(script_ID)
+    @setting(5, "remove_queued_script", script_id='w')
+    def remove_queued_script(self, c, script_id):
+        self.scheduler.remove_queued_script(script_id)
 
-    @setting(6, "get_progress", script_ID='w', returns='sv')
-    def get_progress(self, c, script_ID):
+    @setting(6, "get_progress", script_id='w', returns='sv')
+    def get_progress(self, c, script_id):
         """
         Get progress of a currently running experiment
         """
-        status = self.scheduler.get_running_status(script_ID)
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_progress = "Trying to get progress of script with ID {0} but"
             try_progress += "it was not running"
-            raise Exception(try_progress.format(script_ID))
+            raise Exception(try_progress.format(script_id))
         return status.get_progress()
 
     @setting(10, 'new_experiment', script_name='s', returns='w')
@@ -245,38 +240,38 @@ class ScriptScanner(ScriptSignalsServer):
 
         return schedule_id
 
-    @setting(14, 'change_scheduled_duration', scheduled_ID='w',
+    @setting(14, 'change_scheduled_duration', scheduled_id='w',
              duration='v[s]')
-    def change_scheduled_duration(self, c, scheduled_ID, duration):
+    def change_scheduled_duration(self, c, scheduled_id, duration):
         """
         Change duration of the scheduled script execution
         """
-        self.scheduler.change_period_scheduled_script(scheduled_ID,
+        self.scheduler.change_period_scheduled_script(scheduled_id,
                                                       duration['s'])
 
-    @setting(15, 'cancel_scheduled_script', scheduled_ID='w')
-    def cancel_scheduled_script(self, c, scheduled_ID):
+    @setting(15, 'cancel_scheduled_script', scheduled_id='w')
+    def cancel_scheduled_script(self, c, scheduled_id):
         """
         Cancel the currently scheduled script
         """
-        self.scheduler.cancel_scheduled_script(scheduled_ID)
+        self.scheduler.cancel_scheduled_script(scheduled_id)
 
-    @setting(20, "pause_script", script_ID='w', should_pause='b')
-    def pause_script(self, c, script_ID, should_pause):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(20, "pause_script", script_id='w', should_pause='b')
+    def pause_script(self, c, script_id, should_pause):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_pause = "Trying to pause script with ID {0} but it was not"
             try_pause += " running"
-            raise Exception(try_pause.format(script_ID))
+            raise Exception(try_pause.format(script_id))
         status.set_pausing(should_pause)
 
-    @setting(21, "stop_script", script_ID='w')
-    def stop_script(self, c, script_ID):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(21, "stop_script", script_id='w')
+    def stop_script(self, c, script_id):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_stop = "Trying to stop script with ID {0} but it was not"
             try_stop += " running"
-            raise Exception(try_stop.format(script_ID))
+            raise Exception(try_stop.format(script_id))
         status.set_stopping()
 
     @setting(30, "register_external_launch", name='s', returns='w')
@@ -290,66 +285,66 @@ class ScriptScanner(ScriptSignalsServer):
         ident = self.scheduler.add_external_scan(external_scan)
         return ident
 
-    @setting(31, "script_set_progress", script_ID='w', progress='v')
-    def script_set_progress(self, c, script_ID, progress):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(31, "script_set_progress", script_id='w', progress='v')
+    def script_set_progress(self, c, script_id, progress):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_set = "Trying to set progress of script with ID {0} but it was"
             try_set += " not running"
-            raise Exception(try_set.format(script_ID))
+            raise Exception(try_set.format(script_id))
         status.set_percentage(progress)
 
-    @setting(32, "launch_confirmed", script_ID='w')
-    def launch_confirmed(self, c, script_ID):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(32, "launch_confirmed", script_id='w')
+    def launch_confirmed(self, c, script_id):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_confirm = "Trying to confirm launch of script with ID {0} but "
             try_confirm += "it was not running"
-            raise Exception(try_confirm.format(script_ID))
+            raise Exception(try_confirm.format(script_id))
         status.launch_confirmed()
 
-    @setting(33, "finish_confirmed", script_ID='w')
-    def finish_confirmed(self, c, script_ID):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(33, "finish_confirmed", script_id='w')
+    def finish_confirmed(self, c, script_id):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_confirm = "Trying to confirm Finish of script with ID {0} but "
             try_confirm += "it was not running"
-            raise Exception(try_confirm.format(script_ID))
+            raise Exception(try_confirm.format(script_id))
         status.finish_confirmed()
-        self.scheduler.remove_if_external(script_ID)
+        self.scheduler.remove_if_external(script_id)
 
-    @setting(34, "stop_confirmed", script_ID='w')
-    def stop_confirmed(self, c, script_ID):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(34, "stop_confirmed", script_id='w')
+    def stop_confirmed(self, c, script_id):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_confirm = "Trying to confirm Stop of script with ID {0} but it"
             try_confirm += " was not running"
-            raise Exception(try_confirm.format(script_ID))
+            raise Exception(try_confirm.format(script_id))
         status.stop_confirmed()
 
-    @setting(35, "pause_or_stop", script_ID='w', returns='b')
-    def pause_or_stop(self, c, script_ID):
+    @setting(35, "pause_or_stop", script_id='w', returns='b')
+    def pause_or_stop(self, c, script_id):
         """
-        Returns the boolean whether or not the script should be stopped. This
+        Returns the boolean whether the script should be stopped. This
         request blocks while the script is to be paused.
         """
-        status = self.scheduler.get_running_status(script_ID)
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_confirm = "Trying to confirm Pause/Stop of script with ID {0} "
             try_confirm += "but it was not running"
-            raise Exception(try_confirm.format(script_ID))
+            raise Exception(try_confirm.format(script_id))
         yield status.pause()
         returnValue(status.should_stop)
 
-    @setting(36, "error_finish_confirmed", script_ID='w', error_message='s')
-    def error_finish_confirmed(self, c, script_ID, error_message):
-        status = self.scheduler.get_running_status(script_ID)
+    @setting(36, "error_finish_confirmed", script_id='w', error_message='s')
+    def error_finish_confirmed(self, c, script_id, error_message):
+        status = self.scheduler.get_running_status(script_id)
         if status is None:
             try_confirm = "Trying to confirm error finish of script with ID "
             try_confirm += "{0} but it was not running"
-            raise Exception(try_confirm.format(script_ID))
+            raise Exception(try_confirm.format(script_id))
         status.error_finish_confirmed(error_message)
-        self.scheduler.remove_if_external(script_ID)
+        self.scheduler.remove_if_external(script_id)
 
     @setting(37, "reload_available_scripts")
     def reload_available_scripts(self, c):
