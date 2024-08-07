@@ -5,7 +5,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Dual PMTFlow
-version = 1.40
+version = 1.5
 description =
 instancename = Dual PMTFlow
 
@@ -90,14 +90,14 @@ class Dual_PMTFlow(LabradServer):
             if self.openDataSet is not None:
                 self.openDataSet = yield self.makeNewDataSet(self.saveFolder, self.dataSetName)
                 self.onNewSetting(('dataset', self.openDataSet))
-            print 'Connected: Data Vault'
+            print('Connected: Data Vault')
         except AttributeError:
             self.dv = None
-            print 'Not Connected: Data Vault'
+            print('Not Connected: Data Vault')
 
     @inlineCallbacks
     def disconnect_data_vault(self):
-        print 'Not Connected: Data Vault'
+        print('Not Connected: Data Vault')
         self.dv = None
         yield None
 
@@ -113,14 +113,14 @@ class Dual_PMTFlow(LabradServer):
                 yield self.dorecordData()
                 self.onNewState('on')
                 self.recordingInterrupted = False
-            print 'Connected: Pulser'
+            print('Connected: Pulser')
         except AttributeError:
             self.pulser = None
-            print 'Not Connected: Pulser'
+            print('Not Connected: Pulser')
 
     @inlineCallbacks
     def disconnect_pulser(self):
-        print 'Not Connected: Pulser'
+        print('Not Connected: Pulser')
         self.pulser = None
         if self.recording.running:
             yield self.recording.stop()
@@ -395,18 +395,18 @@ class Dual_PMTFlow(LabradServer):
         for pmt in self.pmt_list:
             if not pmt.enabled:
                 if self.debug:
-                    print pmt.id, "not enabled."
+                    print(pmt.id, "not enabled.")
 #                return
             else:
                 try:
                     yield self.getPMTCounts(pmt.id)
                 except:
-                    print 'Not Able to Get PMT Counts'
+                    print('Not Able to Get PMT Counts')
                     self.rawdata = []
                 if len(self.rawdata) != 0:
                     if self.currentMode == 'Normal':
                         if self.debug:
-                            print "_record() self.rawdata=", self.rawdata
+                            print("_record() self.rawdata=", self.rawdata)
                         # converting to format [time, normal count, 0 , 0]
                         toDataVault = [ [elem[2] - self.startTime, elem[0], 0, 0] for elem in self.rawdata]
                     elif self.currentMode == 'Differential':
@@ -416,7 +416,7 @@ class Dual_PMTFlow(LabradServer):
                     try:
                         yield self.dv.add(toDataVault, context=pmt.context)
                     except:
-                        print 'Not Able to Save To Data Vault'
+                        print('Not Able to Save To Data Vault')
 
     @inlineCallbacks
     def getPMTCounts(self, pmt_id):
