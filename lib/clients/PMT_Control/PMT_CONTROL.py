@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 SIGNALID = 874193
 
 
+# noinspection PyUnresolvedReferences
 class pmtWidget(QWidget):
     def __init__(self, reactor, cxn=None):
         super(pmtWidget, self).__init__()

@@ -262,41 +262,41 @@ class RigolServer(GPIBManagedServer):
     @setting(10, 'Output', channel = 'i', output = 'b')
     def deviceOutput(self, c, channel, output = None): # uses passed context "c" to address specific device
         dev = self.selectedDevice(c)
-        yield dev.Output(channel, output)
+        yield dev.output(channel, output)
 
     @setting(69, 'Apply Waveform', channel = 'i', function = 's', frequency = ['v[Hz]'], amplitude = ['v[V]'], offset = ['v[V]']  )
     def applyDeviceWaveform(self, c, function, frequency, amplitude, offset, channel = None):
         dev = self.selectedDevice(c)
-        yield dev.applyWaveForm(function, frequency, amplitude, offset, channel)
+        yield dev.apply_waveform(function, frequency, amplitude, offset, channel)
 
     @setting(707, 'Wave Function', channel = 'i', function = 's')
     def deviceFunction(self, c, channel, function = None):
         dev = self.selectedDevice(c)
-        func = yield dev.WaveFunction(channel, function)
+        func = yield dev.wave_function(channel, function)
         returnValue(func)
 
     @setting(131, channel = 'i', value = 'v[V]')
     def amplitude(self, c, channel, value = None):
         dev = self.selectedDevice(c)
-        volts = yield dev.Amplitude(channel, value)
+        volts = yield dev.amplitude(channel, value)
         returnValue(volts)
 
     @setting(92, channel = 'i', value = 'v[Hz]')
     def frequency(self, c, channel, value = None):
         dev = self.selectedDevice(c)
-        freq = yield dev.Frequency(channel, value)
+        freq = yield dev.frequency(channel, value)
         returnValue(freq)
 
     @setting(9, 'Apply DC', channel = 'i', value = 'v[V]')
     def setDC(self, c, channel, value = None):
         dev = self.selectedDevice(c)
-        volts = yield dev.setDC(channel, value)
+        volts = yield dev.set_dc(channel, value)
         returnValue(volts)
 
     @setting(99, channel = 'i', value = 'v[V]')
     def offset(self, c, channel, value = None):
         dev = self.selectedDevice(c)
-        offset = yield dev.Offset(channel, value)
+        offset = yield dev.offset(channel, value)
         returnValue(offset)
 
 
