@@ -20,7 +20,7 @@ timeout = 20
 """
 
 from labrad.server import LabradServer, setting, Signal
-from labrad import types
+from labrad.types import Value
 from twisted.internet.defer import Deferred, returnValue, inlineCallbacks
 from twisted.internet.task import LoopingCall
 import time
@@ -39,7 +39,7 @@ class NormalPMTFlow(LabradServer):
         self.save_folder = ['', 'PMT Counts']
         self.dataset_name = 'PMT Counts'
         self.modes = ['Normal', 'Differential']
-        self.collection_period = types.Value(0.100, 's')
+        self.collection_period = Value(0.100, 's')
         self.last_differential = {'ON': 0, 'OFF': 0}
         self.current_mode = 'Normal'
         self.dv = None
@@ -86,7 +86,7 @@ class NormalPMTFlow(LabradServer):
             self.dv = yield self.client.data_vault
             yield self.dv.cd(self.save_folder, True)
             if self.open_data_set is not None:
-                self.open_data_set = yield self.make_new_dataset(self.save_folder, self.dataset_name)
+                self.open_data_set = yield self.start_new_dataset(self.save_folder, self.dataset_name)
                 self.onNewSetting(('dataset', self.open_data_set))
             print('Connected: Data Vault')
         except AttributeError:
@@ -135,7 +135,7 @@ class NormalPMTFlow(LabradServer):
         return notified
 
     @inlineCallbacks
-    def make_new_dataset(self, folder, name):
+    def start_new_dataset(self, folder, name):
         yield self.dv.cd(folder, True)
         ds = yield self.dv.new(name, [('t', 'num')], [('KiloCounts/sec', 'Differential High', 'num'),
                                                       ('KiloCounts/sec', 'Differential Low', 'num'),
@@ -167,7 +167,7 @@ class NormalPMTFlow(LabradServer):
         """Starts new dataset, if name not provided, it will be the same"""
         if set_name is not None:
             self.dataset_name = set_name
-        self.open_data_set = yield self.make_new_dataset(self.save_folder, self.dataset_name)
+        self.open_data_set = yield self.start_new_dataset(self.save_folder, self.dataset_name)
         other_listeners = self.get_other_listeners(c)
         self.onNewSetting(('dataset', self.open_data_set), other_listeners)
         returnValue(self.open_data_set)
@@ -220,7 +220,7 @@ class NormalPMTFlow(LabradServer):
         if self.current_mode == 'Differential':
             yield self._program_pulser_diff()
         if self.open_data_set is None:
-            self.open_data_set = yield self.make_new_dataset(self.save_folder, self.dataset_name)
+            self.open_data_set = yield self.start_new_dataset(self.save_folder, self.dataset_name)
         self.recording.start(self.collection_period['s'] / 2.0)
         returnValue(new_set)
 
@@ -309,18 +309,24 @@ class NormalPMTFlow(LabradServer):
 
     @inlineCallbacks
     def _program_pulser_diff(self):
+        """
+        DiffCountTrigger |██▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+        866DP            |████████████████████████████████████▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+        Internal866      |████████████████████████████████████▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+
+        """
         yield self.pulser.new_sequence()
         yield self.pulser.add_ttl_pulse('DiffCountTrigger',
-                                        types.Value(0.0, 'us'),
-                                        types.Value(10.0, 'us'))
+                                        Value(0.0, 'us'),
+                                        Value(10.0, 'us'))
         yield self.pulser.add_ttl_pulse('DiffCountTrigger',
                                         self.collection_period,
-                                        types.Value(10.0, 'us'))
+                                        Value(10.0, 'us'))
         yield self.pulser.add_ttl_pulse('866DP',
-                                        types.Value(0.0, 'us'),
+                                        Value(0.0, 'us'),
                                         self.collection_period)
         yield self.pulser.add_ttl_pulse('Internal866',
-                                        types.Value(0.0, 'us'),
+                                        Value(0.0, 'us'),
                                         self.collection_period)
         yield self.pulser.extend_sequence_length(2 * self.collection_period)
         yield self.pulser.program_sequence()
