@@ -133,7 +133,6 @@ class API(object):
         # buf = "\x00"*(number*2)
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa0, 2, buf)
-        buf = str(buf)
         return buf
 
     def get_normal_total(self):
@@ -164,7 +163,6 @@ class API(object):
         # buf = "\x00"* ( number * 2 )
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa2, 2, buf)
-        buf = str(buf)
         return buf
 
     def how_many_sequences_done(self):
@@ -242,7 +240,7 @@ class API(object):
         """sets delay value in microseconds"""
         min_delay, max_delay = hardwareConfiguration.lineTriggerLimits
         if not min_delay <= delay <= max_delay:
-            raise Exception("Incorrect Delay Time for Line Triggering")
+            raise ValueError("Incorrect Delay Time for Line Triggering")
         self.xem.SetWireInValue(0x06, delay)
         self.xem.SetWireInValue(0x00, 0x08, 0x08)
         self.xem.UpdateWireIns()
