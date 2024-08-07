@@ -766,7 +766,7 @@ class Pulser(LabradServer):
         frequency and to know when the repumping light is switched on or off.
         """
         if mode not in self.collection_time.keys():
-            raise Exception("Incorrect mode")
+            raise ValueError("Incorrect mode")
         self.collection_mode = mode
         count_rate = self.collection_time[mode]
         yield self.in_communication.acquire()
@@ -786,9 +786,9 @@ class Pulser(LabradServer):
         """
         new_time = new_time['s']
         if not self.collection_time_range[0] <= new_time <= self.collection_time_range[1]:
-            raise Exception('incorrect collection time')
+            raise ValueError('incorrect collection time')
         if mode not in self.collection_time.keys():
-            raise Exception("Incorrect mode")
+            raise ValueError("Incorrect mode")
         if mode == 'Normal':
             self.collection_time[mode] = new_time
             yield self.in_communication.acquire()
@@ -968,7 +968,7 @@ class Pulser(LabradServer):
         raw = yield deferToThread(self.api.get_resolved_counts, counted)
         self.in_communication.release()
         # noinspection PyArgumentList
-        arr = np.fromstring(raw, dtype=np.uint16)
+        arr = np.frombuffer(raw, dtype=np.uint16)
         del raw
         arr = arr.reshape(-1, 2)
         timetags = (65536 * arr[:, 0] + arr[:, 1]) * self.time_resolved_resolution
