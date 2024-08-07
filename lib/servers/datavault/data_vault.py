@@ -16,7 +16,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Data Vault
-version = 2.5
+version = 2.6
 description =
 instancename = Data Vault
 
@@ -30,7 +30,6 @@ timeout = 20
 ### END NODE INFO
 """
 
-from labrad import types
 from labrad.server import LabradServer, Signal, setting
 
 from twisted.internet import reactor
@@ -42,8 +41,11 @@ import re
 import sys
 from datetime import datetime
 
+from errors import *
+
 try:
     import numpy
+
     print("Numpy imported.")
     useNumpy = True
 except ImportError:
@@ -67,82 +69,6 @@ FILE_TIMEOUT = 60  # how long to keep datafiles open if not accessed
 DATA_TIMEOUT = 300  # how long to keep data in memory if not accessed
 TIME_FORMAT = '%Y-%m-%d, %H:%M:%S'
 
-# error messages
-
-
-class NoDatasetError(types.Error):
-    """Please open a dataset first."""
-    code = 2
-
-
-class DatasetNotFoundError(types.Error):
-    code = 3
-
-    def __init__(self, name):
-        self.msg = "Dataset '%s' not found!" % name
-
-
-class DirectoryExistsError(types.Error):
-    code = 4
-
-    def __init__(self, name):
-        self.msg = "Directory '%s' already exists!" % name
-
-
-class DirectoryNotFoundError(types.Error):
-    code = 5
-
-
-class EmptyNameError(types.Error):
-    """Names of directories or keys cannot be empty"""
-    code = 6
-
-    def __init__(self, path):
-        self.msg = "Directory %s does not exist!" % (path,)
-
-
-class ReadOnlyError(types.Error):
-    """Points can only be added to datasets created with 'new' or opened with
-    'open_appendable'."""
-    code = 7
-
-
-class BadDataError(types.Error):
-    code = 8
-
-    def __init__(self, varcount, gotcount):
-        requires_message = 'Dataset requires %d values per datapoint not %d.'
-        self.msg = requires_message % (varcount, gotcount)
-
-
-class BadParameterError(types.Error):
-    code = 9
-
-    def __init__(self, name):
-        self.msg = "Parameter '%s' not found." % name
-
-
-class ParameterInUseError(types.Error):
-    code = 10
-
-    def __init__(self, name):
-        self.msg = "Already a parameter called '%s'." % name
-
-
-class AdditionalHeaderInUseError(types.Error):
-    code = 11
-
-    def __init__(self, header_name, name):
-        self.msg = "Already a value called '%s' in header '%s'." % (name, header_name)
-
-
-class BadAdditionalHeaderError(types.Error):
-    code = 12
-
-    def __init__(self, header_name, name):
-        self.msg = "'%s' in header '%s' not found." % (name, header_name)
-
-
 # filename translation
 
 encodings = [
@@ -159,29 +85,30 @@ encodings = [
 ]
 
 
-def dsEncode(name):
+def ds_encode(name: str) -> str:
     for char, code in encodings:
         name = name.replace(char, code)
     return name
 
 
-def dsDecode(name):
+def ds_decode(name: str) -> str:
     for char, code in encodings[1:] + encodings[0:1]:
         name = name.replace(code, char)
     return name
 
 
-def filedir(path):
-    return os.path.join(DATADIR, *[dsEncode(d) + '.dir' for d in path[1:]])
+def file_dir(path) -> os.path:
+    # noinspection PyTypeChecker
+    return os.path.join(DATADIR, *[ds_encode(d) + '.dir' for d in path[1:]])
 
 
 # time formatting
 
-def timeToStr(t):
+def time_to_str(t: datetime) -> str:
     return t.strftime(TIME_FORMAT)
 
 
-def timeFromStr(s):
+def time_from_str(s: str) -> datetime:
     return datetime.strptime(s, TIME_FORMAT)
 
 
@@ -191,7 +118,7 @@ re_legend = re.compile(r'\((.*)\)')  # matches anything inside ()
 re_units = re.compile(r'\[(.*)]')  # matches anything inside [ ]
 
 
-def getMatch(pat, s, default=None):
+def get_match(pat, s, default=None):
     matches = re.findall(pat, s)
     if len(matches) == 0:
         if default is None:
@@ -200,16 +127,16 @@ def getMatch(pat, s, default=None):
     return matches[0].strip()
 
 
-def parseIndependent(s):
-    label = getMatch(re_label, s)
-    units = getMatch(re_units, s, '')
+def parse_independent(s):
+    label = get_match(re_label, s)
+    units = get_match(re_units, s, '')
     return label, units
 
 
-def parseDependent(s):
-    label = getMatch(re_label, s)
-    legend = getMatch(re_legend, s, '')
-    units = getMatch(re_units, s, '')
+def parse_dependent(s):
+    label = get_match(re_label, s)
+    legend = get_match(re_legend, s, '')
+    units = get_match(re_units, s, '')
     return label, legend, units
 
 
@@ -224,7 +151,7 @@ class Session(object):
     _sessions = {}
 
     @classmethod
-    def getAll(cls):
+    def get_all(cls):
         return cls._sessions.values()
 
     @staticmethod
@@ -234,7 +161,7 @@ class Session(object):
         This does not tell us whether a session object has been
         created for that path.
         """
-        return os.path.exists(filedir(path))
+        return os.path.exists(file_dir(path))
 
     def __new__(cls, path, parent):
         """Get a Session object.
@@ -254,7 +181,7 @@ class Session(object):
         """Initialization that happens once when session object is created."""
         self.path = path
         self.parent = parent
-        self.dir = filedir(path)
+        self.dir = file_dir(path)
         self.infofile = os.path.join(self.dir, 'session.ini')
         self.datasets = {}
 
@@ -278,57 +205,58 @@ class Session(object):
 
     def load(self):
         """Load info from the session.ini file."""
-        S = SafeConfigParser()
-        S.read(self.infofile)
+        s = SafeConfigParser()
+        s.read(self.infofile)
 
         sec = 'File System'
-        self.counter = S.getint(sec, 'Counter')
+        self.counter = s.getint(sec, 'Counter')
 
         sec = 'Information'
-        self.created = timeFromStr(S.get(sec, 'Created'))
-        self.accessed = timeFromStr(S.get(sec, 'Accessed'))
-        self.modified = timeFromStr(S.get(sec, 'Modified'))
+        self.created = time_from_str(s.get(sec, 'Created'))
+        self.accessed = time_from_str(s.get(sec, 'Accessed'))
+        self.modified = time_from_str(s.get(sec, 'Modified'))
 
         # get tags if they're there
-        if S.has_section('Tags'):
-            self.session_tags = eval(S.get('Tags', 'sessions', raw=True))
-            self.dataset_tags = eval(S.get('Tags', 'datasets', raw=True))
+        if s.has_section('Tags'):
+            self.session_tags = eval(s.get('Tags', 'sessions', raw=True))
+            self.dataset_tags = eval(s.get('Tags', 'datasets', raw=True))
         else:
             self.session_tags = {}
             self.dataset_tags = {}
 
     def save(self):
         """Save info to the session.ini file."""
-        S = SafeConfigParser()
+        s = SafeConfigParser()
 
         sec = 'File System'
-        S.add_section(sec)
-        S.set(sec, 'Counter', repr(self.counter))
+        s.add_section(sec)
+        s.set(sec, 'Counter', repr(self.counter))
 
         sec = 'Information'
-        S.add_section(sec)
-        S.set(sec, 'Created', timeToStr(self.created))
-        S.set(sec, 'Accessed', timeToStr(self.accessed))
-        S.set(sec, 'Modified', timeToStr(self.modified))
+        s.add_section(sec)
+        s.set(sec, 'Created', time_to_str(self.created))
+        s.set(sec, 'Accessed', time_to_str(self.accessed))
+        s.set(sec, 'Modified', time_to_str(self.modified))
 
         sec = 'Tags'
-        S.add_section(sec)
-        S.set(sec, 'sessions', repr(self.session_tags))
-        S.set(sec, 'datasets', repr(self.dataset_tags))
+        s.add_section(sec)
+        s.set(sec, 'sessions', repr(self.session_tags))
+        s.set(sec, 'datasets', repr(self.dataset_tags))
 
         with open(self.infofile, 'w') as f:
-            S.write(f)
+            s.write(f)
 
     def access(self):
         """Update last access time and save."""
         self.accessed = datetime.now()
         self.save()
 
-    def listContents(self, tagFilters):
+    def list_contents(self, tag_filters):
         """Get a list of directory names in this directory."""
         files = os.listdir(self.dir)
-        dirs = [dsDecode(s[:-4]) for s in files if s.endswith('.dir')]
-        datasets = [dsDecode(s[:-4]) for s in files if s.endswith('.csv')]
+        dirs = [ds_decode(s[:-4]) for s in files if s.endswith('.dir')]
+        datasets = [ds_decode(s[:-4]) for s in files if s.endswith('.csv')]
+
         # apply tag filters
 
         def include(entries, tag, tags):
@@ -340,22 +268,23 @@ class Session(object):
             """Exclude all entries that have the specified tag."""
             return [e for e in entries
                     if e not in tags or tag not in tags[e]]
-        for tag in tagFilters:
+
+        for tag in tag_filters:
             if tag[:1] == '-':
-                filter = exclude
+                tag_filter = exclude
                 tag = tag[1:]
             else:
-                filter = include
-            dirs = filter(dirs, tag, self.session_tags)
-            datasets = filter(datasets, tag, self.dataset_tags)
+                tag_filter = include
+            dirs = tag_filter(dirs, tag, self.session_tags)
+            datasets = tag_filter(datasets, tag, self.dataset_tags)
         return dirs, datasets
 
-    def listDatasets(self):
+    def list_datasets(self):
         """Get a list of dataset names in this directory."""
         files = os.listdir(self.dir)
-        return [dsDecode(s[:-4]) for s in files if s.endswith('.csv')]
+        return [ds_decode(s[:-4]) for s in files if s.endswith('.csv')]
 
-    def newDataset(self, title, independents, dependents, dtype):
+    def new_dataset(self, title, independents, dependents, dtype):
         num = self.counter
         self.counter += 1
         self.modified = datetime.now()
@@ -363,9 +292,9 @@ class Session(object):
         name = '%05d - %s' % (num, title)
         dataset = Dataset(self, name, dtype, title, create=True)
         for i in independents:
-            dataset.addIndependent(i)
+            dataset.add_independent(i)
         for d in dependents:
-            dataset.addDependent(d)
+            dataset.add_dependent(d)
         self.datasets[name] = dataset
         self.access()
 
@@ -374,7 +303,7 @@ class Session(object):
         # self.parent.onNewDatasetDir((name, self.path), self.listeners)
         return dataset
 
-    def newMatrixDataset(self, title, size, dtype):
+    def new_matrix_dataset(self, title, size, dtype):
         num = self.counter
         self.counter += 1
         self.modified = datetime.now()
@@ -388,19 +317,19 @@ class Session(object):
         self.parent.onNewDataset(name, self.listeners)
         return dataset
 
-    def openDataset(self, name):
+    def open_dataset(self, name):
         # first lookup by number if necessary
-        if isinstance(name, (int)):
-            for oldName in self.listDatasets():
-                num = int(oldName[:5])
+        if isinstance(name, int):
+            for old_name in self.list_datasets():
+                num = int(old_name[:5])
                 if name == num:
-                    name = oldName
+                    name = old_name
                     break
         # if it's still a number, we didn't find the set
-        if isinstance(name, (int)):
+        if isinstance(name, int):
             raise DatasetNotFoundError(name)
 
-        filename = dsEncode(name)
+        filename = ds_encode(name)
         if not os.path.exists(os.path.join(self.dir, filename + '.csv')):
             raise DatasetNotFoundError(name)
 
@@ -415,51 +344,51 @@ class Session(object):
 
         return dataset
 
-    def updateTags(self, tags, sessions, datasets):
-        def updateTagDict(tags, entries, d):
+    def update_tags(self, tags, sessions, datasets):
+        def update_tag_dict(tags, entries, d):
             updates = []
             for entry in entries:
                 changed = False
                 if entry not in d:
                     d[entry] = set()
-                entryTags = d[entry]
+                entry_tags = d[entry]
                 for tag in tags:
                     if tag[:1] == '-':
                         # remove this tag
                         tag = tag[1:]
-                        if tag in entryTags:
-                            entryTags.remove(tag)
+                        if tag in entry_tags:
+                            entry_tags.remove(tag)
                             changed = True
                     elif tag[:1] == '^':
                         # toggle this tag
                         tag = tag[1:]
-                        if tag in entryTags:
-                            entryTags.remove(tag)
+                        if tag in entry_tags:
+                            entry_tags.remove(tag)
                         else:
-                            entryTags.add(tag)
+                            entry_tags.add(tag)
                         changed = True
                     else:
                         # add this tag
-                        if tag not in entryTags:
-                            entryTags.add(tag)
+                        if tag not in entry_tags:
+                            entry_tags.add(tag)
                             changed = True
                 if changed:
-                    updates.append((entry, sorted(entryTags)))
+                    updates.append((entry, sorted(entry_tags)))
             return updates
 
-        sessUpdates = updateTagDict(tags, sessions, self.session_tags)
-        dataUpdates = updateTagDict(tags, datasets, self.dataset_tags)
+        sess_updates = update_tag_dict(tags, sessions, self.session_tags)
+        data_updates = update_tag_dict(tags, datasets, self.dataset_tags)
 
         self.access()
-        if len(sessUpdates) + len(dataUpdates):
+        if len(sess_updates) + len(data_updates):
             # fire a message about the new tags
-            msg = (sessUpdates, dataUpdates)
+            msg = (sess_updates, data_updates)
             self.parent.onTagsUpdated(msg, self.listeners)
 
-    def getTags(self, sessions, datasets):
-        sessTags = [(s, sorted(self.session_tags.get(s, []))) for s in sessions]
-        dataTags = [(d, sorted(self.dataset_tags.get(d, []))) for d in datasets]
-        return sessTags, dataTags
+    def get_tags(self, sessions, datasets):
+        sess_tags = [(s, sorted(self.session_tags.get(s, []))) for s in sessions]
+        data_tags = [(d, sorted(self.dataset_tags.get(d, []))) for d in datasets]
+        return sess_tags, data_tags
 
 
 class Image(object):
@@ -481,9 +410,10 @@ class Dataset:
         self.parent = session.parent
         self.name = name
         self.session = session  # MK
-        file_base = os.path.join(session.dir, dsEncode(name))
+        file_base = os.path.join(session.dir, ds_encode(name))
         self.datafile = file_base + '.csv'
         self.infofile = file_base + '.ini'
+        # noinspection PyStatementEffect
         self.file  # create the datafile, but don't do anything with it
         self.listeners = set()  # contexts that want to hear about added data
         self.param_listeners = set()
@@ -511,122 +441,127 @@ class Dataset:
             self.access()
 
     def load(self):
-        S = SafeConfigParser()
-        S.read(self.infofile)
+        s = SafeConfigParser()
+        s.read(self.infofile)
 
         gen = 'General'
-        self.dtype = S.get(gen, 'DType')
-        self.title = S.get(gen, 'Title', raw=True)
-        self.created = timeFromStr(S.get(gen, 'Created'))
-        self.accessed = timeFromStr(S.get(gen, 'Accessed'))
-        self.modified = timeFromStr(S.get(gen, 'Modified'))
+        self.dtype = s.get(gen, 'DType')
+        self.title = s.get(gen, 'Title', raw=True)
+        self.created = time_from_str(s.get(gen, 'Created'))
+        self.accessed = time_from_str(s.get(gen, 'Accessed'))
+        self.modified = time_from_str(s.get(gen, 'Modified'))
         non_additional_header_names = ["dtype", "title", "created", "accessed",
                                        "modified", "independent", "dependent",
                                        "parameters", "comments"]
-        additional_header_names = [header for header in S.options("General")
+        additional_header_names = [header for header in s.options("General")
                                    if header not in non_additional_header_names]
 
-        def getInd(i):
+        def get_ind(i):
             sec = 'Independent %d' % (i + 1)
-            label = S.get(sec, 'Label', raw=True)
-            units = S.get(sec, 'Units', raw=True)
+            label = s.get(sec, 'Label', raw=True)
+            units = s.get(sec, 'Units', raw=True)
             return dict(label=label, units=units)
-        count = S.getint(gen, 'Independent')
-        self.independents = [getInd(i) for i in range(count)]
 
-        def getDep(i):
+        count = s.getint(gen, 'Independent')
+        self.independents = [get_ind(i) for i in range(count)]
+
+        def get_dep(i):
             sec = 'Dependent %d' % (i + 1)
-            label = S.get(sec, 'Label', raw=True)
-            units = S.get(sec, 'Units', raw=True)
-            categ = S.get(sec, 'Category', raw=True)
+            label = s.get(sec, 'Label', raw=True)
+            units = s.get(sec, 'Units', raw=True)
+            categ = s.get(sec, 'Category', raw=True)
             return dict(label=label, units=units, category=categ)
-        count = S.getint(gen, 'Dependent')
-        self.dependents = [getDep(i) for i in range(count)]
 
-        def getPar(i):
+        count = s.getint(gen, 'Dependent')
+        self.dependents = [get_dep(i) for i in range(count)]
+
+        def get_par(i):
             sec = 'Parameter %d' % (i + 1)
-            label = S.get(sec, 'Label', raw=True)
+            label = s.get(sec, 'Label', raw=True)
             # TODO: big security hole! eval can execute arbitrary code
-            data = types.evalLRData(S.get(sec, 'Data', raw=True))
+            data = types.evalLRData(s.get(sec, 'Data', raw=True))
             return dict(label=label, data=data)
-        count = S.getint(gen, 'Parameters')
-        self.parameters = [getPar(i) for i in range(count)]
 
-        def getAddiHeader(header_name, i):
+        count = s.getint(gen, 'Parameters')
+        self.parameters = [get_par(i) for i in range(count)]
+
+        def get_addi_header(header_name, i):
             sec = header_name + ' %d' % (i + 1)
-            label = S.get(sec, 'Label', raw=True)
+            label = s.get(sec, 'Label', raw=True)
             # TODO: big security hole! eval can execute arbitrary code
-            data = types.evalLRData(S.get(sec, 'Data', raw=True))
+            data = types.evalLRData(s.get(sec, 'Data', raw=True))
             return dict(label=label, data=data)
+
         self.additional_headers = {}
         for header in additional_header_names:
-            count = S.getint(gen, header)
-            self.additional_headers[header] = [getAddiHeader(header, i) for i in range(count)]
+            count = s.getint(gen, header)
+            self.additional_headers[header] = [get_addi_header(header, i) for i in range(count)]
 
         # get comments if they're there
-        if S.has_section('Comments'):
-            def getComment(i):
+        if s.has_section('Comments'):
+            def get_comment(i):
                 sec = 'Comments'
-                time, user, comment = eval(S.get(sec, 'c%d' % i, raw=True))
-                return timeFromStr(time), user, comment
-            count = S.getint(gen, 'Comments')
-            self.comments = [getComment(i) for i in range(count)]
+                time, user, comment = eval(s.get(sec, 'c%d' % i, raw=True))
+                return time_from_str(time), user, comment
+
+            count = s.getint(gen, 'Comments')
+            self.comments = [get_comment(i) for i in range(count)]
         else:
             self.comments = []
 
     def save(self):
-        S = SafeConfigParser()
+        s = SafeConfigParser()
 
         sec = 'General'
-        S.add_section(sec)
-        S.set(sec, 'DType', self.dtype)
-        S.set(sec, 'Created', timeToStr(self.created))
-        S.set(sec, 'Accessed', timeToStr(self.accessed))
-        S.set(sec, 'Modified', timeToStr(self.modified))
-        S.set(sec, 'Title', self.title)
-        S.set(sec, 'Independent', repr(len(self.independents)))
-        S.set(sec, 'Dependent', repr(len(self.dependents)))
-        S.set(sec, 'Parameters', repr(len(self.parameters)))
-        S.set(sec, 'Comments', repr(len(self.comments)))
+        s.add_section(sec)
+        s.set(sec, 'DType', self.dtype)
+        s.set(sec, 'Created', time_to_str(self.created))
+        s.set(sec, 'Accessed', time_to_str(self.accessed))
+        s.set(sec, 'Modified', time_to_str(self.modified))
+        s.set(sec, 'Title', self.title)
+        s.set(sec, 'Independent', repr(len(self.independents)))
+        s.set(sec, 'Dependent', repr(len(self.dependents)))
+        s.set(sec, 'Parameters', repr(len(self.parameters)))
+        s.set(sec, 'Comments', repr(len(self.comments)))
         for header in self.additional_headers:
-            S.set(sec, header, repr(len(self.additional_headers[header])))
+            s.set(sec, header, repr(len(self.additional_headers[header])))
 
         for i, ind in enumerate(self.independents):
             sec = 'Independent %d' % (i + 1)
-            S.add_section(sec)
-            S.set(sec, 'Label', ind['label'])
-            S.set(sec, 'Units', ind['units'])
+            s.add_section(sec)
+            s.set(sec, 'Label', ind['label'])
+            s.set(sec, 'Units', ind['units'])
 
         for i, dep in enumerate(self.dependents):
             sec = 'Dependent %d' % (i + 1)
-            S.add_section(sec)
-            S.set(sec, 'Label', dep['label'])
-            S.set(sec, 'Units', dep['units'])
-            S.set(sec, 'Category', dep['category'])
+            s.add_section(sec)
+            s.set(sec, 'Label', dep['label'])
+            s.set(sec, 'Units', dep['units'])
+            s.set(sec, 'Category', dep['category'])
 
         for i, par in enumerate(self.parameters):
             sec = 'Parameter %d' % (i + 1)
-            S.add_section(sec)
-            S.set(sec, 'Label', par['label'])
+            s.add_section(sec)
+            s.set(sec, 'Label', par['label'])
             # TODO: smarter saving here, since eval'ing is insecure
-            S.set(sec, 'Data', repr(par['data']))
+            s.set(sec, 'Data', repr(par['data']))
 
         for header in self.additional_headers:
             values = self.additional_headers[header]
             for i, value in enumerate(values):
                 sec = header + ' %d' % (i + 1)
-                S.add_section(sec)
-                S.set(sec, 'Label', value['label'])
-                S.set(sec, 'Data', repr(value['data']))
+                s.add_section(sec)
+                s.set(sec, 'Label', value['label'])
+                s.set(sec, 'Data', repr(value['data']))
 
         sec = 'Comments'
-        S.add_section(sec)
+        s.add_section(sec)
         for i, (time, user, comment) in enumerate(self.comments):
-            time = timeToStr(time)
-            S.set(sec, 'c%d' % i, repr((time, user, comment)))
+            time = time_to_str(time)
+            s.set(sec, 'c%d' % i, repr((time, user, comment)))
 
         with open(self.infofile, 'w') as f:
-            S.write(f)
+            s.write(f)
 
     def access(self):
         """Update time of last access for this dataset."""
@@ -642,17 +577,17 @@ class Dataset:
         """
         if not hasattr(self, '_file'):
             self._file = open(self.datafile, 'a+')  # append data
-            self._fileTimeoutCall = reactor.callLater(FILE_TIMEOUT, self._fileTimeout)
+            self._fileTimeoutCall = reactor.callLater(FILE_TIMEOUT, self._file_timeout)
         else:
             self._fileTimeoutCall.reset(FILE_TIMEOUT)
         return self._file
 
-    def _fileTimeout(self):
+    def _file_timeout(self):
         self._file.close()
         del self._file
         del self._fileTimeoutCall
 
-    def _fileSize(self):
+    def _file_size(self):
         """Check the file size of our datafile."""
         # does this include the size before the file has been flushed to disk?
         return os.fstat(self.file.fileno()).st_size
@@ -665,7 +600,7 @@ class Dataset:
         if not hasattr(self, '_data'):
             self._data = []
             self._datapos = 0
-            self._dataTimeoutCall = reactor.callLater(DATA_TIMEOUT, self._dataTimeout)
+            self._dataTimeoutCall = reactor.callLater(DATA_TIMEOUT, self._data_timeout)
         else:
             self._dataTimeoutCall.reset(DATA_TIMEOUT)
         f = self.file
@@ -675,54 +610,55 @@ class Dataset:
         self._datapos = f.tell()
         return self._data
 
-    def _dataTimeout(self):
+    def _data_timeout(self):
         del self._data
         del self._datapos
         del self._dataTimeoutCall
 
-    def _saveData(self, data):
+    def _save_data(self, data):
         f = self.file
         for row in data:
             f.write(', '.join(DATA_FORMAT % v for v in row) + '\n')
         f.flush()
 
-    def addIndependent(self, label):
+    def add_independent(self, label):
         """Add an independent variable to this dataset."""
         if isinstance(label, tuple):
             label, units = label
         else:
-            label, units = parseIndependent(label)
+            label, units = parse_independent(label)
         d = dict(label=label, units=units)
         self.independents.append(d)
         self.save()
 
-    def addDependent(self, label):
+    def add_dependent(self, label):
         """Add a dependent variable to this dataset."""
         if isinstance(label, tuple):
             label, legend, units = label
         else:
-            label, legend, units = parseDependent(label)
+            label, legend, units = parse_dependent(label)
         d = dict(category=label, label=legend, units=units)
         self.dependents.append(d)
         self.save()
 
-    def addParameter(self, name, data, saveNow=True):
+    def add_parameter(self, name, data, save_now=True):
         for p in self.parameters:
             if p['label'] == name:
                 raise ParameterInUseError(name)
         d = dict(label=name, data=data)
         self.parameters.append(d)
-        if saveNow:
+        if save_now:
             self.save()
 
         # notify all listening contexts
         self.parent.onNewParameter(None, self.param_listeners)
-        self.parent.onNewParameterDataset((int(self.name[0:5]), self.name[8:len(self.name)], self.session.path, name), self.parent.root.listeners)
+        self.parent.onNewParameterDataset((int(self.name[0:5]), self.name[8:len(self.name)], self.session.path, name),
+                                          self.parent.root.listeners)
         self.param_listeners = set()
         return name
 
     # MK
-    def addParameterOverWrite(self, name, data, saveNow=True):
+    def add_parameter_overwrite(self, name, data, save_now=True):
         done = False
         for p in self.parameters:
             if p['label'] == name:
@@ -731,11 +667,11 @@ class Dataset:
         if not done:
             d = dict(label=name, data=data)
             self.parameters.append(d)
-        if saveNow:
+        if save_now:
             self.save()
         if name in self.deferredParameterDict.keys():
             for dParam in self.deferredParameterDict[name][:]:
-                self.timeOutCallIDs[dParam].cancel() # cancel the callLater!
+                self.timeOutCallIDs[dParam].cancel()  # cancel the callLater!
                 self.timeOutCallIDs.pop(dParam)
                 dParam.callback(data)
                 # delete the deferredLIST
@@ -746,14 +682,14 @@ class Dataset:
         self.param_listeners = set()
         return name
 
-    def parameterTimeout(self, name, dParam):
+    def parameter_timeout(self, name, d_param):
         # call back the associated parameter deferred and remove it from the list!
-        for dParameter in self.deferredParameterDict[name]:
-            if (dParameter == dParam):
-                dParam.callback(False)
-                self.deferredParameterDict[name].remove(dParam)
+        for d_parameter in self.deferredParameterDict[name]:
+            if d_parameter == d_param:
+                d_param.callback(False)
+                self.deferredParameterDict[name].remove(d_param)
 
-    def getParameter(self, name, case_sensitive=True):
+    def get_parameter(self, name, case_sensitive=True):
         for p in self.parameters:
             if case_sensitive:
                 if p['label'] == name:
@@ -763,7 +699,7 @@ class Dataset:
                     return p['data']
         raise BadParameterError(name)
 
-    def addData(self, data):
+    def add_data(self, data):
         varcount = len(self.independents) + len(self.dependents)
         if not len(data) or not isinstance(data[0], list):
             data = [data]
@@ -771,20 +707,20 @@ class Dataset:
             raise BadDataError(varcount, len(data[0]))
 
         # append the data to the file
-        self._saveData(data)
+        self._save_data(data)
 
         # notify all listening contexts
         self.parent.onDataAvailable(None, self.listeners)
         self.listeners = set()
 
-    def getData(self, limit, start):
+    def get_data(self, limit, start):
         if limit is None:
             data = self.data[start:]
         else:
             data = self.data[start:start + limit]
         return data, start + len(data)
 
-    def keepStreaming(self, context, pos):
+    def keep_streaming(self, context, pos):
         if pos < len(self.data):
             if context in self.listeners:
                 self.listeners.remove(context)
@@ -792,7 +728,7 @@ class Dataset:
         else:
             self.listeners.add(context)
 
-    def addComment(self, user, comment):
+    def add_comment(self, user, comment):
         self.comments.append((datetime.now(), user, comment))
         self.save()
 
@@ -800,14 +736,14 @@ class Dataset:
         self.parent.onCommentsAvailable(None, self.comment_listeners)
         self.comment_listeners = set()
 
-    def getComments(self, limit, start):
+    def get_comments(self, limit, start):
         if limit is None:
             comments = self.comments[start:]
         else:
             comments = self.comments[start:start + limit]
         return comments, start + len(comments)
 
-    def keepStreamingComments(self, context, pos):
+    def keep_streaming_comments(self, context, pos):
         if pos < len(self.comments):
             if context in self.comment_listeners:
                 self.comment_listeners.remove(context)
@@ -815,7 +751,7 @@ class Dataset:
         else:
             self.comment_listeners.add(context)
 
-    def addAdditionalHeader(self, header_name, name, data, saveNow=True):
+    def add_additional_header(self, header_name, name, data, save_now=True):
         header_name = header_name.lower()
         if header_name not in self.additional_headers:
             self.additional_headers[header_name] = []
@@ -824,7 +760,7 @@ class Dataset:
                 raise AdditionalHeaderInUseError(header_name, name)
         d = dict(label=name, data=data)
         self.additional_headers[header_name].append(d)
-        if saveNow:
+        if save_now:
             self.save()
 
         # notify all listening contexts
@@ -837,7 +773,7 @@ class Dataset:
         self.add_header_listeners = set()
         return name
 
-    def getAdditionalHeader(self, header_name, name, case_sensitive=True):
+    def get_additional_header(self, header_name, name, case_sensitive=True):
         for header in self.additional_headers:
             for item in self.additional_headers[header]:
                 if case_sensitive:
@@ -858,16 +794,17 @@ class NumpyDataset(Dataset):
         if not hasattr(self, '_data'):
             def _get(f):
                 if self.dtype == 'float':
-                    return numpy.loadtxt(self.file, delimiter=',')
+                    return numpy.loadtxt(self.file.name, delimiter=',')
                 if self.dtype == 'string':
-                    return numpy.loadtxt(self.file, delimiter=',', dtype=str)
+                    return numpy.loadtxt(self.file.name, delimiter=',', dtype=str)
+
             try:
                 # if the file is empty, this line can barf in certain versions
                 # of numpy.  Clearly, if the file does not exist on disk, this
                 # will be the case.  Even if the file exists on disk, we must
                 # check its size
-                if self._fileSize() > 0:
-                    self._data = _get(self.file)
+                if self._file_size() > 0:
+                    self._data = _get(self.file.name)
                 else:
                     self._data = numpy.array([[]])
                 if len(self._data.shape) == 1:
@@ -881,7 +818,7 @@ class NumpyDataset(Dataset):
                 # this error is raised by numpy 1.3
                 self.file.seek(0)
                 self._data = numpy.array([[]])
-            self._dataTimeoutCall = reactor.callLater(DATA_TIMEOUT, self._dataTimeout)
+            self._dataTimeoutCall = reactor.callLater(DATA_TIMEOUT, self._data_timeout)
         else:
             self._dataTimeoutCall.reset(DATA_TIMEOUT)
         return self._data
@@ -889,23 +826,26 @@ class NumpyDataset(Dataset):
     def _set_data(self, data):
         self._data = data
 
+    # noinspection PyTypeChecker
     data = property(_get_data, _set_data)
 
-    def _saveData(self, data):
+    def _save_data(self, data):
         def _save(file, dat):
             if self.dtype == 'float':
                 numpy.savetxt(f, data, fmt=DATA_FORMAT, delimiter=',')
             if self.dtype == 'string':
                 numpy.savetxt(f, data, fmt=STRING_FORMAT, delimiter=',')
+
         f = self.file
         _save(f, data)
         f.flush()
 
-    def _dataTimeout(self):
+    def _data_timeout(self):
         del self._data
         del self._dataTimeoutCall
 
-    def addData(self, data):
+    def add_data(self, data):
+        varcount = 0
         if self.independents:
             varcount = len(self.independents) + len(self.dependents)
         if self.matrixcolumns:
@@ -925,13 +865,13 @@ class NumpyDataset(Dataset):
             self.data = data
 
         # append data to file
-        self._saveData(data)
+        self._save_data(data)
 
         # notify all listening contexts
         self.parent.onDataAvailable(None, self.listeners)
         self.listeners = set()
 
-    def getData(self, limit, start):
+    def get_data(self, limit, start):
         if limit is None:
             data = self.data[start:]
         else:
@@ -940,7 +880,7 @@ class NumpyDataset(Dataset):
         nrows = len(data) if data.size > 0 else 0
         return data, start + nrows
 
-    def keepStreaming(self, context, pos):
+    def keep_streaming(self, context, pos):
         # cheesy hack: if pos == 0, we only need to check whether
         # the filesize is nonzero
         if pos == 0:
@@ -967,25 +907,27 @@ class DataVault(LabradServer):
     def initServer(self):
         # load configuration info from registry
         global DATADIR
+        path = ['', 'Servers', self.name, 'Repository']
+        nodename = util.getNodeName()
+        reg = self.client.registry
         try:
-            path = ['', 'Servers', self.name, 'Repository']
-            nodename = util.getNodeName()
-            reg = self.client.registry
             try:
                 # try to load for this node
                 p = reg.packet()
                 p.cd(path)
                 p.get(nodename, 's')
                 ans = yield p.send()
-            except:
+            except Exception as e:
+                print(e)
                 # try to load default
                 p = reg.packet()
                 p.cd(path)
                 p.get('__default__', 's')
                 ans = yield p.send()
             DATADIR = ans.get
-            gotLocation = True
-        except:
+            got_location = True
+        except Exception as e:
+            print(e)
             try:
                 print('Could not load repository location from registry.')
                 print('Please enter data storage directory or hit enter to use the current directory:')
@@ -1022,26 +964,28 @@ class DataVault(LabradServer):
 
     def expireContext(self, c):
         """Stop sending any signals to this context."""
-        def removeFromList(ls):
+
+        def remove_from_list(ls):
             if c.ID in ls:
                 ls.remove(c.ID)
-        for session in Session.getAll():
-            removeFromList(session.listeners)
-            for dataset in session.datasets.values():
-                removeFromList(dataset.listeners)
-                removeFromList(dataset.param_listeners)
-                removeFromList(dataset.comment_listeners)
-                removeFromList(dataset.add_header_listeners)
 
-    def getSession(self, c):
+        for session in Session.get_all():
+            remove_from_list(session.listeners)
+            for dataset in session.datasets.values():
+                remove_from_list(dataset.listeners)
+                remove_from_list(dataset.param_listeners)
+                remove_from_list(dataset.comment_listeners)
+                remove_from_list(dataset.add_header_listeners)
+
+    def get_session(self, c):
         """Get a session object for the current path."""
         return Session(c['path'], self)
 
-    def getDataset(self, c):
+    def get_dataset(self, c):
         """Get a dataset object for the current dataset."""
         if 'dataset' not in c:
             raise NoDatasetError()
-        session = self.getSession(c)
+        session = self.get_session(c)
         return session.datasets[c['dataset']]
 
     # session signals
@@ -1053,24 +997,24 @@ class DataVault(LabradServer):
 
     # dataset signals
     onDataAvailable = Signal(543619, 'signal: data available', '')
-    onNewParameterDataset = Signal(543620, 'signal: new parameter dataset', '(i, s, ?, s)') ####MK
+    onNewParameterDataset = Signal(543620, 'signal: new parameter dataset', '(i, s, ?, s)')
     onNewParameter = Signal(543625, 'signal: new parameter', '')
     onNewAdditionalHeader = Signal(543626, 'signal: new additional header', '')
     onNewAdditionalHeaderDataset = Signal(543627, 'signal: new additional header dataset', '(i, s, ?, s)')
     onCommentsAvailable = Signal(543621, 'signal: comments available', '')
 
-    @setting(6, tagFilters=['s', '*s'], includeTags='b',
+    @setting(6, tag_filters=['s', '*s'], include_tags='b',
              returns=['*s{subdirs}, *s{datasets}',
                       '*(s*s){subdirs}, *(s*s){datasets}'])
-    def dir(self, c, tagFilters=('-trash'), includeTags=None):
+    def dir(self, c, tag_filters=('-trash',), include_tags=None):
         """Get subdirectories and datasets in the current directory."""
         # print 'dir:', tagFilters, includeTags
-        if isinstance(tagFilters, str):
-            tagFilters = [tagFilters]
-        sess = self.getSession(c)
-        dirs, datasets = sess.listContents(tagFilters)
-        if includeTags:
-            dirs, datasets = sess.getTags(dirs, datasets)
+        if isinstance(tag_filters, str):
+            tag_filters = [tag_filters]
+        sess = self.get_session(c)
+        dirs, datasets = sess.list_contents(tag_filters)
+        if include_tags:
+            dirs, datasets = sess.get_tags(dirs, datasets)
         return dirs, datasets
 
     @setting(7, path=['s{get current directory}',
@@ -1090,7 +1034,7 @@ class DataVault(LabradServer):
             return c['path']
 
         temp = c['path'][:]  # copy the current path
-        if isinstance(path, (int)):
+        if isinstance(path, int):
             if path > 0:
                 temp = temp[:-path]
                 if not len(temp):
@@ -1098,11 +1042,11 @@ class DataVault(LabradServer):
         else:
             if isinstance(path, str):
                 path = [path]
-            for dir in path:
-                if dir == '':
+            for directory in path:
+                if directory == '':
                     temp = ['']
                 else:
-                    temp.append(dir)
+                    temp.append(directory)
                 if not Session.exists(temp) and not create:
                     raise DirectoryNotFoundError(temp)
                 session = Session(temp, self)  # touch the session
@@ -1148,8 +1092,8 @@ class DataVault(LabradServer):
         """
         if len(dtype) != 1 or dtype not in 'fs':
             raise TypeError("dtype keyword only accepts 'f' or 's'")
-        session = self.getSession(c)
-        dataset = session.newDataset(name or 'untitled', independents, dependents, dtype)
+        session = self.get_session(c)
+        dataset = session.new_dataset(name or 'untitled', independents, dependents, dtype)
         self.onNewDatasetDir((dataset.name, session.path), self.root.listeners)  # MR
         c['dataset'] = dataset.name  # not the same as name; has number prefixed
         c['filepos'] = 0  # start at the beginning
@@ -1158,15 +1102,15 @@ class DataVault(LabradServer):
         return c['path'], c['dataset']
 
     @setting(73, name='s', dtype='s', size='*i', returns='(*s{path}, s{name})')
-    def newMatrix(self, c, name, size, dtype):
+    def new_matrix(self, c, name, size, dtype):
         """Create a new Matrix dataset
 
         the size specifies dimensions [row, column]
         """
         if len(dtype) != 1 or dtype not in 'fs':
             raise TypeError("dtype keyword only accepts 'f' or 's'")
-        session = self.getSession(c)
-        dataset = session.newMatrixDataset(name or 'untitled', size, dtype)
+        session = self.get_session(c)
+        dataset = session.new_matrix_dataset(name or 'untitled', size, dtype)
         self.onNewDatasetDir((dataset.name, session.path), self.root.listeners)  # MR
         c['dataset'] = dataset.name  # not the same as name; has number prefixed
         c['filepos'] = 0  # start at the beginning
@@ -1181,14 +1125,14 @@ class DataVault(LabradServer):
         You can specify the dataset by name or number.
         Returns the path and name for this dataset.
         """
-        session = self.getSession(c)
-        dataset = session.openDataset(name)
+        session = self.get_session(c)
+        dataset = session.open_dataset(name)
         c['dataset'] = dataset.name  # not the same as name; has number prefixed
         c['filepos'] = 0
         c['commentpos'] = 0
         c['writing'] = False
-        dataset.keepStreaming(c.ID, 0)
-        dataset.keepStreamingComments(c.ID, 0)
+        dataset.keep_streaming(c.ID, 0)
+        dataset.keep_streaming_comments(c.ID, 0)
         return c['path'], c['dataset']
 
     @setting(11, name=['s', 'w'], returns='(*s{path}, s{name})')
@@ -1198,19 +1142,20 @@ class DataVault(LabradServer):
         You can specify the dataset by name or number.
         Returns the path and name for this dataset.
         """
-        session = self.getSession(c)
-        dataset = session.openDataset(name)
+        session = self.get_session(c)
+        dataset = session.open_dataset(name)
         c['dataset'] = dataset.name  # not the same as name; has number prefixed
         c['filepos'] = 0
         c['commentpos'] = 0
         c['writing'] = True
-        dataset.keepStreaming(c.ID, 0)
-        dataset.keepStreamingComments(c.ID, 0)
+        dataset.keep_streaming(c.ID, 0)
+        dataset.keep_streaming_comments(c.ID, 0)
         return c['path'], c['dataset']
 
     @setting(20, data=['*v: add one row of data',
-             '*2v: add multiple rows of data', '*s: add string of data',
-             '*2s: add multiple strings'], returns='')
+                       '*2v: add multiple rows of data',
+                       '*s: add string of data',
+                       '*2s: add multiple strings'], returns='')
     def add(self, c, data):
         """Add data to the current dataset.
 
@@ -1218,13 +1163,13 @@ class DataVault(LabradServer):
         to the total number of variables in the data set
         (independents + dependents).
         """
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         if not c['writing']:
             raise ReadOnlyError()
-        dataset.addData(data)
+        dataset.add_data(data)
 
-    @setting(21, limit='w', startOver='b', returns=['*2v', '*2s', '*s'])
-    def get(self, c, limit=None, startOver=False):
+    @setting(21, limit='w', start_over='b', returns=['*2v', '*2s', '*s'])
+    def get(self, c, limit=None, start_over=False):
         """Get data from the current dataset.
 
         Limit is the maximum number of rows of data to return, with
@@ -1233,10 +1178,10 @@ class DataVault(LabradServer):
         of the dataset.  By default, only new data that has not been seen
         in this context is returned.
         """
-        dataset = self.getDataset(c)
-        c['filepos'] = 0 if startOver else c['filepos']
-        data, c['filepos'] = dataset.getData(limit, c['filepos'])
-        dataset.keepStreaming(c.ID, c['filepos'])
+        dataset = self.get_dataset(c)
+        c['filepos'] = 0 if start_over else c['filepos']
+        data, c['filepos'] = dataset.get_data(limit, c['filepos'])
+        dataset.keep_streaming(c.ID, c['filepos'])
         return data
 
     # Add in saving camera images as a .npy with the dataset
@@ -1246,7 +1191,7 @@ class DataVault(LabradServer):
         """
         Save a CCD image of the open dataest to a .npy file
         """
-        session = self.getSession(c)
+        session = self.get_session(c)
         x_pixels, y_pixels = image_size
         data = numpy.reshape(data, (repetitions, y_pixels, x_pixels))
         image = Image(session, filename)
@@ -1261,7 +1206,7 @@ class DataVault(LabradServer):
         Label is meant to be an axis label, which may be shared among several
         traces, while legend is unique to each trace.
         """
-        ds = self.getDataset(c)
+        ds = self.get_dataset(c)
         ind = [(i['label'], i['units']) for i in ds.independents]
         dep = [(d['category'], d['label'], d['units']) for d in ds.dependents]
         return ind, dep
@@ -1269,7 +1214,7 @@ class DataVault(LabradServer):
     @setting(120, returns='*s')
     def parameters(self, c):
         """Get a list of parameter names."""
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         # send a message when new parameters are added
         dataset.param_listeners.add(c.ID)
         return [par['label'] for par in dataset.parameters]
@@ -1277,14 +1222,14 @@ class DataVault(LabradServer):
     @setting(121, 'add parameter', name='s', returns='')
     def add_parameter(self, c, name, data):
         """Add a new parameter to the current dataset."""
-        dataset = self.getDataset(c)
-        dataset.addParameter(name, data)
+        dataset = self.get_dataset(c)
+        dataset.add_parameter(name, data)
 
     @setting(122, 'get parameter', name='s')
     def get_parameter(self, c, name, case_sensitive=True):
         """Get the value of a parameter."""
-        dataset = self.getDataset(c)
-        return dataset.getParameter(name, case_sensitive)
+        dataset = self.get_dataset(c)
+        return dataset.get_parameter(name, case_sensitive)
 
     @setting(123, 'get parameters')
     def get_parameters(self, c):
@@ -1294,9 +1239,9 @@ class DataVault(LabradServer):
         If the set has no parameters, nothing is returned (since empty clusters
         are not allowed).
         """
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         names = [par['label'] for par in dataset.parameters]
-        params = tuple((name, dataset.getParameter(name)) for name in names)
+        params = tuple((name, dataset.get_parameter(name)) for name in names)
         # send a message when new parameters are added
         dataset.param_listeners.add(c.ID)
         if len(params):
@@ -1338,7 +1283,7 @@ class DataVault(LabradServer):
                     curdirs = [(list(key[1]), item)]
                     yield self.read_pars_int(c, ctx, dataset, curdirs, subdirs)
                 else:
-                    dataset.addParameter(' -> '.join(key[1]), item, saveNow=False)
+                    dataset.add_parameter(' -> '.join(key[1]), item, save_now=False)
 
     @setting(125, 'import parameters',
              subdirs=[' : Import current directory',
@@ -1348,7 +1293,7 @@ class DataVault(LabradServer):
     def import_parameters(self, c, subdirs=None):
         """Reads all entries from the current registry directory, optionally
         including subdirectories, as parameters into the current dataset."""
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         ctx = self.client.context()
         p = self.client.registry.packet(context=ctx)
         p.duplicate_context(c.ID)
@@ -1363,16 +1308,16 @@ class DataVault(LabradServer):
     @setting(126, 'add parameter over write', name='s', returns='')
     def add_parameter_over_write(self, c, name, data):
         """Add a new parameter to the current dataset."""
-        dataset = self.getDataset(c)
-        dataset.addParameterOverWrite(name, data)
+        dataset = self.get_dataset(c)
+        dataset.add_parameter_overwrite(name, data)
 
     @setting(127, 'wait for parameter', name='s', timeout='i')
     def wait_for_parameter(self, c, name, timeout=60):
         """Wait for parameter"""
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         d = Deferred()
-        callID = reactor.callLater(timeout, dataset.parameterTimeout, name, d)
-        dataset.timeOutCallIDs[d] = callID
+        call_id = reactor.callLater(timeout, dataset.parameter_timeout, name, d)
+        dataset.timeOutCallIDs[d] = call_id
         try:
             dataset.deferredParameterDict[name].append(d)
         except KeyError:
@@ -1383,17 +1328,17 @@ class DataVault(LabradServer):
     @setting(200, 'add comment', comment=['s'], user=['s'], returns=[''])
     def add_comment(self, c, comment, user='anonymous'):
         """Add a comment to the current dataset."""
-        dataset = self.getDataset(c)
-        return dataset.addComment(user, comment)
+        dataset = self.get_dataset(c)
+        return dataset.add_comment(user, comment)
 
-    @setting(201, 'get comments', limit=['w'], startOver=['b'],
+    @setting(201, 'get comments', limit=['w'], start_over=['b'],
              returns=['*(t, s{user}, s{comment})'])
-    def get_comments(self, c, limit=None, startOver=False):
+    def get_comments(self, c, limit=None, start_over=False):
         """Get comments for the current dataset."""
-        dataset = self.getDataset(c)
-        c['commentpos'] = 0 if startOver else c['commentpos']
-        comments, c['commentpos'] = dataset.getComments(limit, c['commentpos'])
-        dataset.keepStreamingComments(c.ID, c['commentpos'])
+        dataset = self.get_dataset(c)
+        c['commentpos'] = 0 if start_over else c['commentpos']
+        comments, c['commentpos'] = dataset.get_comments(limit, c['commentpos'])
+        dataset.keep_streaming_comments(c.ID, c['commentpos'])
         return comments
 
     @setting(300, 'update tags', tags=['s', '*s'], dirs=['s', '*s'],
@@ -1413,22 +1358,22 @@ class DataVault(LabradServer):
         if isinstance(dirs, str):
             dirs = [dirs]
         if datasets is None:
-            datasets = [self.getDataset(c)]
+            datasets = [self.get_dataset(c)]
         elif isinstance(datasets, str):
             datasets = [datasets]
-        sess = self.getSession(c)
-        sess.updateTags(tags, dirs, datasets)
+        sess = self.get_session(c)
+        sess.update_tags(tags, dirs, datasets)
 
     @setting(301, 'get tags', dirs=['s', '*s'], datasets=['s', '*s'],
              returns='*(s*s)*(s*s)')
     def get_tags(self, c, dirs, datasets):
         """Get tags for directories and datasets in the current dir."""
-        sess = self.getSession(c)
+        sess = self.get_session(c)
         if isinstance(dirs, str):
             dirs = [dirs]
         if isinstance(datasets, str):
             datasets = [datasets]
-        return sess.getTags(dirs, datasets)
+        return sess.get_tags(dirs, datasets)
 
     @setting(128, 'add additional header', header_name='s', name='s', returns='')
     def add_additional_header(self, c, header_name, name, data):
@@ -1436,13 +1381,13 @@ class DataVault(LabradServer):
         Add a new additional header to the current dataset.
         header_name will be converted to lower case.
         """
-        dataset = self.getDataset(c)
-        dataset.addAdditionalHeader(header_name, name, data)
+        dataset = self.get_dataset(c)
+        dataset.add_additional_header(header_name, name, data)
 
     @setting(129, returns='*(ss)')
     def additional_headers(self, c):
         """Get a list of additional header (header_name, name) tuples."""
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         # send a message when new additional headers are added
         dataset.add_header_listeners.add(c.ID)
         additional_headers = []
@@ -1454,8 +1399,8 @@ class DataVault(LabradServer):
     @setting(130, 'get additional header', header_name='s', name='s')
     def get_additional_header(self, c, header_name, name, case_sensitive=True):
         """Get the value of an additional header."""
-        dataset = self.getDataset(c)
-        return dataset.getAdditionalHeader(header_name, name, case_sensitive)
+        dataset = self.get_dataset(c)
+        return dataset.get_additional_header(header_name, name, case_sensitive)
 
     @setting(131, 'get additional headers')
     def get_additional_headers(self, c):
@@ -1465,11 +1410,11 @@ class DataVault(LabradServer):
         If the set has no additional headers, nothing is returned (since empty clusters
         are not allowed).
         """
-        dataset = self.getDataset(c)
+        dataset = self.get_dataset(c)
         additional_headers = ()
         for header in dataset.additional_headers:
             for item in dataset.additional_headers[header]:
-                additional_headers += ((header, item["label"], item["data"]), )
+                additional_headers += ((header, item["label"], item["data"]),)
         # send a message when new parameters are added
         dataset.add_header_listeners.add(c.ID)
         if len(additional_headers) > 0:
@@ -1480,4 +1425,5 @@ __server__ = DataVault()
 
 if __name__ == '__main__':
     from labrad import util
+
     util.runServer(__server__)
