@@ -29,9 +29,9 @@ try:
 except ImportError:
     from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
 
-from sequence import Sequence
-from errors import dds_access_locked
-from api import API
+from common.lib.servers.Pulser2.sequence import Sequence
+from common.lib.servers.Pulser2.errors import dds_access_locked
+from common.lib.servers.Pulser2.api import API
 import numpy as np
 
 
@@ -458,7 +458,10 @@ class Pulser(LabradServer):
         """
         Add DDS pulses to the pulse sequence
         :param values: these should be input in the form of a list of tuples:
+        [(name, start, duration, frequency, amplitude)]
+        or
         [(name, start, duration, frequency, amplitude, phase, ramp_rate, amp_ramp_rate)]
+
         NOTE:
         ramp_rate is in MHz/ms (even though it wants to be passed in as just MHz)
         amp_ramp_rate is in dB/ms (even though it wants to be passed in as just dB)

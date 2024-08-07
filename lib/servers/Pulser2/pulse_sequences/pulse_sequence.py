@@ -17,8 +17,6 @@ class PulseSequence:
         The 1.0 microsecond is added for this reason and only affects the sequence with an initial 1 microsecond
         offset
         """
-        if not isinstance(parameter_dict, dict):
-            raise Exception("replacement_dict must be a TreeDict in sequence {0}".format(self.__class__.__name__))
         self.start = start
         self.end = start
         self._dds_pulses = []
@@ -90,8 +88,6 @@ class PulseSequence:
             raise Exception(
                 "Adding subsequence {0} that is not listed in the required subsequences".format(
                     sequence.__class__.__name__))
-        if not isinstance(replacement_dict, dict):
-            raise Exception("replacement_dict must be a TreeDict")
         for replacement_key in replacement_dict.keys():
             parsed = tuple(replacement_key.split('.'))
             key_list = self.replaced_parameters.get(sequence, [])

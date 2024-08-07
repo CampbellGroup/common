@@ -54,7 +54,10 @@ class Sequence:
         return step
 
     def num_to_hex(self, number):
-        """converts the number to the hex representation for a total of 32 bits"""
+        """
+        converts the number to the hex representation for a total of 32 bits
+        i.e: 3 -> 00000000...000100 ->  \x00\x00\x03\x00, note that the order of 8bit pieces is switched'''
+        """
         number = int(number)
         b = bytearray(4)
         b[2] = number % 256
@@ -87,14 +90,16 @@ class Sequence:
         return self.ddsSettings, self.ttlProgram
 
     def user_added_dds(self):
+        """a flag that checks whether a dds has been added to the sequence"""
         return bool(len(self.ddsSettingList))
 
     def parse_dds(self):
         if not self.user_added_dds():
             return None
+        # get the state of the pulser. This will be a dict of the form {name: channel_number}:
         state = self.parent.get_current_dds()
         pulses_end = {}.fromkeys(state, (0, 'stop'))  # time / boolean whether in a middle of a pulse
-        dds_program = {}.fromkeys(state, bytearray())
+        dds_program = {}.fromkeys(state, b'')
         last_time = 0
         start = None
         entries = sorted(self.ddsSettingList, key=lambda t: t[1])  # sort by starting time
@@ -221,5 +226,5 @@ class Sequence:
             reverse = expand[::-1]
             return reverse
 
-        channels = map(expand_channel, channels)
+        channels = list(map(expand_channel, channels))
         return numpy.vstack((times, channels)).transpose()
