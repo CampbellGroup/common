@@ -48,7 +48,7 @@ class switchWidget(QFrame):
         listed in the registry. If there is no listing, will display all channels.
         """
         server = yield self.cxn.get_server('Pulser')
-        all_channels = yield server.get_channels(context=self.context)
+        all_channels = yield server.get_ttl_channels(context=self.context)
         all_names = [el[0] for el in all_channels]
         channels_to_display = yield self.registry_load_displayed(all_names)
         if channels_to_display is None:

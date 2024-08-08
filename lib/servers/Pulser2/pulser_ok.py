@@ -4,7 +4,7 @@
 ### BEGIN NODE INFO
 [info]
 name = Pulser
-version = 2.1
+version = 3.0
 description =
 instancename = Pulser
 
@@ -23,14 +23,15 @@ from twisted.internet import reactor
 from twisted.internet.defer import DeferredLock, inlineCallbacks, returnValue, Deferred
 from twisted.internet.threads import deferToThread
 import time
+from typing import Dict
 
 try:
-    from config.pulser.hardwareConfiguration import hardwareConfiguration
+    from config.pulser_config import PulserConfiguration
 except ImportError:
-    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
+    from common.lib.config.pulser_config import PulserConfiguration
 
 from common.lib.servers.Pulser2.sequence import Sequence
-from common.lib.servers.Pulser2.errors import dds_access_locked
+from common.lib.servers.Pulser2.errors import *
 from common.lib.servers.Pulser2.api import API
 import numpy as np
 
@@ -47,20 +48,18 @@ class Pulser(LabradServer):
     def initServer(self):
         self.api = API()
 
-        # load config from hardwareConfiguration
-        self.channel_dict = hardwareConfiguration.channelDict
-        self.collection_time = hardwareConfiguration.collectionTime
-        self.collection_mode = hardwareConfiguration.collectionMode
-        self.sequence_type = hardwareConfiguration.sequenceType
-        self.is_programmed = hardwareConfiguration.isProgrammed
-        self.time_resolution = float(hardwareConfiguration.timeResolution)
-        self.dds_dict = hardwareConfiguration.ddsDict
-        self.time_resolved_resolution = hardwareConfiguration.timeResolvedResolution
-        self.remote_channels = hardwareConfiguration.remoteChannels
-        self.collection_time_range = hardwareConfiguration.collectionTimeRange
-        self.sequence_time_range = hardwareConfiguration.sequenceTimeRange
-        self.have_second_pmt = hardwareConfiguration.secondPMT
-        self.have_dac = hardwareConfiguration.DAC
+        # load config from PulserConfiguration
+        self.time_resolution = float(PulserConfiguration.time_resolution)
+        self.time_resolved_resolution = PulserConfiguration.time_resolved_resolution
+        self.sequence_time_range = PulserConfiguration.sequence_time_range
+        self.ttl_channel_dict = PulserConfiguration.ttl_channel_dict
+        self.default_collection_time = PulserConfiguration.default_collection_time
+        self.default_collection_mode = PulserConfiguration.default_collection_mode
+        self.dds_channel_dict = PulserConfiguration.dds_channel_dict
+        self.remote_channels = PulserConfiguration.remote_channels
+        self.collection_time_range = PulserConfiguration.collection_time_range
+        self.have_second_pmt = PulserConfiguration.has_second_pmt
+        self.have_dac = PulserConfiguration.has_dac
 
         self.in_communication = DeferredLock()
         self.clear_next_pmt_counts = 0
@@ -68,7 +67,7 @@ class Pulser(LabradServer):
         # line trigger settings
         self.linetrigger_enabled = False
         self.linetrigger_duration = WithUnit(0, 'us')
-        self.linetrigger_limits = [WithUnit(v, 'us') for v in hardwareConfiguration.lineTriggerLimits]
+        self.linetrigger_limits = [WithUnit(v, 'us') for v in PulserConfiguration.line_trigger_limits]
 
         # initialize the board
         self.initialize_board()
@@ -78,25 +77,27 @@ class Pulser(LabradServer):
         self.listeners = set()
 
         self.programmed_sequence = None
+        self.is_programmed = False
+        self.sequence_type = None  # None for not programmed, can be 'one' or 'infinite'
 
-    def initialize_board(self):
+    def initialize_board(self) -> None:
         """connect to the OpalKelly FPGA board"""
         connected = self.api.connect_ok_board()
         if not connected:
             raise Exception("Pulser Not Found")
 
-    def initialize_ttl(self):
+    def initialize_ttl(self) -> None:
         """set all TTLs to their initial settings"""
-        for channel in iter(self.channel_dict.values()):
-            channelnumber = channel.channelnumber
-            if channel.ismanual:
-                state = self.cnot(channel.manualinv, channel.manualstate)
-                self.api.set_manual(channelnumber, state)
+        for channel in iter(self.ttl_channel_dict.values()):
+            channel_number = channel.channel_number
+            if channel.is_manual:
+                state = self.cnot(channel.inverted_manual, channel.manual_state)
+                self.api.set_manual(channel_number, state)
             else:
-                self.api.set_auto(channelnumber, channel.autoinv)
+                self.api.set_auto(channel_number, channel.inverted_auto)
 
     @inlineCallbacks
-    def initialize_remote(self):
+    def initialize_remote(self) -> None:
         """connect to any remote channels that are specified in the hardwareConfiguration"""
         self.remoteConnections = {}
         if len(self.remote_channels):
@@ -111,13 +112,13 @@ class Pulser(LabradServer):
                     self.remoteConnections[name] = None
 
     @inlineCallbacks
-    def initialize_dds(self):
+    def initialize_dds(self) -> None:
         """
         Initializes the DDS boards
         """
-        self.ddsLock = False
+        self.dds_lock = False
         self.api.initialize_dds()
-        for name, channel in self.dds_dict.items():
+        for name, channel in self.dds_channel_dict.items():
             channel.name = name
             freq, ampl = (channel.frequency, channel.amplitude)
             self._check_range('amplitude', channel, ampl)
@@ -141,7 +142,7 @@ class Pulser(LabradServer):
         """
         sequence = c.get('sequence')
         if not sequence:
-            raise Exception("Please create new sequence first")
+            raise RuntimeError("Please create new sequence first")
         self.programmed_sequence = sequence
         dds, ttl = sequence.prog_representation()
         yield self.in_communication.acquire()
@@ -158,7 +159,7 @@ class Pulser(LabradServer):
         (until complete_infinite is called)
         """
         if not self.is_programmed:
-            raise Exception("No programmed sequence")
+            raise MissingSequenceError("No programmed sequence")
         yield self.in_communication.acquire()
         yield deferToThread(self.api.set_number_repetitions, 0)
         yield deferToThread(self.api.reset_seq_counter)
@@ -173,7 +174,7 @@ class Pulser(LabradServer):
         (started by start_infinite)
         """
         if self.sequence_type != 'Infinite':
-            raise Exception("Not running infinite sequence")
+            raise RuntimeError("Not running infinite sequence")
         yield self.in_communication.acquire()
         yield deferToThread(self.api.start_single)
         self.in_communication.release()
@@ -182,7 +183,7 @@ class Pulser(LabradServer):
     def start(self, c):
         """Start a single execution of the currently programmed pulse sequence"""
         if not self.is_programmed:
-            raise Exception("No Programmed Sequence")
+            raise MissingSequenceError("No Programmed Sequence")
         yield self.in_communication.acquire()
         yield deferToThread(self.api.reset_seq_counter)
         yield deferToThread(self.api.start_single)
@@ -197,21 +198,19 @@ class Pulser(LabradServer):
         :param start: the start of the pulse
         :param duration: the duration of the pulse
         """
-        if channel not in self.channel_dict.keys():
-            raise Exception("Unknown Channel {}".format(channel))
-        hardware_addr = self.channel_dict.get(channel).channelnumber
+        if channel not in self.ttl_channel_dict.keys():
+            raise IndexError("Unknown Channel {}".format(channel))
+        hardware_addr = self.ttl_channel_dict.get(channel).channel_number
         sequence = c.get('sequence')
         start = start['s']
         duration = duration['s']
         # simple error checking
-        if not ((self.sequence_time_range[0] <= start <= self.sequence_time_range[1]) and (
-                self.sequence_time_range[0] <= start + duration <= self.sequence_time_range[1])):
-            raise Exception("Time boundaries are out of range")
-        if not duration >= self.time_resolution:
-            raise Exception("Incorrect duration")
-        if not sequence:
-            raise Exception("Please create new sequence first")
-        sequence.add_pulse(hardware_addr, start, duration)
+        assert ((self.sequence_time_range[0] <= start <= self.sequence_time_range[1]) and
+                (self.sequence_time_range[0] <= start + duration <= self.sequence_time_range[1])), (
+            f"TTL pulse start and end  must be between {self.sequence_time_range[0]} and {self.sequence_time_range[1]}")
+        assert duration >= self.time_resolution, f"Duration must be longer than {self.time_resolution} seconds"
+        assert sequence, "Please create new sequence first"
+        sequence.add_ttl_pulse(hardware_addr, start, duration)
 
     @setting(6, 'Add TTL Pulses', pulses='*(sv[s]v[s])')
     def add_ttl_pulses(self, c, pulses):
@@ -232,10 +231,9 @@ class Pulser(LabradServer):
         :param time_length: the amount to extend the sequence by in seconds
         """
         sequence = c.get('sequence')
-        if not (self.sequence_time_range[0] <= time_length['s'] <= self.sequence_time_range[1]):
-            raise Exception("Time boundaries are out of range")
-        if not sequence:
-            raise Exception("Please create new sequence first")
+        assert (self.sequence_time_range[0] <= time_length['s'] <= self.sequence_time_range[1]), (
+            f"Sequence length must be between {self.sequence_time_range[0]} and {self.sequence_time_range[1]} s")
+        assert sequence, "Please create new sequence first"
         sequence.extend_sequence_length(time_length['s'])
 
     @setting(8, "Stop Sequence")
@@ -251,7 +249,7 @@ class Pulser(LabradServer):
             yield deferToThread(self.api.stop_looped)
         self.in_communication.release()
         self.sequence_type = None
-        self.ddsLock = False
+        self.dds_lock = False
 
     @setting(9, "Start Number", repetition='w')
     def start_number(self, c, repetition):
@@ -260,10 +258,9 @@ class Pulser(LabradServer):
         :param repetition: the number of repetitions to run
         """
         if not self.is_programmed:
-            raise Exception("No programmed sequence")
+            raise MissingSequenceError("No programmed sequence")
 
-        if not 1 <= repetition <= (2 ** 16 - 1):
-            raise Exception("Incorrect number of pulses")
+        assert 1 <= repetition <= (2 ** 16 - 1), "Incorrect number of repetitions, must be between 1 and 65535"
         yield self.in_communication.acquire()
         yield deferToThread(self.api.set_number_repetitions, repetition)
         yield deferToThread(self.api.reset_seq_counter)
@@ -281,8 +278,7 @@ class Pulser(LabradServer):
         sequence = c.get('sequence')
         if get_programmed:
             sequence = self.programmed_sequence
-        if not sequence:
-            raise Exception("Please create new sequence first")
+        assert sequence,  "Please create new sequence first"
         ttl, dds = sequence.human_representation()
         return ttl.tolist()
 
@@ -296,8 +292,7 @@ class Pulser(LabradServer):
         sequence = c.get('sequence')
         if get_programmed:
             sequence = self.programmed_sequence
-        if not sequence:
-            raise Exception("Please create new sequence first")
+        assert sequence, "Please create new sequence first"
         ttl, dds = sequence.human_representation()
         return dds
 
@@ -328,12 +323,12 @@ class Pulser(LabradServer):
 
     # region TTL Functions
     #####################
-    @setting(12, 'Get Channels', returns='*(sw)')
-    def get_channels(self, c):
+    @setting(12, 'Get TTL Channels', returns='*(sw)')
+    def get_ttl_channels(self, c):
         """Returns a list of all available channels, and the corresponding hardware numbers"""
-        d = self.channel_dict
+        d = self.ttl_channel_dict
         keys = d.keys()
-        numbers = [d[key].channelnumber for key in keys]
+        numbers = [d[key].channel_number for key in keys]
         return list(zip(keys, numbers))
 
     @setting(13, 'Switch Manual', channel_name='s', state='b')
@@ -345,17 +340,17 @@ class Pulser(LabradServer):
         :param channel_name: the channel to be switched
         :keyword param state: the state that the switch should return to
         """
-        if channel_name not in self.channel_dict.keys():
-            raise Exception("Incorrect Channel")
-        channel = self.channel_dict[channel_name]
-        channel_number = channel.channelnumber
-        channel.ismanual = True
+        if channel_name not in self.ttl_channel_dict.keys():
+            raise KeyError(f"TTL channel '{channel_name}' not found in Pulser config")
+        channel = self.ttl_channel_dict[channel_name]
+        channel_number = channel.channel_number
+        channel.is_manual = True
         if state is not None:
-            channel.manualstate = state
+            channel.manual_state = state
         else:
-            state = channel.manualstate
+            state = channel.manual_state
         yield self.in_communication.acquire()
-        yield deferToThread(self.api.set_manual, channel_number, self.cnot(channel.manualinv, state))
+        yield deferToThread(self.api.set_manual, channel_number, self.cnot(channel.inverted_manual, state))
         self.in_communication.release()
         if state:
             self.notify_other_listeners(c, (channel_name, 'ManualOn'), self.onSwitch)
@@ -369,15 +364,15 @@ class Pulser(LabradServer):
         :param channel_name: the channel to be switched
         :param invert: whether to invert the state of the ttl
         """
-        if channel_name not in self.channel_dict.keys():
-            raise Exception("Incorrect Channel")
-        channel = self.channel_dict[channel_name]
-        channel_number = channel.channelnumber
-        channel.ismanual = False
+        if channel_name not in self.ttl_channel_dict.keys():
+            raise KeyError(f"TTL channel '{channel_name}' not found in Pulser config")
+        channel = self.ttl_channel_dict[channel_name]
+        channel_number = channel.channel_number
+        channel.is_manual = False
         if invert is not None:
-            channel.autoinv = invert
+            channel.inverted_auto = invert
         else:
-            invert = channel.autoinv
+            invert = channel.inverted_auto
         yield self.in_communication.acquire()
         yield deferToThread(self.api.set_auto, channel_number, invert)
         self.in_communication.release()
@@ -389,10 +384,10 @@ class Pulser(LabradServer):
         Returns the current state of the switch: in the form
         (Manual/Auto, ManualOn/Off, ManualInversionOn/Off, AutoInversionOn/Off)
         """
-        if channel_name not in self.channel_dict.keys():
-            raise Exception("Incorrect Channel")
-        channel = self.channel_dict[channel_name]
-        answer = (channel.ismanual, channel.manualstate, channel.manualinv, channel.autoinv)
+        if channel_name not in self.ttl_channel_dict.keys():
+            raise KeyError(f"TTL channel '{channel_name}' not found in Pulser config")
+        channel = self.ttl_channel_dict[channel_name]
+        answer = (channel.is_manual, channel.manual_state, channel.inverted_manual, channel.inverted_auto)
         return answer
 
     # endregion TTL Functions
@@ -403,7 +398,7 @@ class Pulser(LabradServer):
     @setting(41, "Get DDS Channels", returns='*s')
     def get_dds_channels(self, c):
         """get the list of available channels"""
-        return list(self.dds_dict.keys())
+        return list(self.dds_channel_dict.keys())
 
     @setting(43, "Amplitude", name='s', amplitude='v[dBm]', returns='v[dBm]')
     def amplitude(self, c, name=None, amplitude=None):
@@ -414,8 +409,8 @@ class Pulser(LabradServer):
                           If left blank, the current amplitude will be returned
         """
         # get the hardware channel
-        if self.ddsLock and amplitude is not None:
-            raise dds_access_locked()
+        if self.dds_lock and amplitude is not None:
+            raise DDSAccessLockedError()
         channel = self._get_channel(c, name)
         if amplitude is not None:
             # setting the ampplitude
@@ -438,8 +433,8 @@ class Pulser(LabradServer):
                           If left blank, the current frequency will be returned
         """
         # get the hardware channel
-        if self.ddsLock and frequency is not None:
-            raise dds_access_locked()
+        if self.dds_lock and frequency is not None:
+            raise DDSAccessLockedError()
         channel = self._get_channel(c, name)
         if frequency is not None:
             # setting the frequency
@@ -468,7 +463,7 @@ class Pulser(LabradServer):
         """
         sequence = c.get('sequence')
         if not sequence:
-            raise Exception("Please create new sequence first")
+            raise MissingSequenceError("Please create new sequence first")
         for value in values:
             try:
                 name, start, dur, freq, ampl = value
@@ -478,9 +473,9 @@ class Pulser(LabradServer):
             except ValueError:
                 name, start, dur, freq, ampl, phase, ramp_rate, amp_ramp_rate = value
             try:
-                channel = self.dds_dict[name]
+                channel = self.dds_channel_dict[name]
             except KeyError:
-                raise Exception("Unknown DDS channel {}".format(name))
+                raise KeyError(f"DDS channel '{name}' not found in Pulser config")
             start = start['s']
             dur = dur['s']
             freq = freq['MHz']
@@ -494,38 +489,34 @@ class Pulser(LabradServer):
             else:
                 self._check_range('frequency', channel, freq)
                 self._check_range('amplitude', channel, ampl)
-            num = self.settings_to_num(channel, freq, ampl, phase, ramp_rate, amp_ramp_rate)
+            num = self._settings_to_num(channel, freq, ampl, phase, ramp_rate, amp_ramp_rate)
             if not channel.phase_coherent_model:
-                num_off = self.settings_to_num(channel, freq_off, ampl_off)
+                num_off = self._settings_to_num(channel, freq_off, ampl_off)
             else:
                 # note that keeping the frequency the same when switching off to preserve phase coherence
-                num_off = self.settings_to_num(channel, freq, ampl_off, phase, ramp_rate, amp_ramp_rate)
+                num_off = self._settings_to_num(channel, freq, ampl_off, phase, ramp_rate, amp_ramp_rate)
             # note < sign, because start can not be 0.
             # this would overwrite the 0 position of the ram,
             # and cause the dds to change before pulse sequence is launched
-            if not self.sequence_time_range[0] < start <= self.sequence_time_range[1]:
-                raise Exception(
-                    "DDS start time out of acceptable input range for channel {0} at time {1}".format(name,
-                                                                                                      start))
-            if not self.sequence_time_range[0] < start + dur <= self.sequence_time_range[1]:
-                raise Exception(
-                    "DDS start time out of acceptable input range for channel {0} at time {1}".format(name,
-                                                                                                      start + dur))
+            assert self.sequence_time_range[0] < start <= self.sequence_time_range[1], (
+                    f"DDS start time out of acceptable input range for channel {name} at time {start}")
+            assert self.sequence_time_range[0] < start + dur <= self.sequence_time_range[1], (
+                    f"DDS end time out of acceptable input range for channel {name} at time {start + dur}")
             if not dur == 0:  # 0-length pulses are ignored
-                sequence.add_dds(name, start, num, 'start')
-                sequence.add_dds(name, start + dur, num_off, 'stop')
+                sequence.add_dds_pulse(name, start, num, 'start')
+                sequence.add_dds_pulse(name, start + dur, num_off, 'stop')
 
     @setting(46, 'Get DDS Amplitude Range', name='s', returns='(vv)')
     def get_dds_ampl_range(self, c, name=None):
         """Returns the allowed amplitude range of the DDS"""
         channel = self._get_channel(c, name)
-        return channel.allowedamplrange
+        return channel.allowed_ampl_range
 
     @setting(47, 'Get DDS Frequency Range', name='s', returns='(vv)')
     def get_dds_freq_range(self, c, name=None):
         """Returns the allowed frequency range of the DDS"""
         channel = self._get_channel(c, name)
-        return channel.allowedfreqrange
+        return channel.allowed_freq_range
 
     @setting(48, 'Output', name='s', state='b', returns=' b')
     def output(self, c, name=None, state=None):
@@ -535,8 +526,8 @@ class Pulser(LabradServer):
 
         If no state is provided, just returns the current state of the DDS
         """
-        if self.ddsLock and state is not None:
-            raise dds_access_locked()
+        if self.dds_lock and state is not None:
+            raise DDSAccessLockedError()
         channel = self._get_channel(c, name)
         if state is not None:
             yield self._set_output(channel, state)
@@ -547,23 +538,23 @@ class Pulser(LabradServer):
     @setting(49, 'Clear DDS Lock')
     def clear_dds_lock(self, c):
         """Clears the dds lock"""
-        self.ddsLock = False
+        self.dds_lock = False
 
     def _check_range(self, t, channel, val):
         """Checks whether the current channel is valid given the config."""
         r = None
         if t == 'amplitude':
-            r = channel.allowedamplrange
+            r = channel.allowed_ampl_range
         elif t == 'frequency':
-            r = channel.allowedfreqrange
-        if not r[0] <= val <= r[1]:
-            raise Exception("channel {0} : {1} of {2} is outside the allowed range".format(channel.name, t, val))
+            r = channel.allowed_freq_range
+        assert r[0] <= val <= r[1], f"channel {channel.name} : {t} of {val} is outside the allowed range"
 
-    def _get_channel(self, c, name):
+    def _get_channel(self, c, name: str):
+        """Returns the TTLChannel object corresponding to the channel"""
         try:
-            channel = self.dds_dict[name]
+            channel = self.dds_channel_dict[name]
         except KeyError:
-            raise Exception("Channel {0} not found".format(name))
+            raise KeyError("DDS channel {} not found".format(name))
         return channel
 
     @inlineCallbacks
@@ -577,7 +568,7 @@ class Pulser(LabradServer):
         yield self.in_communication.run(self._set_parameters, channel, freq, ampl)
 
     @inlineCallbacks
-    def _set_output(self, channel, state):
+    def _set_output(self, channel, state: bool):
         if state and not channel.state:  # if turning on, and is currently off
             yield self.in_communication.run(self._set_parameters, channel, channel.frequency, channel.amplitude)
         elif channel.state and not state:  # if turning off and is currenly on
@@ -585,40 +576,33 @@ class Pulser(LabradServer):
             yield self.in_communication.run(self._set_parameters, channel, freq, ampl)
 
     @inlineCallbacks
-    def _program_dds_sequence(self, dds):
+    def _program_dds_sequence(self, dds: bytes) -> None:
         """takes the parsed dds sequence and programs the board with it"""
-        self.ddsLock = True
-        for name, channel in self.dds_dict.items():
+        self.dds_lock = True
+        for name, channel in self.dds_channel_dict.items():
             buf = dds[name]
             yield self.program_dds_chanel(channel, buf)
 
     @inlineCallbacks
     def _set_parameters(self, channel, freq, ampl):
-        buf = self.settings_to_buf(channel, freq, ampl)
+        buf = self._settings_to_buf(channel, freq, ampl)
         yield self.program_dds_chanel(channel, buf)
 
-    def settings_to_buf(self, channel, freq, ampl):
-        num = self.settings_to_num(channel, freq, ampl)
-        # if not channel.phase_coherent_model:
-        #     buf = self._int(num)
-        # else:
+    def _settings_to_buf(self, channel, freq, ampl):
+        """converts DDS settings into a bytewise representation"""
+        num = self._settings_to_num(channel, freq, ampl)
         buf = self.int_to_buf_coherent(num)
-        # buf = buf + '\x00\x00' #adding termination
-        # buf = bytearray.fromhex(u'0000') + buf
-        # print buf
         return buf
 
-    def settings_to_num(self, channel, freq, ampl, phase=0.0, ramp_rate=0.0, amp_ramp_rate=0.0):
-        # if not channel.phase_coherent_model:
-        #     num = self._valToInt(channel, freq, ampl)
-        # else:
+    def _settings_to_num(self, channel, freq, ampl, phase=0.0, ramp_rate=0.0, amp_ramp_rate=0.0):
+        """converts DDS settings into an integer representation"""
         num = self._val_to_int_coherent(channel, freq, ampl, phase, ramp_rate, amp_ramp_rate)
         return num
 
     @inlineCallbacks
     def program_dds_chanel(self, channel, buf):
-        addr = channel.channelnumber
-        if not channel.remote:
+        addr = channel.channel_number
+        if not channel.is_remote:
             yield deferToThread(self._set_dds_local, addr, buf)
         else:
             yield self._set_dds_remote(channel, addr, buf)
@@ -631,18 +615,18 @@ class Pulser(LabradServer):
     # noinspection PyUnresolvedReferences
     @inlineCallbacks
     def _set_dds_remote(self, channel, addr, buf):
-        cxn = self.remoteConnections[channel.remote]
-        remote_info = self.remote_channels[channel.remote]
+        cxn = self.remoteConnections[channel.is_remote]
+        remote_info = self.remote_channels[channel.is_remote]
         server, reset, program = remote_info.server, remote_info.reset, remote_info.program
         try:
             yield cxn.servers[server][reset]()
-            yield cxn.servers[server][program]([(channel.channelnumber, buf)])
+            yield cxn.servers[server][program]([(channel.channel_number, buf)])
         except (KeyError, AttributeError):
-            print('Not programing remote channel {}'.format(channel.remote))
+            print('Not programing remote channel {}'.format(channel.is_remote))
 
-    def get_current_dds(self):
-        """Returns a dictionary {name:num} with the representation of the current dds state"""
-        d = dict([(name, self._channel_to_num(channel)) for (name, channel) in self.dds_dict.items()])
+    def get_current_dds(self) -> Dict[str, int]:
+        """Returns a dictionary {name: channel_number} with the representation of the current ddses"""
+        d = dict([(name, self._channel_to_num(channel)) for (name, channel) in self.dds_channel_dict.items()])
         return d
 
     def _channel_to_num(self, channel):
@@ -654,7 +638,7 @@ class Pulser(LabradServer):
             self._check_range('frequency', channel, freq)
         else:
             freq, ampl = channel.off_parameters
-        num = self.settings_to_num(channel, freq, ampl)
+        num = self._settings_to_num(channel, freq, ampl)
         return num
 
     def _val_to_int_coherent(self, channel, freq, ampl, phase=0.0, ramp_rate=0.0, amp_ramp_rate=0.0):
@@ -667,15 +651,16 @@ class Pulser(LabradServer):
         """
         ans = 0
         # changed the precision from 32 to 64 to handle super fine frequency tuning
-        for val, r, m, precision in [(freq, channel.boardfreqrange, 1, 64), (ampl, channel.boardamplrange, 2 ** 64, 16),
-                                     (phase, channel.boardphaserange, 2 ** 80, 16)]:
+        for val, r, m, precision in [(freq, channel.board_freq_range, 1, 64),
+                                     (ampl, channel.board_ampl_range, 2 ** 64, 16),
+                                     (phase, channel.board_phase_range, 2 ** 80, 16)]:
             minim, maxim = r
             resolution = (maxim - minim) / float(2 ** precision - 1)
             seq = int((val - minim) / resolution)  # sequential representation
             ans += m * seq
 
         # add ramp rate
-        minim, maxim = channel.boardramprange
+        minim, maxim = channel.board_ramp_range
         resolution = (maxim - minim) / float(2 ** 16 - 1)
         if ramp_rate < minim:  # if the ramp rate is smaller than the minim, thenn treat it as no rampp
             seq = 0
@@ -749,11 +734,11 @@ class Pulser(LabradServer):
         amp_ramp[0] = amp_ramp_rate % 256
         amp_ramp[1] = (amp_ramp_rate // 256) % 256
 
-        # a = bytearray.fromhex(u'0000') + amp + bytearray.fromhex(u'0000 0000')
+        # a = bytes.fromhex(u'0000') + amp + bytes.fromhex(u'0000 0000')
         a = phase + amp + amp_ramp + ramp
 
         ans = a + b
-        return ans
+        return bytes(ans)
 
     # endregion DDS functions
 
@@ -768,10 +753,10 @@ class Pulser(LabradServer):
         In the differential mode, the FPGA uses triggers the pulse sequence
         frequency and to know when the repumping light is switched on or off.
         """
-        if mode not in self.collection_time.keys():
-            raise ValueError("Incorrect mode")
-        self.collection_mode = mode
-        count_rate = self.collection_time[mode]
+        if mode not in self.default_collection_time.keys():
+            raise ValueError(f"Incorrect mode. Must be in {self.default_collection_time.keys()}")
+        self.default_collection_mode = mode
+        count_rate = self.default_collection_time[mode]
         yield self.in_communication.acquire()
         if mode == 'Normal':
             # set the mode on the device and set update time for normal mode
@@ -788,18 +773,18 @@ class Pulser(LabradServer):
         Sets how long to collect photons list in either 'Normal' or 'Differential' mode of operation
         """
         new_time = new_time['s']
-        if not self.collection_time_range[0] <= new_time <= self.collection_time_range[1]:
-            raise ValueError('incorrect collection time')
-        if mode not in self.collection_time.keys():
-            raise ValueError("Incorrect mode")
+        assert self.collection_time_range[0] <= new_time <= self.collection_time_range[1], (
+            f'Collection time must be between {self.collection_time_range[0]} and {self.collection_time_range[1]} s')
+        if mode not in self.default_collection_time.keys():
+            raise ValueError(f"Incorrect mode. Must be in {self.default_collection_time.keys()}")
         if mode == 'Normal':
-            self.collection_time[mode] = new_time
+            self.default_collection_time[mode] = new_time
             yield self.in_communication.acquire()
             yield deferToThread(self.api.set_pmt_count_rate, new_time)
             self.clear_next_pmt_counts = 3  # assign to clear next two counts
             self.in_communication.release()
         elif mode == 'Differential':
-            self.collection_time[mode] = new_time
+            self.default_collection_time[mode] = new_time
             self.clear_next_pmt_counts = 3  # assign to clear next two counts
 
     @setting(23, 'Get Collection Time', returns='(vv)')
@@ -901,7 +886,7 @@ class Pulser(LabradServer):
     def convert_kc_per_sec(self, inp):
         """converts raw PMT counts into kC/s, using the collection time and collection mode"""
         [raw_count, typ] = inp
-        count_kc_per_sec = float(raw_count) / self.collection_time[self.collection_mode] / 1000.
+        count_kc_per_sec = float(raw_count) / self.default_collection_time[self.default_collection_mode] / 1000.
         return [count_kc_per_sec, typ]
 
     def append_times(self, inp_list, time_last):
@@ -910,7 +895,7 @@ class Pulser(LabradServer):
         and the collection time to guess the arrival time of the previous readings
         i.e ( [[1,2],[2,3]] , timeLAst = 1.0, normalupdatetime = 0.1) -> ( [(1,2,0.9),(2,3,1.0)])
         """
-        collection_time = self.collection_time[self.collection_mode]
+        collection_time = self.default_collection_time[self.default_collection_mode]
         inp_list = list(inp_list)
         for i in range(len(inp_list)):
             inp_list[-i - 1].append(time_last - i * collection_time)
@@ -924,7 +909,7 @@ class Pulser(LabradServer):
     @setting(28, 'Get Collection Mode', returns='s')
     def get_mode(self, c):
         """returns the collection mode (normal or differential)"""
-        return self.collection_mode
+        return self.default_collection_mode
 
     # endregion PMT functions
 

@@ -4,7 +4,7 @@ with labrad.connect() as cxn:
     duration = WithUnit(50, 'ms')
     pulser = cxn.pulser
     pulser.new_sequence()
-    channels = pulser.get_channels()
+    channels = pulser.get_ttl_channels()
     channel_names = [chan[0] for chan in channels]
     for i in range(len(channels)):
         start = i * duration

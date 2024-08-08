@@ -1,9 +1,9 @@
 import ok.ok as ok
 
 try:
-    from config.pulser.hardwareConfiguration import hardwareConfiguration
+    from config.pulser_config import PulserConfiguration
 except ImportError:
-    from common.lib.config.pulser.hardwareConfiguration import hardwareConfiguration
+    from common.lib.config.pulser_config import PulserConfiguration
 
 
 class API(object):
@@ -11,10 +11,10 @@ class API(object):
 
     def __init__(self):
         self.xem = None
-        self.okDeviceID = hardwareConfiguration.okDeviceID
-        self.okDeviceFile = hardwareConfiguration.okDeviceFile
-        self.haveSecondPMT = hardwareConfiguration.secondPMT
-        self.haveDAC = hardwareConfiguration.DAC
+        self.okDeviceID = PulserConfiguration.ok_device_id
+        self.okDeviceFile = PulserConfiguration.ok_device_file
+        self.haveSecondPMT = PulserConfiguration.has_second_pmt
+        self.haveDAC = PulserConfiguration.has_dac
 
     def check_connection(self):
         """Raises an exception is the PFGA is not connected"""
@@ -53,9 +53,6 @@ class API(object):
         self.xem.SetPLL22150Configuration(pll)
 
     def program_board(self, sequence):
-        # print(sequence)
-        # if isinstance(sequence, str):
-        #     sequence = bytearray(sequence.encode(encoding="ascii"))
         sequence_data = self.pad_to_16(sequence)
         self.xem.WriteToBlockPipeIn(0x80, 16, sequence_data)
 
@@ -130,7 +127,6 @@ class API(object):
 
     def get_resolved_counts(self, number):
         """Get the time-tagged photon data."""
-        # buf = "\x00"*(number*2)
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa0, 2, buf)
         return buf
@@ -145,7 +141,6 @@ class API(object):
 
     def get_normal_counts(self, number):
         """Get the normal PMT counts from the FIFO."""
-        # buf = "\x00"* ( number * 2 )
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa1, 2, buf)
         return buf
@@ -160,7 +155,6 @@ class API(object):
 
     def get_readout_counts(self, number):
         """Get the readout count data."""
-        # buf = "\x00"* ( number * 2 )
         buf = bytearray(number * 2)
         self.xem.ReadFromBlockPipeOut(0xa2, 2, buf)
         return buf
@@ -216,20 +210,17 @@ class API(object):
         """
         size_needed = (16 - len(data) % 16) % 16
         zero_padding = bytearray(size_needed)
-        return data + zero_padding
+        return bytearray(data + zero_padding)
 
     def program_dds(self, prog):
         """program the dds channel with a list of frequencies and amplitudes.
         The channel of the particular channel must be selected first"""
         # add the initial padding
         prog = bytearray.fromhex(u'0000') + prog
-        #         for i in range(len(prog)):
-        #             print "prog dds",i,"=", prog[i]
         # pad to a multiple of 16 bytes
         prog_padded = self.pad_to_16(prog)
-        self.xem.WriteToBlockPipeIn(0x81, 16,
-                                    prog_padded)  # very important !!! second argument need to be 16. Don't change this.
-        # print "program DDS"
+        # very important !!! second argument below needs to be 16. Don't change this.
+        self.xem.WriteToBlockPipeIn(0x81, 16, prog_padded)
 
     def initialize_dds(self):
         """force reprogram of all dds chips during initialization"""
@@ -238,7 +229,7 @@ class API(object):
     # Methods relating to line triggering
     def enable_line_trigger(self, delay=0):
         """sets delay value in microseconds"""
-        min_delay, max_delay = hardwareConfiguration.lineTriggerLimits
+        min_delay, max_delay = PulserConfiguration.line_trigger_limits
         if not min_delay <= delay <= max_delay:
             raise ValueError("Incorrect Delay Time for Line Triggering")
         self.xem.SetWireInValue(0x06, delay)

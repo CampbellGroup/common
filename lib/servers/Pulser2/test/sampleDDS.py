@@ -29,7 +29,7 @@ if __name__ == '__main__':
     
     dds = cxn.pulser.human_readable_dds()
     ttl = cxn.pulser.human_readable_ttl()    
-    channels = cxn.pulser.get_channels().asarray
+    channels = cxn.pulser.get_ttl_channels().asarray
     ##print ttl.asarray
     ##print dds.aslist
     sp = SequencePlotter(ttl.asarray, dds.aslist, channels)
