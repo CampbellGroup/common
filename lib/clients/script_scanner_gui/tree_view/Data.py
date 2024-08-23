@@ -122,7 +122,6 @@ class ParameterNode(Node):
         return '{0} {1}'.format(self._value, self._units)
         
     def setData(self, column, value):
-        print('value', value)
         value = value.value()
         if column == 3:
             self._min = value
@@ -432,7 +431,7 @@ class LineSelectionNode(Node):
         return '{0}   ( {1} )'.format(show, self._value)
     
     def full_parameter(self):
-        return ('line_selection', (str(self._value), list(self._dict.iteritems() ) ) )
+        return ('line_selection', (str(self._value), list(self._dict.items())))
     
     def path(self):
         return (self._collection, self.name())
