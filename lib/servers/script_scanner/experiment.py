@@ -113,7 +113,7 @@ class experiment(experiment_info):
         """
         if isinstance(parameter_dict, dict):
             update_dict = dict()
-            for (collection, parameter_name), value in parameter_dict.iteritems():
+            for (collection, parameter_name), value in parameter_dict.items():
                 update_dict['{0}.{1}'.format(collection, parameter_name)] = value
         # elif isinstance(parameter_dict, TreeDict):
         #     update_dict = parameter_dict

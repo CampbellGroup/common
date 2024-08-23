@@ -2,7 +2,7 @@ from twisted.internet.threads import deferToThread
 from twisted.internet.defer import Deferred, DeferredList
 
 try:
-    from config.scriptscanner_config import config
+    from config.scriptscanner_config import Config
 except ImportError:
     from common.lib.config.scriptscanner_config import config
 
@@ -177,7 +177,7 @@ class ScriptScheduler:
         non_conflicting = []
         for running, script in self.running.items():
             cls_name = script.scan.script_cls.name
-            non_conf = config.allowed_concurrent.get(cls_name, None)
+            non_conf = Config.allowed_concurrent.get(cls_name, None)
             if non_conf is not None:
                 non_conflicting.append(set(non_conf))
         if non_conflicting:
@@ -275,7 +275,7 @@ class ScriptScheduler:
         paused_idents = []
         paused_deferred = []
         for ident, script in self.running.items():
-            non_conf = config.allowed_concurrent.get(script.name, [])
+            non_conf = Config.allowed_concurrent.get(script.name, [])
             if scan.script_cls.name not in non_conf and not script.status.status == 'Paused':
                 # don't pause unless it's a conflicting experiment, and it's not already paused
                 if not ident == current_ident:

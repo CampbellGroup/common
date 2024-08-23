@@ -15,6 +15,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+
 from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
@@ -50,7 +51,7 @@ class ScriptScanner(ScriptSignalsServer):
     Attributes
     ----------
     scheduler: scheduler instance.
-    script_parameters: dict, experiment names are keys, values are
+    scripts: dict, experiment names are keys, values are
         script_class_parameters instances.
     """
 
@@ -60,7 +61,7 @@ class ScriptScanner(ScriptSignalsServer):
 
         # Dictionary with experiment.name as keys and
         # script_class_parameters instances are the values.
-        self.script_parameters = {}
+        self.scripts = {}
         # Instance of a complicated object
         self.scheduler = ScriptScheduler(ScriptSignalsServer)
         self.load_scripts()
@@ -69,7 +70,7 @@ class ScriptScanner(ScriptSignalsServer):
         """
         loads script information from the configuration file
         """
-        config = sc_config.config
+        config = sc_config.Config
         for import_path, class_name in config.scripts:
             module = None
             try:
@@ -96,25 +97,25 @@ class ScriptScanner(ScriptSignalsServer):
                     name_not_provided += ' module {1}'
                     print(name_not_provided.format(class_name, module))
                 else:
-                    self.script_parameters[name] = ScriptInfo(name, cls, parameters)
+                    self.scripts[name] = ScriptInfo(name, cls, parameters)
 
     @setting(0, "get_available_scripts", returns='*s')
     def get_available_scripts(self, c):
-        return list(self.script_parameters.keys())
+        return list(self.scripts.keys())
 
-    @setting(1, "get_script_parameters", script='s', returns='*(ss)')
-    def get_script_parameters(self, c, script):
-        if script not in self.script_parameters.keys():
-            raise Exception("Script {} Not Found".format(script))
-        return self.script_parameters[script].parameters
+    @setting(1, "get_script_parameters", script_name='s', returns='*(ss)')
+    def get_script_parameters(self, c, script_name):
+        if script_name not in self.scripts.keys():
+            raise Exception("Script {} Not Found".format(script_name))
+        return self.scripts[script_name].parameters
 
-    @setting(7, "get_script_docstring", script='s', returns='s')
-    def get_script_docstring(self, c, script):
-        if script == "":
+    @setting(7, "get_script_docstring", script_name='s', returns='s')
+    def get_script_docstring(self, c, script_name):
+        if script_name == "":
             return ""
-        if script not in self.script_parameters.keys():
-            print("Script {} Not Found".format(script))
-        return self.script_parameters[script].cls.__doc__ or ""
+        if script_name not in self.scripts.keys():
+            print("Script {} Not Found".format(script_name))
+        return self.scripts[script_name].cls.__doc__ or ""
 
     @setting(2, "get_running", returns='*(ws)')
     def get_running(self, c):
@@ -173,12 +174,12 @@ class ScriptScanner(ScriptSignalsServer):
         -------
         scan_id: int
         """
-        if script_name not in self.script_parameters.keys():
+        if script_name not in self.scripts.keys():
             raise Exception("Script {} Not Found".format(script_name))
-        # Grabs an instance of script_class_parameters that holds
+        # Grabs an instance of ScriptInfo that holds
         # the experiment name, the experiment class, and the list of
         # required parameters for the experiment.
-        script = self.script_parameters[script_name]
+        script = self.scripts[script_name]
         # single_launch is an experiment instance.
         single_launch = scan_methods.single(script.cls)
         scan_id = self.scheduler.add_scan_to_queue(single_launch)
@@ -187,9 +188,9 @@ class ScriptScanner(ScriptSignalsServer):
     @setting(11, "new_script_repeat", script_name='s', repeat='w',
              save_data='b')
     def new_script_repeat(self, c, script_name, repeat, save_data=True):
-        if script_name not in self.script_parameters.keys():
+        if script_name not in self.scripts.keys():
             raise Exception("Script {} Not Found".format(script_name))
-        script = self.script_parameters[script_name]
+        script = self.scripts[script_name]
         repeat_launch = scan_methods.repeat_reload(script.cls, repeat,
                                                    save_data)
 
@@ -202,12 +203,12 @@ class ScriptScanner(ScriptSignalsServer):
     def new_scan(self, c, scan_script_name, measure_script_name, collection,
                  parameter_name, minim, maxim, steps, units):
         # need error checking that parameters are valid
-        if scan_script_name not in self.script_parameters.keys():
+        if scan_script_name not in self.scripts.keys():
             raise Exception("Script {} Not Found".format(scan_script_name))
-        if measure_script_name not in self.script_parameters.keys():
+        if measure_script_name not in self.scripts.keys():
             raise Exception("Script {} Not Found".format(measure_script_name))
-        scan_script = self.script_parameters[scan_script_name]
-        measure_script = self.script_parameters[measure_script_name]
+        scan_script = self.scripts[scan_script_name]
+        measure_script = self.scripts[measure_script_name]
         parameter = (collection, parameter_name)
         if scan_script == measure_script:
             scan_launch = scan_methods.scan_experiment_1D(scan_script.cls,
@@ -228,11 +229,11 @@ class ScriptScanner(ScriptSignalsServer):
         Schedule the script to run every specified duration of seconds.
         Priority indicates the priority with which the script is scheduled.
         """
-        if script_name not in self.script_parameters.keys():
+        if script_name not in self.scripts.keys():
             raise Exception("Script {} Not Found".format(script_name))
         if priority not in ['Normal', 'First in Queue', 'Pause All Others']:
             raise Exception("Priority not recognized")
-        script = self.script_parameters[script_name]
+        script = self.scripts[script_name]
         single_launch = scan_methods.single(script.cls)
         schedule_id = self.scheduler.new_scheduled_scan(single_launch,
                                                         duration['s'],
@@ -349,7 +350,7 @@ class ScriptScanner(ScriptSignalsServer):
     @setting(37, "reload_available_scripts")
     def reload_available_scripts(self, c):
         reload(sc_config)
-        self.script_parameters = {}
+        self.scripts = {}
         self.load_scripts()
 
     @inlineCallbacks

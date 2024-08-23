@@ -2,6 +2,8 @@ from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 from PyQt5.QtGui import *
 from common.lib.clients.script_scanner_gui.qtui import FixedWidthButton, ProgressBar
+import logging
+logger = logging.getLogger(__name__)
 
 
 class ScriptStatusWidget(QWidget):
@@ -135,7 +137,7 @@ class RunningScansList(QTableWidget):
         try:
             widget = self.d[ident]
         except KeyError:
-            print("trying set status of experiment that's not there")
+            logger.error("trying set status of experiment that's not there")
         else:
             widget.set_status(status, percentage)
 
@@ -143,7 +145,7 @@ class RunningScansList(QTableWidget):
         try:
             widget = self.d[ident]
         except KeyError:
-            print("trying set pause experiment that's not there")
+            logger.error("trying set pause experiment that's not there")
         else:
             widget.set_paused(is_paused)
 
@@ -167,7 +169,7 @@ class RunningScansList(QTableWidget):
         try:
             self.remove(ident)
         except KeyError:
-            print("trying remove experiment {0} that's not there".format(ident))
+            logger.error("trying remove experiment {0} that's not there".format(ident))
 
     def closeEvent(self, x):
         self.reactor.stop()

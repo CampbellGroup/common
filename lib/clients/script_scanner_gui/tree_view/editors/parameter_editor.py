@@ -28,8 +28,8 @@ class parameter_delegate(QAbstractItemDelegate):
         if editor == self.parent.uiName or editor == self.parent.uiCollection:
             editor.setText(node.data(index.column()))
         elif editor == self.parent.uiValue:
-            print('editor', editor)
-            print('node', node.data(index.column()))
+            # print('editor', editor)
+            # print('node', node.data(index.column()))
             editor.setValue(node.data(index.column()))
         elif editor == self.parent.uiMin:
             editor.setValue(node.data(index.column()))

@@ -101,7 +101,7 @@ class ParametersEditor(base, form):
                                             collection_node)
             self._parameter[collection_name, parameter_name] = node
         else:
-            print('unknown value type', value_type, collection_name, parameter_name)
+            logger.error('unknown value type', value_type, collection_name, parameter_name)
 
     def set_parameter(self, collection, name, full_info):
         """set value of a parameter stores in the model"""
@@ -118,7 +118,7 @@ class ParametersEditor(base, form):
 
     def get_scannable_parameters(self):
         scannable = []
-        for (collection, param), index in self._scannable_parameter.iteritems():
+        for (collection, param), index in self._scannable_parameter.items():
             if (collection, param) in self._proxyModel.shown():
                 parameter_node = index.internalPointer()
                 minim = parameter_node.data(3)
