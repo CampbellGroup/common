@@ -482,6 +482,8 @@ class NumpyDataset(Dataset):
 
         # check row length
         if data.shape[-1] != varcount:
+            print(data, data.shape)
+            print(varcount, self.independents, self.dependents)
             raise BadDataError(varcount, data.shape[-1])
 
         # append data to in-memory data
