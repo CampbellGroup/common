@@ -5,7 +5,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 class QCustomPID(QFrame):
     def __init__(self, DACPort, parent=None):
-        QWidget.__init__(self, parent, flags=None)
+        QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
         self.makeLayout(DACPort)
 
