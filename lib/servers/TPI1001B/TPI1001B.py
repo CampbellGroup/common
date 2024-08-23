@@ -23,12 +23,13 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 
 TIMEOUT = Value(5.0, 's')
 
+
 class TPI1001BDevice(DeviceWrapper):
 
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a Piezo device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print('connecting to "%s" on port "%s"...' % (server.name, port),)
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -76,10 +77,10 @@ class TPI1001B(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print('loading config info...',)
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        print self.serialLinks
+        print(self.serialLinks)
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
@@ -93,7 +94,6 @@ class TPI1001B(DeviceServer):
             p.get(k, key=k)
         ans = yield p.send()
         self.serialLinks = dict((k, ans[k]) for k in keys)
-
 
     @inlineCallbacks
     def findDevices(self):
@@ -114,6 +114,7 @@ class TPI1001B(DeviceServer):
     def user_control(self, c):
         dev = self.selectDevice(c)
         yield dev.write()
+
 
 if __name__ == "__main__":
     from labrad import util
