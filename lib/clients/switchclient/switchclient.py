@@ -7,11 +7,11 @@ logger = logging.getLogger(__name__)
 
 try:
     from config.switch_client_config import switch_config
-except:
+except ImportError:
     from common.lib.config.switch_client_config import switch_config
 
 
-class switchclient(QFrame):
+class SwitchClient(QFrame):
     SIGNALID = 219749
 
     def __init__(self, reactor, cxn=None):
@@ -20,7 +20,7 @@ class switchclient(QFrame):
             be stored for iteration. also grabs chan info
             from switch_config file
         """
-        super(switchclient, self).__init__()
+        super(SwitchClient, self).__init__()
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.reactor = reactor
@@ -49,21 +49,17 @@ class switchclient(QFrame):
             yield self.reg.cd(['', 'settings'])
             self.settings = yield self.reg.dir()
             self.settings = self.settings[1]
-        except:
+        except Exception as e:
+            print(e)
             self.settings = []
 
         self.chaninfo = switch_config.info
-        self.initializeGUI()
+        self.initialize_gui()
 
     @inlineCallbacks
-    def initializeGUI(self):
+    def initialize_gui(self):
 
-        layout = QGridLayout()
-
-        qBox = QGroupBox('Laser Shutters')
-        subLayout = QGridLayout()
-        qBox.setLayout(subLayout)
-        layout.addWidget(qBox, 0, 0)
+        layout = QVBoxLayout()
 
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
@@ -78,16 +74,16 @@ class switchclient(QFrame):
                 widget.TTLswitch.setChecked(False)
 
             widget.TTLswitch.toggled.connect(lambda state=widget.TTLswitch.isDown(),
-                                             port=port, chan=chan, inverted=inverted:
-                                             self.changeState(state, port, chan, inverted))
+                                             p=port, c=chan, i=inverted:
+                                             self.change_state(state, p, c, i))
             self.d[port] = widget
             self.chan_from_port[port] = chan
-            subLayout.addWidget(self.d[port], position[0], position[1])
+            layout.addWidget(self.d[port])
 
         self.setLayout(layout)
 
     @inlineCallbacks
-    def changeState(self, state, port, chan, inverted):
+    def change_state(self, state, port, chan, inverted):
         if chan + 'shutter' in self.settings:
             yield self.reg.set(chan + 'shutter', state)
         if inverted:
@@ -116,6 +112,6 @@ if __name__ == "__main__":
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor
-    switchWidget = switchclient(reactor)
+    switchWidget = SwitchClient(reactor)
     switchWidget.show()
     reactor.run()
