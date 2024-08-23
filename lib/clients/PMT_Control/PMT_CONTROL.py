@@ -97,14 +97,13 @@ class pmtWidget(QWidget):
 
     @inlineCallbacks
     def on_toggled(self, state):
-        logger.info("on_toggled called")
         if state:
-            logger.info("PMT toggled on")
+            logger.debug("PMT toggled on")
             yield self.server.record_data()
             new_set = yield self.server.current_dataset()
             self.lineEdit.setText(new_set)
         else:
-            logger.info("PMT toggled off")
+            logger.debug("PMT toggled off")
             yield self.server.stop_recording()
             self.lcdNumber.display('OFF')
         self.setText(self.pushButton)
