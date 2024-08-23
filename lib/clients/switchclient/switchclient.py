@@ -63,8 +63,7 @@ class SwitchClient(QFrame):
 
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
-            position = self.chaninfo[chan][1]
-            inverted = self.chaninfo[chan][2]
+            inverted = self.chaninfo[chan][1]
 
             widget = QCustomSwitchChannel(chan, ('Closed', 'Open'))
             if chan + 'shutter' in self.settings:
@@ -98,7 +97,7 @@ class SwitchClient(QFrame):
         if port in self.d.keys():
             if chan + 'shutter' in self.settings:
                 yield self.reg.set(chan + 'shutter', state)
-            inverted = self.chaninfo[chan][2]
+            inverted = self.chaninfo[chan][1]
             if inverted:
                 state = not state
             self.d[port].TTLswitch.setChecked(state)
