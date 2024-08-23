@@ -30,11 +30,11 @@ class API(object):
         module_count = fp.GetDeviceCount()
         print("Pulser found {} unused opalKelly modules".format(module_count))
         for i in range(module_count):
+            print("checking module {}".format(i))
             serial = fp.GetDeviceListSerial(i)
             tmp = ok.FrontPanel()
             tmp.OpenBySerial(serial)
             iden = tmp.GetDeviceID()
-            print(iden, self.okDeviceID)
             if iden == self.okDeviceID:
                 self.xem = tmp
                 print('Connected to {}'.format(iden))
@@ -43,6 +43,7 @@ class API(object):
         return False
 
     def program_ok_board(self):
+        """Programs the OpalKelly FPGA with the bitfile given in the config"""
         prog = self.xem.ConfigureFPGA(self.okDeviceFile)
         if prog:
             raise Exception("Not able to program FPGA")
@@ -53,6 +54,7 @@ class API(object):
         self.xem.SetPLL22150Configuration(pll)
 
     def program_board(self, sequence):
+        """programs a sequence onto the board"""
         sequence_data = self.pad_to_16(sequence)
         self.xem.WriteToBlockPipeIn(0x80, 16, sequence_data)
 

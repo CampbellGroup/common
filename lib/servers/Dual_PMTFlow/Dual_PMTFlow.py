@@ -179,7 +179,7 @@ class Dual_PMTFlow(LabradServer):
         Start recording Time Resolved Counts into Data Vault
         """
         if mode not in self.modes:
-            raise Exception('Incorrect Mode')
+            raise ValueError('Incorrect Mode')
         if not self.recording.running:
             self.currentMode = mode
             yield self.pulser.set_mode(mode)

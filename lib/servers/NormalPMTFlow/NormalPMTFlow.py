@@ -5,7 +5,7 @@
 ### BEGIN NODE INFO
 [info]
 name = NormalPMTFlow
-version = 1.32
+version = 1.4
 description = 
 instancename = NormalPMTFlow
 
@@ -310,10 +310,10 @@ class NormalPMTFlow(LabradServer):
     @inlineCallbacks
     def _program_pulser_diff(self):
         """
+        Programs the Pulse for differential mode with the following pulse sequence
         DiffCountTrigger |██▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁██▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
         866DP            |████████████████████████████████████▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
         Internal866      |████████████████████████████████████▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-
         """
         yield self.pulser.new_sequence()
         yield self.pulser.add_ttl_pulse('DiffCountTrigger',

@@ -81,9 +81,8 @@ class PulseSequence:
         self._ttl_pulses.append((channel, start, duration))
 
     def add_sequence(self, sequence, replacement_dict=None, position=None):
-        if replacement_dict is None:
-            replacement_dict = dict()
         """insert a subsequence, position is either time or None to insert at the end"""
+        replacement_dict = dict() if replacement_dict is None else replacement_dict
         if sequence not in self.required_subsequences:
             raise Exception(
                 "Adding subsequence {0} that is not listed in the required subsequences".format(

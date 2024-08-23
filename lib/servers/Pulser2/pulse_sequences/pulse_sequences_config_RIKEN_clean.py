@@ -42,7 +42,7 @@ class double_pass_729(dds_channel):
         phase = phase / 2.0 #double pass doubles the phase.
         phase = -phase #flip the phase such that DDS follows sin(w t - phi), see writeup on single qubit operations
         phase = phase % 360.0 #translates the specifies phase to be between 0 and 360
-        phase  = WithUnit(phase, 'deg') #return in units
+        phase = WithUnit(phase, 'deg') #return in units
         return phase
         
 #defining available dds channels
