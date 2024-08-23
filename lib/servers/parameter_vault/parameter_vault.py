@@ -40,28 +40,28 @@ class ParameterVault(LabradServer):
     def expireContext(self, c):
         self.listeners.remove(c.ID)
 
-    def getOtherListeners(self, c):
+    def get_other_listeners(self, c):
         notified = self.listeners.copy()
         notified.remove(c.ID)
         return notified
 
     @inlineCallbacks
     def load_parameters(self):
-        # recursively add all parameters to the dictionary
-        yield self._addParametersInDirectory(self.registryDirectory, [])
+        """recursively add all parameters to the dictionary"""
+        yield self._add_parameters_in_directory(self.registryDirectory, [])
 
     @inlineCallbacks
-    def _addParametersInDirectory(self, topPath, subPath):
-        yield self.client.registry.cd(topPath + subPath)
+    def _add_parameters_in_directory(self, top_path, sub_path):
+        yield self.client.registry.cd(top_path + sub_path)
         directories, parameters = yield self.client.registry.dir()
-        if subPath:  # ignore parameters in the top level
+        if sub_path:  # ignore parameters in the top level
             for parameter in parameters:
                 value = yield self.client.registry.get(parameter)
-                key = tuple(subPath + [parameter])
+                key = tuple(sub_path + [parameter])
                 self.parameters[key] = value
         for directory in directories:
-            newpath = subPath + [directory]
-            yield self._addParametersInDirectory(topPath, newpath)
+            newpath = sub_path + [directory]
+            yield self._add_parameters_in_directory(top_path, newpath)
 
     def _get_parameter_names(self, collection):
         names = []
@@ -79,13 +79,13 @@ class ParameterVault(LabradServer):
     @inlineCallbacks
     def save_parameters(self):
         """save the latest parameters into registry"""
-        regDir = self.registryDirectory
-        for key, value in self.parameters.iteritems():
-            print('saving parameter {0} in {1}'.format(key[1], key[0]))
+        reg_dir = self.registryDirectory
+        for key, value in self.parameters.items():
+            print('saving parameter to {1}: {0}'.format(key[1], key[0]))
             key = list(key)
             parameter_name = key.pop()
-            fullDir = regDir + key
-            yield self.client.registry.cd(fullDir)
+            full_dir = reg_dir + key
+            yield self.client.registry.cd(full_dir)
             yield self.client.registry.set(parameter_name, value)
 
     def _save_full(self, key, value):
@@ -136,7 +136,7 @@ class ParameterVault(LabradServer):
             start, stop, steps = item[1]
             assert minim <= start <= maxim, parameter_bound.format(key)
             assert minim <= stop <= maxim, parameter_bound.format(key)
-            return (start, stop, steps)
+            return start, stop, steps
 
         elif param_type == 'selection_simple':
             assert item[0] in item[1], bad_selection.format(key)
@@ -151,39 +151,38 @@ class ParameterVault(LabradServer):
 
     @setting(0, "Set Parameter", collection='s', parameter_name='s', value='?',
              full_info='b', returns='')
-    def setParameter(self, c, collection, parameter_name, value,
-                     full_info=False):
+    def set_parameter(self, c, collection, parameter_name, value, full_info=False):
         """Set Parameter"""
         key = (collection, parameter_name)
         if key not in self.parameters.keys():
-            raise Exception(str(key) + " Parameter Not Found")
+            raise KeyError(str(key) + " Parameter Not Found")
         if full_info:
             self.parameters[key] = value
         else:
             self.parameters[key] = self._save_full(key, value)
-        notified = self.getOtherListeners(c)
+        notified = self.get_other_listeners(c)
         self.onParameterChange((key[0], key[1]), notified)
 
     @setting(1, "Get Parameter", collection='s', parameter_name='s',
              checked='b', returns=['?'])
-    def getParameter(self, c, collection, parameter_name, checked=True):
+    def get_parameter(self, c, collection, parameter_name, checked=True):
         """Get Parameter Value"""
         key = (collection, parameter_name)
         if key not in self.parameters.keys():
-            raise Exception(str(key) + "  Parameter Not Found")
+            raise KeyError(str(key) + "  Parameter Not Found")
         value = self.parameters[key]
         if checked:
             value = self._check_parameter(key, value)
         return value
 
     @setting(2, "Get Parameter Names", collection='s', returns='*s')
-    def getParameterNames(self, c, collection):
+    def get_parameter_names(self, c, collection):
         """Get Parameter Names"""
         parameter_names = self._get_parameter_names(collection)
         return parameter_names
 
     @setting(3, "Save Parameters To Registry", returns='')
-    def saveParametersToRegistry(self, c):
+    def save_parameters_to_registry(self, c):
         """Get Experiment Parameter Names"""
         yield self.save_parameters()
 
@@ -210,7 +209,7 @@ class ParameterVault(LabradServer):
             yield self.save_parameters()
             print('parameters saved')
         except AttributeError:
-            # if values don't exist yet, i.e stopServer was called due to an
+            # if values don't exist yet, i.e. stopServer was called due to an
             # Identification Error
             pass
 
