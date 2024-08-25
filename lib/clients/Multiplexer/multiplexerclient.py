@@ -17,6 +17,7 @@ import os
 import numpy as np
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 SIGNALID1 = 445566
@@ -28,6 +29,7 @@ SIGNALID6 = 102588
 SIGNALID7 = 148323
 SIGNALID8 = 238883
 SIGNALID9 = 462917
+
 
 # this is the signal for the updated frequencies
 
@@ -98,10 +100,10 @@ class WavemeterClient(QWidget):
         yield self.server.addListener(listener=self.toggle_channel_cock, source=None, ID=SIGNALID7)
         yield self.server.addListener(listener=self.update_amplitude, source=None, ID=SIGNALID8)
 
-        self.initializeGUI()
+        self.initialize_gui()
 
     @inlineCallbacks
-    def initializeGUI(self):
+    def initialize_gui(self):
 
         layout = QGridLayout()
 
@@ -112,20 +114,23 @@ class WavemeterClient(QWidget):
         q_box.setLayout(sub_layout)
         layout.addWidget(q_box, 0, 0)
 
-        self.lockSwitch = TextChangingButton('Lock Wave Meter')
-        self.lockSwitch.setMaximumHeight(50)
-        self.startSwitch = TextChangingButton('Wavemeter')
-        self.startSwitch.setMaximumHeight(50)
+        self.lock_wm_button = TextChangingButton('Lock Wave Meter')
+        self.lock_wm_button.setMaximumHeight(50)
+
+        self.wm_onoff_button = TextChangingButton('Wavemeter')
+        self.wm_onoff_button.setMaximumHeight(50)
+
         init_start_value = yield self.server.get_wlm_output()
         init_lock_value = yield self.server.get_lock_state()
-        self.lockSwitch.setChecked(init_lock_value)
-        self.startSwitch.setChecked(init_start_value)
 
-        self.lockSwitch.toggled.connect(self.set_lock)
-        self.startSwitch.toggled.connect(self.set_output)
+        self.lock_wm_button.setChecked(init_lock_value)
+        self.wm_onoff_button.setChecked(init_start_value)
 
-        sub_layout.addWidget(self.lockSwitch, 0, 2)
-        sub_layout.addWidget(self.startSwitch, 0, 0)
+        self.lock_wm_button.toggled.connect(self.set_lock)
+        self.wm_onoff_button.toggled.connect(self.set_output)
+
+        sub_layout.addWidget(self.lock_wm_button, 0, 2)
+        sub_layout.addWidget(self.wm_onoff_button, 0, 0)
 
         for chan in self.chaninfo:
             wm_channel = self.chaninfo[chan][0]
@@ -153,34 +158,35 @@ class WavemeterClient(QWidget):
             if dac_port != 0:
                 self.wmChannels[dac_port] = wm_channel
                 init_course = yield self.get_pid_course(dac_port, hint)
-                widget.spinFreq.setValue(init_course)
-                widget.spinFreq.valueChanged.connect(
-                    lambda freq=widget.spinFreq.value(), dac_port=dac_port: self.freq_changed(freq, dac_port))
-                widget.setPID.clicked.connect(
-                    lambda state=widget.setPID.isDown(), chan=chan, dac_port=dac_port: self.initialize_pid_gui(dac_port,
-                                                                                                               chan))
+                widget.freq_spinbox.setValue(init_course)
+                widget.freq_spinbox.valueChanged.connect(
+                    lambda freq=widget.freq_spinbox.value(), port=dac_port: self.freq_changed(freq, port))
+                widget.set_pid_button.clicked.connect(
+                    lambda state=widget.set_pid_button.isDown(), ch=chan, port=dac_port: self.initialize_pid_gui(port, ch))
                 init_lock = yield self.server.get_channel_lock(dac_port, wm_channel)
-                widget.lockChannel.setChecked(bool(init_lock))
-                widget.lockChannel.toggled.connect(
-                    lambda state=widget.lockChannel.isDown(), dac_port=dac_port: self.lock_single_channel(state,
-                                                                                                          dac_port))
+                widget.lock_channel_button.setChecked(bool(init_lock))
+                widget.lock_channel_button.toggled.connect(
+                    lambda state=widget.lock_channel_button.isDown(), port=dac_port: self.lock_single_channel(state, port))
             else:
-                widget.spinFreq.setValue(float(hint))
-                widget.lockChannel.toggled.connect(
-                    lambda state=widget.lockChannel.isDown(), wm_channel=wm_channel: self.set_button_off(wm_channel))
+                widget.freq_spinbox.setValue(float(hint))
+                widget.lock_channel_button.toggled.connect(
+                    lambda state=widget.lock_channel_button.isDown(), chan=wm_channel: self.set_button_off(chan))
 
             widget.current_frequency.setStyleSheet('color: rgb' + str(color))
-            widget.spinExp.valueChanged.connect(
-                lambda exp=widget.spinExp.value(), wm_channel=wm_channel: self.exp_changed(exp, wm_channel))
+            widget.exposure_spinbox.valueChanged.connect(
+                lambda exp=widget.exposure_spinbox.value(), chan=wm_channel: self.exp_changed(exp, chan))
             init_value = yield self.server.get_exposure(wm_channel)
-            widget.spinExp.setValue(init_value)
+            widget.exposure_spinbox.setValue(init_value)
             init_meas = yield self.server.get_switcher_signal_state(wm_channel)
             init_meas = init_meas
-            widget.measSwitch.setChecked(bool(init_meas))
-            widget.measSwitch.toggled.connect(
-                lambda state=widget.measSwitch.isDown(), wm_channel=wm_channel: self.change_state(state, wm_channel))
-            widget.zeroVoltage.clicked.connect(
-                lambda widget=widget, dac_port=dac_port: self.set_voltage_zero(widget, dac_port))
+            widget.measure_button.setChecked(bool(init_meas))
+            widget.measure_button.toggled.connect(
+                lambda state=widget.measure_button.isDown(), chan=wm_channel: self.change_state(state, chan))
+            widget.zero_voltage_button.clicked.connect(
+                lambda w=widget, port=dac_port: self.set_voltage_zero(w, port))
+            widget.lock_channel_button.clicked.connect(
+                lambda state=widget.lock_channel_button.isDown(), chan=wm_channel: self.lock_single_channel(state, chan)
+            )
 
             self.d[wm_channel] = widget
             sub_layout.addWidget(self.d[wm_channel], position[1], position[0], 1, 3)
@@ -212,21 +218,21 @@ class WavemeterClient(QWidget):
         self.pid.polarityBox.setCurrentIndex(self.index[pol_init])
 
         self.pid.spinP.valueChanged.connect(
-            lambda p=self.pid.spinP.value(), dac_port=dac_port: self.change_p(p, dac_port))
+            lambda p=self.pid.spinP.value(), port=dac_port: self.change_p(p, port))
         self.pid.spinI.valueChanged.connect(
-            lambda i=self.pid.spinI.value(), dac_port=dac_port: self.change_i(i, dac_port))
+            lambda i=self.pid.spinI.value(), port=dac_port: self.change_i(i, port))
         self.pid.spinD.valueChanged.connect(
-            lambda d=self.pid.spinD.value(), dac_port=dac_port: self.change_d(d, dac_port))
+            lambda d=self.pid.spinD.value(), port=dac_port: self.change_d(d, port))
         self.pid.spinDt.valueChanged.connect(
-            lambda dt=self.pid.spinDt.value(), dac_port=dac_port: self.change_dt(dt, dac_port))
+            lambda dt=self.pid.spinDt.value(), port=dac_port: self.change_dt(dt, port))
         self.pid.useDTBox.stateChanged.connect(
-            lambda state=self.pid.useDTBox.isChecked(), dac_port=dac_port: self.const_dt(state, dac_port))
+            lambda state=self.pid.useDTBox.isChecked(), port=dac_port: self.const_dt(state, port))
         self.pid.spinFactor.valueChanged.connect(
-            lambda factor=self.pid.spinFactor.value(), dac_port=dac_port: self.change_factor(factor, dac_port))
+            lambda factor=self.pid.spinFactor.value(), port=dac_port: self.change_factor(factor, port))
         self.pid.spinExp.valueChanged.connect(
-            lambda exponent=self.pid.spinExp.value(), dac_port=dac_port: self.change_exponent(exponent, dac_port))
+            lambda exponent=self.pid.spinExp.value(), port=dac_port: self.change_exponent(exponent, port))
         self.pid.polarityBox.currentIndexChanged.connect(lambda index=self.pid.polarityBox.currentIndex(),
-                                                                dac_port=dac_port: self.change_polarity(index, dac_port))
+                                                                port=dac_port: self.change_polarity(index, port))
 
         self.pid.show()
 
@@ -242,7 +248,7 @@ class WavemeterClient(QWidget):
         if chan in self.d:
             freq = signal[1]
 
-            if not self.d[chan].measSwitch.isChecked():
+            if not self.d[chan].measure_button.isChecked():
                 self.d[chan].current_frequency.setText('Not Measured')
             elif freq == -3.0:
                 self.d[chan].current_frequency.setText('Under Exposed')
@@ -263,39 +269,43 @@ class WavemeterClient(QWidget):
             except:
                 pass
 
+    @inlineCallbacks
+    def set_voltage_zero(self, widget, port):
+        yield self.server.set_dac_voltage(port, 0.0)
+
     def toggle_measurement(self, c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
-            self.d[chan].measSwitch.blockSignals(True)
-            self.d[chan].measSwitch.setChecked(value)
-            self.d[chan].measSwitch.blockSignals(False)
+            self.d[chan].measure_button.blockSignals(True)
+            self.d[chan].measure_button.setChecked(value)
+            self.d[chan].measure_button.blockSignals(False)
 
     def toggle_lock(self, c, signal):
-        self.lockSwitch.blockSignals(True)
-        self.lockSwitch.setChecked(signal)
-        self.lockSwitch.blockSignals(False)
+        self.lock_wm_button.blockSignals(True)
+        self.lock_wm_button.setChecked(signal)
+        self.lock_wm_button.blockSignals(False)
 
     def toggle_channel_cock(self, c, signal):
         wm_channel = signal[1]
         state = signal[2]
         if wm_channel in self.d:
-            self.d[wm_channel].lockChannel.blockSignals(True)
-            self.d[wm_channel].lockChannel.setChecked(bool(state))
-            self.d[wm_channel].lockChannel.blockSignals(False)
+            self.d[wm_channel].lock_channel_button.blockSignals(True)
+            self.d[wm_channel].lock_channel_button.setChecked(bool(state))
+            self.d[wm_channel].lock_channel_button.blockSignals(False)
 
     def update_exp(self, c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
-            self.d[chan].spinExp.blockSignals(True)
-            self.d[chan].spinExp.setValue(value)
-            self.d[chan].spinExp.blockSignals(False)
+            self.d[chan].exposure_spinbox.blockSignals(True)
+            self.d[chan].exposure_spinbox.setValue(value)
+            self.d[chan].exposure_spinbox.blockSignals(False)
 
     def update_wlm_output(self, c, signal):
-        self.startSwitch.blockSignals(True)
-        self.startSwitch.setChecked(signal)
-        self.startSwitch.blockSignals(False)
+        self.wm_onoff_button.blockSignals(True)
+        self.wm_onoff_button.setChecked(signal)
+        self.wm_onoff_button.blockSignals(False)
 
     def update_amplitude(self, c, signal):
         wm_channel = signal[0]
@@ -313,7 +323,7 @@ class WavemeterClient(QWidget):
             self.pattern_1[chan].setData(x=np.arange(points), y=if1)
 
     def set_button_off(self, wm_channel):
-        self.d[wm_channel].lockChannel.setChecked(False)
+        self.d[wm_channel].lock_channel_button.setChecked(False)
 
     @inlineCallbacks
     def change_state(self, state, chan):

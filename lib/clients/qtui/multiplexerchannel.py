@@ -1,6 +1,4 @@
-import sys
 from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import sys
@@ -12,8 +10,8 @@ from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingBu
 
 class StretchedLabel(QLabel):
     def __init__(self, *args, **kwargs):
-        QLabel.__init__(self, *args, **kwargs)
-        self.setMinimumSize(QtCore.QSize(350, 100))
+        QLabel.__init__(self, *args)
+        self.setMinimumSize(QSize(350, 100))
 
     def resizeEvent(self, evt):
         font = self.font()
@@ -27,108 +25,132 @@ class TextChangingButton(_TextChangingButton):
         self.setMaximumHeight(30)
 
 
+# noinspection PyArgumentList
 class QCustomWavemeterChannel(QFrame):
-    def __init__(self, chan_name, wm_channel, dac_port, frequency, stretched_label, display_pid_voltage=None,
+    def __init__(self, chan_name, wm_channel, dac_port, frequency,
+                 stretched_label, display_pid_voltage=None, display_channel_lock=None,
                  parent=None):
         QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
-        self.make_layout(chan_name, wm_channel, dac_port, frequency, stretched_label, display_pid_voltage)
+        self.make_layout(chan_name, wm_channel, dac_port, frequency,
+                         stretched_label, display_pid_voltage, display_channel_lock)
 
-    def make_layout(self, name, wm_channel, dac_port, frequency, stretched_label, display_pid_voltage):
-        layout = QGridLayout()
+    def make_layout(self, name, wm_channel, dac_port, frequency,
+                    stretched_label, display_pid_voltage, display_channel_lock):
 
         shell_font = 'MS Shell Dlg 2'
         chan_name = QLabel(name)
-        chan_name.setFont(QtGui.QFont(shell_font, pointSize=16))
-        chan_name.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        chan_name.setFont(QFont(shell_font, pointSize=16))
+        chan_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        config_title = QLabel('WLM Connections:')
-        config_title.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
-        config_title.setFont(QtGui.QFont(shell_font, pointSize=13))
+        dac_label = QLabel("DAC Port " + str(dac_port))
+        dac_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        dac_label.setFont(QFont(shell_font, pointSize=13))
 
-        config_label = QLabel("Channel " + str(wm_channel) + '        ' + "DAC Port " + str(dac_port))
-        config_label.setFont(QtGui.QFont(shell_font, pointSize=11))
-        config_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        wm_chan_label = QLabel("WM Channel " + str(wm_channel))
+        wm_chan_label.setFont(QFont(shell_font, pointSize=13))
+        wm_chan_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.pid_voltage = QLabel('DAC Voltage (mV)  -.-')
-        self.pid_voltage.setFont(QtGui.QFont(shell_font, pointSize=12))
+        self.pid_voltage.setFont(QFont(shell_font, pointSize=12))
 
         if display_pid_voltage:
             self.pid_indicator = SlideIndicator([-10.0, 10.0])
 
         self.power_meter = MQProgressBar()
-        self.power_meter.setOrientation(QtCore.Qt.Orientation.Vertical)
+        self.power_meter.setOrientation(Qt.Orientation.Vertical)
         self.power_meter.setMeterColor("orange", "red")
         self.power_meter.setMeterBorder("orange")
 
-        if display_pid_voltage is True:
-            layout.addWidget(self.pid_voltage, 6, 6, 1, 5)
-            layout.addWidget(self.pid_indicator, 5, 6, 1, 5)
         if stretched_label is True:
             self.current_frequency = StretchedLabel(frequency)
         else:
             self.current_frequency = QLabel(frequency)
 
-        self.current_frequency.setFont(QtGui.QFont(shell_font, pointSize=60))
-        self.current_frequency.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        # for a 1080p monitor, change the MinimumWidth to 600 or smaller
-        self.current_frequency.setMinimumWidth(800)
+        self.current_frequency.setFont(QFont(shell_font, pointSize=60))
+        self.current_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.current_frequency.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
         frequency_label = QLabel('Set Frequency')
-        frequency_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
-        frequency_label.setFont(QtGui.QFont(shell_font, pointSize=13))
+        frequency_label.setAlignment(Qt.AlignmentFlag.AlignBottom)
+        frequency_label.setFont(QFont(shell_font, pointSize=13))
 
         exposure_label = QLabel('Set Exposure (ms)')
-        exposure_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
-        exposure_label.setFont(QtGui.QFont(shell_font, pointSize=13))
+        exposure_label.setAlignment(Qt.AlignmentFlag.AlignBottom)
+        exposure_label.setFont(QFont(shell_font, pointSize=13))
 
-        self.setPID = QPushButton('Set PID')
-        self.setPID.setMaximumHeight(30)
-        self.setPID.setFont(QtGui.QFont(shell_font, pointSize=10))
+        self.set_pid_button = QPushButton('Set PID')
+        self.set_pid_button.setMaximumHeight(30)
+        self.set_pid_button.setFont(QFont(shell_font, pointSize=10))
 
-        self.measSwitch = TextChangingButton('WLM Measure')
-        self.lockChannel = TextChangingButton('Lock Channel')
-        self.zeroVoltage = QPushButton('Zero Voltage')
-        self.lockChannel.setMinimumWidth(180)
+        self.measure_button = TextChangingButton('WLM Measure')
+
+        self.lock_channel_button = TextChangingButton('Lock Channel')
+
+        self.zero_voltage_button = QPushButton('Zero Voltage')
+        self.zero_voltage_button.setMaximumHeight(30)
+        self.zero_voltage_button.setFont(QFont(shell_font, pointSize=10))
 
         # editable fields
-        self.spinFreq = QDoubleSpinBox()
-        self.spinFreq.setFont(QtGui.QFont(shell_font, pointSize=16))
-        self.spinFreq.setDecimals(6)
-        self.spinFreq.setSingleStep(0.000001)
-        self.spinFreq.setRange(100.0, 1000.0)
-        self.spinFreq.setKeyboardTracking(False)
+        self.freq_spinbox = QDoubleSpinBox()
+        self.freq_spinbox.setFont(QFont(shell_font, pointSize=16))
+        self.freq_spinbox.setDecimals(6)
+        self.freq_spinbox.setSingleStep(0.000001)
+        self.freq_spinbox.setRange(100.0, 1000.0)
+        self.freq_spinbox.setKeyboardTracking(False)
 
-        self.spinExp = QDoubleSpinBox()
-        self.spinExp.setFont(QtGui.QFont(shell_font, pointSize=16))
-        self.spinExp.setDecimals(0)
-        self.spinExp.setSingleStep(1)
-        # 10 seconds is the max exposure time on the wavemeter.
-        self.spinExp.setRange(0, 10000.0)
-        self.spinExp.setKeyboardTracking(False)
+        self.exposure_spinbox = QDoubleSpinBox()
+        self.exposure_spinbox.setFont(QFont(shell_font, pointSize=16))
+        self.exposure_spinbox.setDecimals(0)
+        self.exposure_spinbox.setSingleStep(1)
+        self.exposure_spinbox.setRange(0, 10000.0)  # 10 seconds is the max exposure time
+        self.exposure_spinbox.setKeyboardTracking(False)
 
-        layout.addWidget(self.spinFreq, 6, 0, 1, 3)
-        layout.addWidget(self.spinExp, 6, 3, 1, 3)
-        layout.addWidget(self.measSwitch, 0, 6, 1, 5)
-        layout.addWidget(self.lockChannel, 1, 6, 1, 5)
-        layout.addWidget(self.setPID, 2, 6, 1, 5)
-        layout.addWidget(chan_name, 0, 0, 1, 6)
-        layout.addWidget(config_title, 3, 6, 1, 5)
-        layout.addWidget(config_label, 4, 6, 1, 5)
-        layout.addWidget(self.current_frequency, 1, 0, 4, 6)
-        layout.addWidget(frequency_label, 5, 0, 1, 1)
-        layout.addWidget(exposure_label, 5, 3, 1, 3)
-        layout.addWidget(self.power_meter, 0, 11, 7, 1)
+        layout = QHBoxLayout()
+
+        left_grid_widget = QWidget()
+        left_grid_layout = QGridLayout()
+
+        left_grid_layout.addWidget(self.freq_spinbox, 7, 0, 1, 3)
+        left_grid_layout.addWidget(self.exposure_spinbox, 7, 3, 1, 3)
+        left_grid_layout.addWidget(chan_name, 0, 0, 1, 6)
+        left_grid_layout.addWidget(self.current_frequency, 1, 0, 5, 6)
+        left_grid_layout.addWidget(frequency_label, 6, 0, 1, 1)
+        left_grid_layout.addWidget(exposure_label, 6, 3, 1, 3)
+        left_grid_widget.setLayout(left_grid_layout)
+        layout.addWidget(left_grid_widget, 3)
+
+        right_col_widget = QWidget()
+        right_col = QVBoxLayout()
+
+        right_col.addWidget(self.measure_button)
+        if display_channel_lock:
+            right_col.addWidget(self.lock_channel_button)
+        right_col.addWidget(self.set_pid_button)
+        right_col.addWidget(self.zero_voltage_button)
+        right_col.addWidget(wm_chan_label)
+        right_col.addWidget(dac_label)
+        right_col.addStretch()
+        if display_pid_voltage:
+            right_col.addWidget(self.pid_indicator)
+            right_col.addWidget(self.pid_voltage)
+
+        right_col_widget.setLayout(right_col)
+        right_col_widget.setMinimumSize(200, 200)
+        right_col_widget.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        layout.addWidget(right_col_widget, 1)
+
+        layout.addWidget(self.power_meter, 0, Qt.AlignRight)
 
         layout.minimumSize()
 
         self.setLayout(layout)
 
     def set_exposure_range(self, exp_range):
-        self.spinExp.setRange(exp_range)
+        self.exposure_spinbox.setRange(exp_range)
 
     def set_freq_range(self, freq_range):
-        self.spinFreq.setRange(freq_range)
+        self.freq_spinbox.setRange(freq_range)
 
 
 if __name__ == "__main__":

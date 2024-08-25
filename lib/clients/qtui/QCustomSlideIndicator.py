@@ -6,17 +6,21 @@ from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+
+
 class SlideIndicator(QWidget):
     
     def __init__(self, limits):
         super(SlideIndicator, self).__init__()
         self.set_rails(limits)
         self.value = None
-        self.init_UI()
+        self.init_ui()
         
-    def init_UI(self):      
-
-        self.setGeometry(2000, 200, 200, 30)
+    def init_ui(self):
+        self.setGeometry(0, 0, 200, 30)
+        self.setMaximumHeight(60)
+        self.setMinimumHeight(30)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
         self.setWindowTitle('Slide Indicator')
         self.show()
 
@@ -29,22 +33,27 @@ class SlideIndicator(QWidget):
         qp.end()
         
     def draw_grid(self, qp):
-      
+
         pen = QPen(Qt.gray, 2, QtCore.Qt.PenStyle.SolidLine)
+        brush = QBrush(Qt.white)
         qp.setPen(pen)
-        qp.drawLine(0, self.height() - 1, self.width(), self.height() - 1)
-        pen.setStyle(QtCore.Qt.PenStyle.CustomDashLine)
-        pen.setDashPattern([1,self.width()/8.1 - 1])
+        qp.setBrush(brush)
+        qp.drawRoundedRect(1, 1, self.width()-2, self.height() - 2, 5, 5)
+
+        pen = QPen(Qt.gray, 1, QtCore.Qt.PenStyle.DashLine)
         qp.setPen(pen)
-        qp.drawLine(0, self.height() - 2, self.width(), self.height() - 2)
-        qp.drawLine(0, self.height() - 3, self.width(), self.height() - 3)
+        qp.drawLine(int(self.width() / 4), 1, int(self.width() / 4), self.height() - 2)
+        qp.drawLine(int(self.width() / 2), 1, int(self.width() / 2), self.height() - 2)
+        qp.drawLine(int(3*self.width() / 4), 1, int(3*self.width() / 4), self.height() - 2)
+
+        # qp.drawLine(0, self.height() - 3, self.width(), self.height() - 3)
         
     def draw_pointer(self, qp):
-        pen = QtGui.QPen(Qt.red, 2, QtCore.Qt.PenStyle.SolidLine)
+        pen = QtGui.QPen(Qt.red, 4, QtCore.Qt.PenStyle.SolidLine, QtCore.Qt.PenCapStyle.RoundCap)
         qp.setPen(pen)
         if self.value is not None:
             xpos = int((self.value - self.minvalue)/self.span * self.width())
-            qp.drawLine(xpos, self.height() - 15, xpos, self.height() - 2)
+            qp.drawLine(xpos, int(self.height()*0.2), xpos, self.height())
             
     def set_rails(self, rails):
         self.minvalue = rails[0]

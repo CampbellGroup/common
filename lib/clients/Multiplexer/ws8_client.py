@@ -142,7 +142,7 @@ class wavemeterclient(QtGui.QWidget):
         if chan in self.d:
             freq = signal[1]
 
-            if not self.d[chan].measSwitch.isChecked():
+            if not self.d[chan].measure_button.isChecked():
                 self.d[chan].current_frequency.setText('Not Measured')
             elif freq == -3.0:
                 self.d[chan].current_frequency.setText('Under Exposed')
@@ -157,13 +157,13 @@ class wavemeterclient(QtGui.QWidget):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
-            self.d[chan].measSwitch.setChecked(value)
+            self.d[chan].measure_button.setChecked(value)
 
     def updateexp(self, c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
-            self.d[chan].spinExp.setValue(value)
+            self.d[chan].exposure_spinbox.setValue(value)
 
     def updateWLMOutput(self, c, signal):
         self.startSwitch.setChecked(signal)
@@ -175,7 +175,7 @@ class wavemeterclient(QtGui.QWidget):
             self.d[wmChannel].power_meter.setValue(value)
 
     def setButtonOff(self, wmChannel):
-        self.d[wmChannel].lockChannel.setChecked(False)
+        self.d[wmChannel].lock_channel_button.setChecked(False)
 
     @inlineCallbacks
     def changeState(self, state, chan):

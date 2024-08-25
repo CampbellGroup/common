@@ -84,9 +84,6 @@ class MultiplexerServer(LabradServer):
 
         self.measureChan()
 
-        
-        
-
     def set_pid_variables(self):
         """
         Each variable that can be changed (P,I,D,etc..) in the
