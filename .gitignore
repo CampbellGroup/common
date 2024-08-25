@@ -6,6 +6,7 @@ Errors.log
 .recent.ini
 .DS_store
 .directory
+.idea
 
 *~
 .settings
