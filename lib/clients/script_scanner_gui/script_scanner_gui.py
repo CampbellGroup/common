@@ -8,7 +8,7 @@ import sys
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from common.lib.clients.script_scanner_gui.scripting_widget import ScriptingWidget
-from common.lib.clients.connection import connection
+from common.lib.clients.connection import Connection
 from common.lib.clients.script_scanner_gui.tree_view.Controllers import ParametersEditor
 import logging
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class ScriptScannerGui(QWidget):
         self.subscribedScriptScanner = False
         self.subscribedParametersVault = False
         if self.cxn is None:
-            self.cxn = connection()
+            self.cxn = Connection()
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:

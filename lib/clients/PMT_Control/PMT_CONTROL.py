@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
 from twisted.internet.defer import inlineCallbacks
-from common.lib.clients.connection import connection
+from common.lib.clients.connection import Connection
 import os
 import logging
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class pmtWidget(QWidget):
         from labrad import types as t
         self.T = t
         if self.cxn is None:
-            self.cxn = connection(name='PMT Client')
+            self.cxn = Connection(name='PMT Client')
             yield self.cxn.connect()
         self.server = yield self.cxn.get_server('normalpmtflow')
         yield self.initializeContent()

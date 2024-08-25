@@ -8,7 +8,7 @@ Version 1.0
 """
 
 
-class connection(object):
+class Connection(object):
 
     def __init__(self, **kwargs):
         self._servers = {}
@@ -23,7 +23,7 @@ class connection(object):
     def connect(self):
         from labrad.wrappers import connectAsync
         self.cxn = yield connectAsync(name=self.name)
-        yield self.setupListeners()
+        yield self.setup_listeners()
         returnValue(self)
     
     @inlineCallbacks
@@ -62,18 +62,19 @@ class connection(object):
             try:
                 self._servers[server_name] = yield self.cxn[server_name]
             except Exception as e:
+                print(e)
                 returnValue(False)
         returnValue(True)
         
     @inlineCallbacks
-    def setupListeners(self):
+    def setup_listeners(self):
         yield self.cxn.manager.subscribe_to_named_message('Server Connect', 9898989, True)
         yield self.cxn.manager.subscribe_to_named_message('Server Disconnect', 9898989+1, True)
-        yield self.cxn.manager.addListener(listener=self.followServerConnect, source=None, ID=9898989)
-        yield self.cxn.manager.addListener(listener=self.followServerDisconnect, source=None, ID=9898989+1)
+        yield self.cxn.manager.addListener(listener=self.follow_server_connect, source=None, ID=9898989)
+        yield self.cxn.manager.addListener(listener=self.follow_server_disconnect, source=None, ID=9898989 + 1)
     
     @inlineCallbacks
-    def followServerConnect(self, cntx, server_name):
+    def follow_server_connect(self, cntx, server_name):
         # print 'server connected'
         server_name = server_name[1]
         if server_name in self._servers.keys():
@@ -87,7 +88,7 @@ class connection(object):
             logger.info('{} connected'.format(server_name))
 
     @inlineCallbacks
-    def followServerDisconnect(self, cntx, server_name):
+    def follow_server_disconnect(self, cntx, server_name):
         server_name = server_name[1]
         if server_name in self._servers.keys():
             logger.info('{} Disconnected'.format(server_name))
@@ -104,6 +105,6 @@ class connection(object):
 
 if __name__ == '__main__':
     from twisted.internet import reactor
-    app = connection()
+    app = Connection()
     reactor.callWhenRunning(app.connect)
     reactor.run()

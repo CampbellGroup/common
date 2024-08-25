@@ -4,7 +4,7 @@ Created on Mar 25, 2016
 @author: Anthony Ransford
 """
 from twisted.internet.defer import inlineCallbacks
-from common.lib.clients.connection import connection
+from common.lib.clients.connection import Connection
 from labrad import errors
 
 from PyQt5.QtWidgets import *
@@ -44,7 +44,7 @@ class eVPumpClient(QFrame):
         connects incoming signals to relevant functions
         """
         if self.cxn is None:
-            self.cxn = connection(name='eV Pump Client')
+            self.cxn = Connection(name='eV Pump Client')
             yield self.cxn.connect()
 
         try:

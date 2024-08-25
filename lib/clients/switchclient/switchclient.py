@@ -1,6 +1,6 @@
 from common.lib.clients.qtui.switch import QCustomSwitchChannel
 from twisted.internet.defer import inlineCallbacks
-from common.lib.clients.connection import connection
+from common.lib.clients.connection import Connection
 from PyQt5.QtWidgets import *
 import logging
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ class SwitchClient(QFrame):
 
         """
         if self.cxn is None:
-            self.cxn = connection(name="Switch Client")
+            self.cxn = Connection(name="Switch Client")
             yield self.cxn.connect()
         self.server = yield self.cxn.get_server('arduinottl')
         self.reg = yield self.cxn.get_server('registry')

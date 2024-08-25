@@ -6,7 +6,7 @@ Created on May 18, 2016
 
 from PyQt4 import QtCore, QtGui
 from twisted.internet.defer import inlineCallbacks
-from common.lib.clients.connection import connection
+from common.lib.clients.connection import Connection
 from Cython.Plex.Regexps import Empty
 
 SIGNALID = 546431

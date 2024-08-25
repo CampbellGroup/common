@@ -1,5 +1,5 @@
 from twisted.internet.defer import inlineCallbacks
-from common.lib.clients.connection import connection
+from common.lib.clients.connection import Connection
 from PyQt4 import QtGui
 import os
 from common.lib.clients.qtui import RGBconverter as RGB
