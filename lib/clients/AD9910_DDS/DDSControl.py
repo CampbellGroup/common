@@ -64,8 +64,8 @@ class DDSclient(QtGui.QWidget):
             MaxPower =  self.U(-1.1625, 'dbm')
             MinFreq = self.U(0, 'MHz')
             MaxFreq = self.U(500, 'MHz')
-            widget.setPowerRange((MinPower['dbm'], MaxPower['dbm']))
-            widget.setFreqRange((MinFreq['MHz'], MaxFreq['MHz']))
+            widget.set_power_range((MinPower['dbm'], MaxPower['dbm']))
+            widget.set_freq_range((MinFreq['MHz'], MaxFreq['MHz']))
             if chan in self.settings:
                 value = yield self.reg.get(chan)
                 initstate = value[0]
@@ -75,17 +75,17 @@ class DDSclient(QtGui.QWidget):
                 initstate = False
                 initpower = MinPower
                 initfreq = MaxFreq/2
-            widget.setStateNoSignal(initstate)
-            widget.setPowerNoSignal(initpower['dbm'])
-            widget.setFreqNoSignal(initfreq['MHz'])
+            widget.set_state_no_signal(initstate)
+            widget.set_power_no_signal(initpower['dbm'])
+            widget.set_freq_no_signal(initfreq['MHz'])
 
             yield self.powerChanged(initpower['dbm'], port, (chan, channel))
             yield self.freqChanged(initfreq['MHz'], port, (chan, channel))
             yield self.switchChanged(initstate, port, (chan, channel))
 
-            widget.spinPower.valueChanged.connect(lambda value =  widget.spinPower.value(), port = port, channel = (chan, channel): self.powerChanged(value, port, channel))
-            widget.spinFreq.valueChanged.connect(lambda value = widget.spinFreq.value(), port = port, channel = (chan, channel) : self.freqChanged(value, port, channel))
-            widget.buttonSwitch.toggled.connect(lambda state = widget.buttonSwitch.isDown(), port = port, channel = (chan, channel) : self.switchChanged(state, port, channel))
+            widget.power_spinbox.valueChanged.connect(lambda value =  widget.power_spinbox.value(), port = port, channel = (chan, channel): self.powerChanged(value, port, channel))
+            widget.freq_spinbox.valueChanged.connect(lambda value = widget.freq_spinbox.value(), port = port, channel = (chan, channel) : self.freqChanged(value, port, channel))
+            widget.switch_button.toggled.connect(lambda state = widget.switch_button.isDown(), port = port, channel = (chan, channel) : self.switchChanged(state, port, channel))
             self.d[port] = widget
             subLayout.addWidget(self.d[port], position[0], position[1])
         self.setLayout(layout)
