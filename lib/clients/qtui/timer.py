@@ -1,8 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+
 
 class QCustomTimer(QFrame):
     def __init__(self, title, show_control=True, parent=None):
