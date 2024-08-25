@@ -4,19 +4,22 @@ Created on May 18, 2016
 @author: Anthony Ransford
 '''
 
-from PyQt4 import QtCore, QtGui
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from twisted.internet.defer import inlineCallbacks
-from common.lib.clients.connection import Connection
-from Cython.Plex.Regexps import Empty
+# from common.lib.clients.connection import Connection
+# from Cython.Plex.Regexps import Empty
 
 SIGNALID = 546431
 
-class node_client(QtGui.QWidget):
+
+class NodeClient(QWidget):
 
     def __init__(self, reactor, cxn=None):
 
-        super(node_client, self).__init__()
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        super(NodeClient, self).__init__()
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.connect()
 
     @inlineCallbacks
@@ -30,7 +33,7 @@ class node_client(QtGui.QWidget):
 
         for server in serverlist:
             if server[1].find('node') == 0:
-                server = server[1].replace(' ', '_')
+                server = server[1].replace(' ', '_').lower()
                 server = getattr(self.cxn, server)
                 self.nodeserverlist.append(server)
 
@@ -41,24 +44,24 @@ class node_client(QtGui.QWidget):
     def initialize_gui(self):
 
         self.setWindowTitle('LabRAD QT Node Client')
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
 
-        stopbutton = QtGui.QPushButton('Stop Server')
-        startbutton = QtGui.QPushButton('Start Server')
-        startautobutton = QtGui.QPushButton('Start Auto Servers')
-        stopallbutton = QtGui.QPushButton('Stop All')
+        stopbutton = QPushButton('Stop Server')
+        startbutton = QPushButton('Start Server')
+        startautobutton = QPushButton('Start Auto Servers')
+        stopallbutton = QPushButton('Stop All')
 
-        availablelabel = QtGui.QLabel('Available')
-        runninglabel = QtGui.QLabel('Running')
+        availablelabel = QLabel('Available')
+        runninglabel = QLabel('Running')
 
-        self.availablelist = QtGui.QListWidget()
-        self.runninglist = QtGui.QListWidget()
+        self.availablelist = QListWidget()
+        self.runninglist = QListWidget()
 
         self.availablelist.customContextMenuRequested.connect(self.avail_pop_up_menu)
-        self.availablelist.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.availablelist.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.runninglist.customContextMenuRequested.connect(self.run_pop_up_menu)
-        self.runninglist.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)        
+        self.runninglist.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.availablelist.doubleClicked.connect(self.start_server)
 
@@ -99,16 +102,16 @@ class node_client(QtGui.QWidget):
         self.runninglist.addItems(runningserverlist)
 
         for autostartserver in autostartservers:
-            runningmatch = self.runninglist.findItems(autostartserver, QtCore.Qt.MatchExactly)
-            availmatch = self.availablelist.findItems(autostartserver, QtCore.Qt.MatchExactly)
+            runningmatch = self.runninglist.findItems(autostartserver, Qt.MatchExactly)
+            availmatch = self.availablelist.findItems(autostartserver, Qt.MatchExactly)
             if len(runningmatch) >= 1:
-                runningmatch[0].setFont(QtGui.QFont('Helvetica',12, QtGui.QFont.Bold))
+                runningmatch[0].setFont(QFont('Helvetica',12, QFont.Bold))
             if len(availmatch) >= 1:
-                availmatch[0].setFont(QtGui.QFont('Helvetica',12, QtGui.QFont.Bold))
+                availmatch[0].setFont(QFont('Helvetica',12, QFont.Bold))
 
     def update_log(self, c, signal):
-        print 'in update'
-        print c, signal
+        print('in update')
+        print(c, signal)
 
     def start_server(self):
         item = self.availablelist.currentItem().text()
@@ -136,12 +139,12 @@ class node_client(QtGui.QWidget):
         self.update_nodes()
 
     def avail_pop_up_menu(self, pos):
-        self.availablemenu = QtGui.QMenu()
+        self.availablemenu = QMenu()
 
         item = self.availablelist.itemAt(pos)
         removeautostartaction = self.availablemenu.addAction('Remove from autostart')
         autostartaction = self.availablemenu.addAction('Auto Start Server')
-        action = self.availablemenu.exec_(self.mapToGlobal(QtCore.QPoint(0, 30) + pos))
+        action = self.availablemenu.exec_(self.mapToGlobal(QPoint(0, 30) + pos))
 
         if action == autostartaction:
             node = self.nodeserverlist[0]
@@ -153,13 +156,13 @@ class node_client(QtGui.QWidget):
         self.update_nodes()
 
     def run_pop_up_menu(self, pos):
-        self.runningmenu = QtGui.QMenu()
+        self.runningmenu = QMenu()
         width = self.availablelist.width()
         item = self.runninglist.itemAt(pos)
         autostartaction = self.runningmenu.addAction('Auto Start Server')
         stopaction = self.runningmenu.addAction('Stop Server')
         removeautostartaction = self.runningmenu.addAction('Remove from autostart')
-        action = self.runningmenu.exec_(self.mapToGlobal(QtCore.QPoint(width, 30) + pos))
+        action = self.runningmenu.exec_(self.mapToGlobal(QPoint(width, 30) + pos))
 
         if action == autostartaction:
             node = self.nodeserverlist[0]
@@ -173,11 +176,12 @@ class node_client(QtGui.QWidget):
             self.stop_server()
         self.update_nodes()
 
+
 if __name__ == '__main__':
-    a = QtGui.QApplication([])
-    import qt4reactor
-    qt4reactor.install()
+    a = QApplication([])
+    import qt5reactor
+    qt5reactor.install()
     from twisted.internet import reactor
-    nodewidget = node_client(reactor)
+    nodewidget = NodeClient(reactor)
     nodewidget.show()
     reactor.run()
