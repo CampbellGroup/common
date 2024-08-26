@@ -4,16 +4,16 @@ from twisted.internet.defer import inlineCallbacks
 from PyQt5.QtWidgets import *
 try:
     from config.piezo_client_config import piezo_config
-except:
+except ImportError:
     from common.lib.config.piezo_client_config import piezo_config
 import logging
 logger = logging.getLogger(__name__)
 
 
-class Piezo_Client(QFrame):
+class PiezoClient(QFrame):
 
     def __init__(self, reactor, parent=None):
-        super(Piezo_Client, self).__init__()
+        super(PiezoClient, self).__init__()
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.MinimumExpanding)
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.reactor = reactor
@@ -28,10 +28,10 @@ class Piezo_Client(QFrame):
         yield self.reg.cd(['', 'Servers', 'UCLAPiezo', 'parameters'])
         from labrad.units import WithUnit as U
         self.U = U
-        self.initializeGUI()
+        self.initialize_gui()
 
     @inlineCallbacks
-    def initializeGUI(self):
+    def initialize_gui(self):
         layout = QGridLayout()
         # initial_remote_setting = False
         # remote_button = QCustomSwitchChannel('Remote Mode', ('On', 'Off'))
@@ -83,6 +83,6 @@ if __name__ == "__main__":
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor
-    piezoWidget = Piezo_Client(reactor)
+    piezoWidget = PiezoClient(reactor)
     piezoWidget.show()
     reactor.run()

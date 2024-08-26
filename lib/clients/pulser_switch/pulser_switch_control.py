@@ -14,9 +14,9 @@ Version 1.0
 SIGNALID = 378902
 
 
-class switchWidget(QFrame):
+class SwitchWidget(QFrame):
     def __init__(self, reactor, cxn=None, parent=None):
-        super(switchWidget, self).__init__(parent=parent)
+        super(SwitchWidget, self).__init__(parent=parent)
         self.initialized = False
         self.reactor = reactor
         self.cxn = cxn
@@ -32,8 +32,8 @@ class switchWidget(QFrame):
         self.context = yield self.cxn.context()
         try:
             displayed_channels = yield self.get_displayed_channels()
-            yield self.initializeGUI(displayed_channels)
-            yield self.setupListeners()
+            yield self.initialize_gui(displayed_channels)
+            yield self.setup_listeners()
         except Exception as e:
             logger.error(e)
             logger.error('Pulser not available')
@@ -78,13 +78,13 @@ class switchWidget(QFrame):
         if self.initialized:
             yield server.signal__switch_toggled(SIGNALID, context=self.context)
             for name in self.d.keys():
-                self.setStateNoSignals(name, server)
+                self.set_state_no_signals(name, server)
         else:
-            yield self.initializeGUI()
-            yield self.setupListeners()
+            yield self.initialize_gui()
+            yield self.setup_listeners()
 
     @inlineCallbacks
-    def initializeGUI(self, channels):
+    def initialize_gui(self, channels):
         """
         Lays out the GUI
 
@@ -94,52 +94,52 @@ class switchWidget(QFrame):
         self.d = {}
         # set layout
         layout = QVBoxLayout()
-        qBox = QGroupBox('Pulser TTL Control')
+        q_box = QGroupBox('Pulser TTL Control')
         sublayout = QHBoxLayout()
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         # get switch names and add them to the layout, and connect their function
         for order, name in enumerate(channels):
             # setting up physical container
-            groupBox = QWidget()
-            groupBoxLayout = QVBoxLayout()
+            group_box = QWidget()
+            group_box_layout = QVBoxLayout()
 
-            buttonOn = QPushButton('ON')
-            buttonOn.setAutoExclusive(True)
-            buttonOn.setCheckable(True)
+            button_on = QPushButton('ON')
+            button_on.setAutoExclusive(True)
+            button_on.setCheckable(True)
 
-            buttonOff = QPushButton('OFF')
-            buttonOff.setCheckable(True)
-            buttonOff.setAutoExclusive(True)
+            button_off = QPushButton('OFF')
+            button_off.setCheckable(True)
+            button_off.setAutoExclusive(True)
 
-            buttonAuto = QPushButton('Auto')
-            buttonAuto.setCheckable(True)
-            buttonAuto.setAutoExclusive(True)
+            button_auto = QPushButton('Auto')
+            button_auto.setCheckable(True)
+            button_auto.setAutoExclusive(True)
 
-            groupBoxLayout.addWidget(QLabel(name))
-            groupBoxLayout.addWidget(buttonOn)
-            groupBoxLayout.addWidget(buttonOff)
-            groupBoxLayout.addWidget(buttonAuto)
+            group_box_layout.addWidget(QLabel(name))
+            group_box_layout.addWidget(button_on)
+            group_box_layout.addWidget(button_off)
+            group_box_layout.addWidget(button_auto)
 
-            groupBox.setLayout(groupBoxLayout)
+            group_box.setLayout(group_box_layout)
             # adding to dictionary for signal following
             self.d[name] = {}
-            self.d[name]['ON'] = buttonOn
-            self.d[name]['OFF'] = buttonOff
-            self.d[name]['AUTO'] = buttonAuto
+            self.d[name]['ON'] = button_on
+            self.d[name]['OFF'] = button_off
+            self.d[name]['AUTO'] = button_auto
             # setting initial state
-            yield self.setStateNoSignals(name, server)
-            buttonOn.clicked.connect(self.buttonConnectionManualOn(name, server))
-            buttonOff.clicked.connect(self.buttonConnectionManualOff(name, server))
-            buttonAuto.clicked.connect(self.buttonConnectionAuto(name, server))
-            sublayout.addWidget(groupBox)  # , 0, 1 + order)
-        qBox.setLayout(sublayout)
-        layout.addWidget(qBox)
+            yield self.set_state_no_signals(name, server)
+            button_on.clicked.connect(self.button_connection_manual_on(name, server))
+            button_off.clicked.connect(self.button_connection_manual_off(name, server))
+            button_auto.clicked.connect(self.button_connection_auto(name, server))
+            sublayout.addWidget(group_box)  # , 0, 1 + order)
+        q_box.setLayout(sublayout)
+        layout.addWidget(q_box)
         self.setLayout(layout)
         self.initialized = True
 
     @inlineCallbacks
-    def setStateNoSignals(self, name, server):
+    def set_state_no_signals(self, name, server):
         initstate = yield server.get_state(name, context=self.context)
         ismanual = initstate[0]
         manstate = initstate[1]
@@ -157,21 +157,21 @@ class switchWidget(QFrame):
                 self.d[name]['OFF'].setChecked(True)
                 self.d[name]['OFF'].blockSignals(False)
 
-    def buttonConnectionManualOn(self, name, server):
+    def button_connection_manual_on(self, name, server):
         @inlineCallbacks
         def func(state):
             yield server.switch_manual(name, True, context=self.context)
 
         return func
 
-    def buttonConnectionManualOff(self, name, server):
+    def button_connection_manual_off(self, name, server):
         @inlineCallbacks
         def func(state):
             yield server.switch_manual(name, False, context=self.context)
 
         return func
 
-    def buttonConnectionAuto(self, name, server):
+    def button_connection_auto(self, name, server):
         @inlineCallbacks
         def func(state):
             yield server.switch_auto(name, context=self.context)
@@ -179,20 +179,20 @@ class switchWidget(QFrame):
         return func
 
     @inlineCallbacks
-    def setupListeners(self):
+    def setup_listeners(self):
         server = yield self.cxn.get_server('Pulser')
         yield server.signal__switch_toggled(SIGNALID, context=self.context)
-        yield server.addListener(listener=self.followSignal, source=None, ID=SIGNALID, context=self.context)
+        yield server.addListener(listener=self.follow_signal, source=None, ID=SIGNALID, context=self.context)
 
-    def followSignal(self, x, state_tuple):
-        (switchName, state) = state_tuple
-        if switchName not in self.d.keys(): return None
+    def follow_signal(self, x, state_tuple):
+        (switch_name, state) = state_tuple
+        if switch_name not in self.d.keys(): return None
         if state == 'Auto':
-            button = self.d[switchName]['AUTO']
+            button = self.d[switch_name]['AUTO']
         elif state == 'ManualOn':
-            button = self.d[switchName]['ON']
+            button = self.d[switch_name]['ON']
         elif state == 'ManualOff':
-            button = self.d[switchName]['OFF']
+            button = self.d[switch_name]['OFF']
         button.setChecked(True)
 
     def closeEvent(self, x):
@@ -209,6 +209,6 @@ if __name__ == "__main__":
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor
-    triggerWidget = switchWidget(reactor)
+    triggerWidget = SwitchWidget(reactor)
     triggerWidget.show()
     reactor.run()

@@ -11,9 +11,9 @@ SIGNALID = 874193
 
 
 # noinspection PyUnresolvedReferences
-class pmtWidget(QWidget):
+class PMTWidget(QWidget):
     def __init__(self, reactor, cxn=None):
-        super(pmtWidget, self).__init__()
+        super(PMTWidget, self).__init__()
         self.reactor = reactor
         base_path = os.path.dirname(__file__)
         path = os.path.join(base_path, "pmtfrontend.ui")
@@ -142,6 +142,6 @@ if __name__ == "__main__":
     import qt5reactor
     qt5reactor.install()
     from twisted.internet import reactor
-    pmtWidget = pmtWidget(reactor)
+    pmtWidget = PMTWidget(reactor)
     pmtWidget.show()
     reactor.run()
