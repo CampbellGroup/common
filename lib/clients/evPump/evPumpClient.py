@@ -5,7 +5,7 @@ Created on Mar 25, 2016
 """
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import Connection
-from labrad import errors
+# from labrad import errors
 
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui

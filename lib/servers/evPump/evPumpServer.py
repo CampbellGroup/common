@@ -110,6 +110,7 @@ class eVPump(DeviceServer):
             super().selectDevice(context, key=key)
         except labrad.errors.NoDevicesAvailableError:
             print("Keithley 3320G server has no available devices")
+            returnValue(None)
 
     @inlineCallbacks
     def loadConfigInfo(self):
