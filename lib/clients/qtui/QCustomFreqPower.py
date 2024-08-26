@@ -17,10 +17,10 @@ class QCustomFreqPower(QFrame):
         layout = QGridLayout()
         # labels
         title = QLabel(title)
-        title.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
+        title.setFont(QtGui.QFont("MS Shell Dlg 2", pointSize=16))
         title.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        freq_label = QLabel('Frequency (MHz)')
-        power_label = QLabel('Power (dBm)')
+        freq_label = QLabel("Frequency (MHz)")
+        power_label = QLabel("Power (dBm)")
         if switchable:
             layout.addWidget(title, 0, 0, 1, 3)
         else:
@@ -29,13 +29,13 @@ class QCustomFreqPower(QFrame):
         layout.addWidget(power_label, 1, 1, 1, 1)
         # editable fields
         self.freq_spinbox = QDoubleSpinBox()
-        self.freq_spinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=14))
+        self.freq_spinbox.setFont(QtGui.QFont("MS Shell Dlg 2", pointSize=14))
         self.freq_spinbox.setDecimals(3)
         self.freq_spinbox.setSingleStep(0.1)
         self.freq_spinbox.setRange(10.0, 250.0)
         self.freq_spinbox.setKeyboardTracking(False)
         self.power_spinbox = QDoubleSpinBox()
-        self.power_spinbox.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=14))
+        self.power_spinbox.setFont(QtGui.QFont("MS Shell Dlg 2", pointSize=14))
         self.power_spinbox.setDecimals(3)
         self.power_spinbox.setSingleStep(0.1)
         self.power_spinbox.setRange(-145.0, 30.0)
@@ -72,6 +72,6 @@ class QCustomFreqPower(QFrame):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    icon = QCustomFreqPower('Control')
+    icon = QCustomFreqPower("Control")
     icon.show()
     app.exec_()

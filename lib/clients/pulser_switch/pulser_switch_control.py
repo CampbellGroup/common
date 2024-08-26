@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 from twisted.internet.defer import inlineCallbacks, returnValue
 from common.lib.clients.connection import Connection
 import logging
+
 logger = logging.getLogger(__name__)
 
 """
@@ -28,6 +29,7 @@ class SwitchWidget(QFrame):
             self.cxn = Connection()
             yield self.cxn.connect()
             from labrad.types import Error
+
             self.Error = Error
         self.context = yield self.cxn.context()
         try:
@@ -36,10 +38,10 @@ class SwitchWidget(QFrame):
             yield self.setup_listeners()
         except Exception as e:
             logger.error(e)
-            logger.error('Pulser not available')
+            logger.error("Pulser not available")
             self.setDisabled(True)
-        self.cxn.add_on_connect('Pulser', self.reinitialize)
-        self.cxn.add_on_disconnect('Pulser', self.disable)
+        self.cxn.add_on_connect("Pulser", self.reinitialize)
+        self.cxn.add_on_disconnect("Pulser", self.disable)
 
     @inlineCallbacks
     def get_displayed_channels(self):
@@ -47,7 +49,7 @@ class SwitchWidget(QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         """
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
         all_channels = yield server.get_ttl_channels(context=self.context)
         all_names = [el[0] for el in all_channels]
         channels_to_display = yield self.registry_load_displayed(all_names)
@@ -58,14 +60,14 @@ class SwitchWidget(QFrame):
 
     @inlineCallbacks
     def registry_load_displayed(self, all_names):
-        reg = yield self.cxn.get_server('Registry')
-        yield reg.cd(['Clients', 'Switch Control'], True, context=self.context)
+        reg = yield self.cxn.get_server("Registry")
+        yield reg.cd(["Clients", "Switch Control"], True, context=self.context)
         try:
-            displayed = yield reg.get('display_channels', context=self.context)
+            displayed = yield reg.get("display_channels", context=self.context)
         except self.Error as e:
             if e.code == 21:
                 # key error
-                yield reg.set('display_channels', all_names, context=self.context)
+                yield reg.set("display_channels", all_names, context=self.context)
                 displayed = None
             else:
                 raise
@@ -74,7 +76,7 @@ class SwitchWidget(QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
         if self.initialized:
             yield server.signal__switch_toggled(SIGNALID, context=self.context)
             for name in self.d.keys():
@@ -90,11 +92,11 @@ class SwitchWidget(QFrame):
 
         @var channels: a list of channels to be displayed.
         """
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
         self.d = {}
         # set layout
         layout = QVBoxLayout()
-        q_box = QGroupBox('Pulser TTL Control')
+        q_box = QGroupBox("Pulser TTL Control")
         sublayout = QHBoxLayout()
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
@@ -104,15 +106,15 @@ class SwitchWidget(QFrame):
             group_box = QWidget()
             group_box_layout = QVBoxLayout()
 
-            button_on = QPushButton('ON')
+            button_on = QPushButton("ON")
             button_on.setAutoExclusive(True)
             button_on.setCheckable(True)
 
-            button_off = QPushButton('OFF')
+            button_off = QPushButton("OFF")
             button_off.setCheckable(True)
             button_off.setAutoExclusive(True)
 
-            button_auto = QPushButton('Auto')
+            button_auto = QPushButton("Auto")
             button_auto.setCheckable(True)
             button_auto.setAutoExclusive(True)
 
@@ -124,9 +126,9 @@ class SwitchWidget(QFrame):
             group_box.setLayout(group_box_layout)
             # adding to dictionary for signal following
             self.d[name] = {}
-            self.d[name]['ON'] = button_on
-            self.d[name]['OFF'] = button_off
-            self.d[name]['AUTO'] = button_auto
+            self.d[name]["ON"] = button_on
+            self.d[name]["OFF"] = button_off
+            self.d[name]["AUTO"] = button_auto
             # setting initial state
             yield self.set_state_no_signals(name, server)
             button_on.clicked.connect(self.button_connection_manual_on(name, server))
@@ -144,18 +146,18 @@ class SwitchWidget(QFrame):
         ismanual = initstate[0]
         manstate = initstate[1]
         if not ismanual:
-            self.d[name]['AUTO'].blockSignals(True)
-            self.d[name]['AUTO'].setChecked(True)
-            self.d[name]['AUTO'].blockSignals(False)
+            self.d[name]["AUTO"].blockSignals(True)
+            self.d[name]["AUTO"].setChecked(True)
+            self.d[name]["AUTO"].blockSignals(False)
         else:
             if manstate:
-                self.d[name]['ON'].blockSignals(True)
-                self.d[name]['ON'].setChecked(True)
-                self.d[name]['ON'].blockSignals(False)
+                self.d[name]["ON"].blockSignals(True)
+                self.d[name]["ON"].setChecked(True)
+                self.d[name]["ON"].blockSignals(False)
             else:
-                self.d[name]['OFF'].blockSignals(True)
-                self.d[name]['OFF'].setChecked(True)
-                self.d[name]['OFF'].blockSignals(False)
+                self.d[name]["OFF"].blockSignals(True)
+                self.d[name]["OFF"].setChecked(True)
+                self.d[name]["OFF"].blockSignals(False)
 
     def button_connection_manual_on(self, name, server):
         @inlineCallbacks
@@ -180,19 +182,22 @@ class SwitchWidget(QFrame):
 
     @inlineCallbacks
     def setup_listeners(self):
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
         yield server.signal__switch_toggled(SIGNALID, context=self.context)
-        yield server.addListener(listener=self.follow_signal, source=None, ID=SIGNALID, context=self.context)
+        yield server.addListener(
+            listener=self.follow_signal, source=None, ID=SIGNALID, context=self.context
+        )
 
     def follow_signal(self, x, state_tuple):
         (switch_name, state) = state_tuple
-        if switch_name not in self.d.keys(): return None
-        if state == 'Auto':
-            button = self.d[switch_name]['AUTO']
-        elif state == 'ManualOn':
-            button = self.d[switch_name]['ON']
-        elif state == 'ManualOff':
-            button = self.d[switch_name]['OFF']
+        if switch_name not in self.d.keys():
+            return None
+        if state == "Auto":
+            button = self.d[switch_name]["AUTO"]
+        elif state == "ManualOn":
+            button = self.d[switch_name]["ON"]
+        elif state == "ManualOff":
+            button = self.d[switch_name]["OFF"]
         button.setChecked(True)
 
     def closeEvent(self, x):
@@ -207,8 +212,10 @@ class SwitchWidget(QFrame):
 if __name__ == "__main__":
     a = QApplication([])
     import qt5reactor
+
     qt5reactor.install()
     from twisted.internet import reactor
+
     triggerWidget = SwitchWidget(reactor)
     triggerWidget.show()
     reactor.run()

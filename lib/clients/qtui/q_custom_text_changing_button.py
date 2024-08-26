@@ -28,7 +28,7 @@ class TextChangingButton(QPushButton):
         super().__init__()
         self.button_text = button_text
         self.setCheckable(True)
-        self.setFont(QFont('MS Shell Dlg 2', pointSize=10))
+        self.setFont(QFont("MS Shell Dlg 2", pointSize=10))
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         # connect signal for appearance changing
         self.toggled.connect(self.set_appearance)

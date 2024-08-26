@@ -44,21 +44,21 @@ class WavemeterClient(QWidget):
         from multiplexer_config
         """
         super(WavemeterClient, self).__init__()
-        self.password = os.environ['LABRADPASSWORD']
+        self.password = os.environ["LABRADPASSWORD"]
         self.parent = parent
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.reactor = reactor
-        self.name = socket.gethostname() + ' Wave Meter Client'
+        self.name = socket.gethostname() + " Wave Meter Client"
         self.d = {}
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
         self.pattern_1 = {}
         self.pattern_2 = {}
-        logger.info('client initialized')
+        logger.info("client initialized")
 
     def _check_window_size(self):
-        """Checks screen size to make sure window fits in the screen. """
+        """Checks screen size to make sure window fits in the screen."""
         desktop = QDesktopWidget()
         screensize = desktop.availableGeometry()
         width = screensize.width()
@@ -76,9 +76,10 @@ class WavemeterClient(QWidget):
         self.chaninfo = multiplexer_config.info
         self.wavemeterIP = multiplexer_config.ip
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(self.wavemeterIP,
-                                      name=self.name,
-                                      password=self.password)
+
+        self.cxn = yield connectAsync(
+            self.wavemeterIP, name=self.name, password=self.password
+        )
 
         self.server = yield self.cxn.multiplexerserver
         yield self.server.signal__frequency_changed(SIGNALID1)
@@ -91,14 +92,30 @@ class WavemeterClient(QWidget):
         yield self.server.signal__amplitude_changed(SIGNALID8)
         # yield self.server.signal__pattern_changed(SIGNALID9)
 
-        yield self.server.addListener(listener=self.update_frequency, source=None, ID=SIGNALID1)
-        yield self.server.addListener(listener=self.toggle_measurement, source=None, ID=SIGNALID2)
-        yield self.server.addListener(listener=self.update_exp, source=None, ID=SIGNALID3)
-        yield self.server.addListener(listener=self.toggle_lock, source=None, ID=SIGNALID4)
-        yield self.server.addListener(listener=self.update_wlm_output, source=None, ID=SIGNALID5)
-        yield self.server.addListener(listener=self.update_pid_voltage, source=None, ID=SIGNALID6)
-        yield self.server.addListener(listener=self.toggle_channel_cock, source=None, ID=SIGNALID7)
-        yield self.server.addListener(listener=self.update_amplitude, source=None, ID=SIGNALID8)
+        yield self.server.addListener(
+            listener=self.update_frequency, source=None, ID=SIGNALID1
+        )
+        yield self.server.addListener(
+            listener=self.toggle_measurement, source=None, ID=SIGNALID2
+        )
+        yield self.server.addListener(
+            listener=self.update_exp, source=None, ID=SIGNALID3
+        )
+        yield self.server.addListener(
+            listener=self.toggle_lock, source=None, ID=SIGNALID4
+        )
+        yield self.server.addListener(
+            listener=self.update_wlm_output, source=None, ID=SIGNALID5
+        )
+        yield self.server.addListener(
+            listener=self.update_pid_voltage, source=None, ID=SIGNALID6
+        )
+        yield self.server.addListener(
+            listener=self.toggle_channel_cock, source=None, ID=SIGNALID7
+        )
+        yield self.server.addListener(
+            listener=self.update_amplitude, source=None, ID=SIGNALID8
+        )
 
         self.initialize_gui()
 
@@ -107,17 +124,17 @@ class WavemeterClient(QWidget):
 
         layout = QGridLayout()
 
-        self.setWindowTitle('Multiplexed Wavemeter')
+        self.setWindowTitle("Multiplexed Wavemeter")
 
-        q_box = QGroupBox('Wavelength and Lock settings')
+        q_box = QGroupBox("Wavelength and Lock settings")
         sub_layout = QGridLayout()
         q_box.setLayout(sub_layout)
         layout.addWidget(q_box, 0, 0)
 
-        self.lock_wm_button = TextChangingButton('Lock Wave Meter')
+        self.lock_wm_button = TextChangingButton("Lock Wave Meter")
         self.lock_wm_button.setMaximumHeight(50)
 
-        self.wm_onoff_button = TextChangingButton('Wavemeter')
+        self.wm_onoff_button = TextChangingButton("Wavemeter")
         self.wm_onoff_button.setMaximumHeight(50)
 
         init_start_value = yield self.server.get_wlm_output()
@@ -139,7 +156,9 @@ class WavemeterClient(QWidget):
             stretched = self.chaninfo[chan][3]
             display_pid = self.chaninfo[chan][4]
             dac_port = self.chaninfo[chan][5]
-            widget = QCustomWavemeterChannel(chan, wm_channel, dac_port, hint, stretched, display_pid)
+            widget = QCustomWavemeterChannel(
+                chan, wm_channel, dac_port, hint, stretched, display_pid
+            )
 
             if display_pid:
                 try:
@@ -150,6 +169,7 @@ class WavemeterClient(QWidget):
 
                     widget.pid_indicator.set_rails(rails)
             from common.lib.clients.qtui import RGBconverter as RGB
+
             RGB = RGB.RGBconverter()
             color = int(2.998e8 / (float(hint) * 1e3))
             color = RGB.wav2RGB(color)
@@ -160,32 +180,53 @@ class WavemeterClient(QWidget):
                 init_course = yield self.get_pid_course(dac_port, hint)
                 widget.freq_spinbox.setValue(init_course)
                 widget.freq_spinbox.valueChanged.connect(
-                    lambda freq=widget.freq_spinbox.value(), port=dac_port: self.freq_changed(freq, port))
+                    lambda freq=widget.freq_spinbox.value(), port=dac_port: self.freq_changed(
+                        freq, port
+                    )
+                )
                 widget.set_pid_button.clicked.connect(
-                    lambda state=widget.set_pid_button.isDown(), ch=chan, port=dac_port: self.initialize_pid_gui(port, ch))
+                    lambda state=widget.set_pid_button.isDown(), ch=chan, port=dac_port: self.initialize_pid_gui(
+                        port, ch
+                    )
+                )
                 init_lock = yield self.server.get_channel_lock(dac_port, wm_channel)
                 widget.lock_channel_button.setChecked(bool(init_lock))
                 widget.lock_channel_button.toggled.connect(
-                    lambda state=widget.lock_channel_button.isDown(), port=dac_port: self.lock_single_channel(state, port))
+                    lambda state=widget.lock_channel_button.isDown(), port=dac_port: self.lock_single_channel(
+                        state, port
+                    )
+                )
             else:
                 widget.freq_spinbox.setValue(float(hint))
                 widget.lock_channel_button.toggled.connect(
-                    lambda state=widget.lock_channel_button.isDown(), chan=wm_channel: self.set_button_off(chan))
+                    lambda state=widget.lock_channel_button.isDown(), chan=wm_channel: self.set_button_off(
+                        chan
+                    )
+                )
 
-            widget.current_frequency.setStyleSheet('color: rgb' + str(color))
+            widget.current_frequency.setStyleSheet("color: rgb" + str(color))
             widget.exposure_spinbox.valueChanged.connect(
-                lambda exp=widget.exposure_spinbox.value(), chan=wm_channel: self.exp_changed(exp, chan))
+                lambda exp=widget.exposure_spinbox.value(), chan=wm_channel: self.exp_changed(
+                    exp, chan
+                )
+            )
             init_value = yield self.server.get_exposure(wm_channel)
             widget.exposure_spinbox.setValue(init_value)
             init_meas = yield self.server.get_switcher_signal_state(wm_channel)
             init_meas = init_meas
             widget.measure_button.setChecked(bool(init_meas))
             widget.measure_button.toggled.connect(
-                lambda state=widget.measure_button.isDown(), chan=wm_channel: self.change_state(state, chan))
+                lambda state=widget.measure_button.isDown(), chan=wm_channel: self.change_state(
+                    state, chan
+                )
+            )
             widget.zero_voltage_button.clicked.connect(
-                lambda w=widget, port=dac_port: self.set_voltage_zero(w, port))
+                lambda w=widget, port=dac_port: self.set_voltage_zero(w, port)
+            )
             widget.lock_channel_button.clicked.connect(
-                lambda state=widget.lock_channel_button.isDown(), chan=wm_channel: self.lock_single_channel(state, chan)
+                lambda state=widget.lock_channel_button.isDown(), chan=wm_channel: self.lock_single_channel(
+                    state, chan
+                )
             )
 
             self.d[wm_channel] = widget
@@ -196,7 +237,7 @@ class WavemeterClient(QWidget):
     @inlineCallbacks
     def initialize_pid_gui(self, dac_port, chan):
         self.pid = QCustomPID(dac_port)
-        self.pid.setWindowTitle(chan + ' PID settings')
+        self.pid.setWindowTitle(chan + " PID settings")
         self.pid.move(self.pos())
         self.index = {1: 0, -1: 1}
 
@@ -218,21 +259,37 @@ class WavemeterClient(QWidget):
         self.pid.polarityBox.setCurrentIndex(self.index[pol_init])
 
         self.pid.spinP.valueChanged.connect(
-            lambda p=self.pid.spinP.value(), port=dac_port: self.change_p(p, port))
+            lambda p=self.pid.spinP.value(), port=dac_port: self.change_p(p, port)
+        )
         self.pid.spinI.valueChanged.connect(
-            lambda i=self.pid.spinI.value(), port=dac_port: self.change_i(i, port))
+            lambda i=self.pid.spinI.value(), port=dac_port: self.change_i(i, port)
+        )
         self.pid.spinD.valueChanged.connect(
-            lambda d=self.pid.spinD.value(), port=dac_port: self.change_d(d, port))
+            lambda d=self.pid.spinD.value(), port=dac_port: self.change_d(d, port)
+        )
         self.pid.spinDt.valueChanged.connect(
-            lambda dt=self.pid.spinDt.value(), port=dac_port: self.change_dt(dt, port))
+            lambda dt=self.pid.spinDt.value(), port=dac_port: self.change_dt(dt, port)
+        )
         self.pid.useDTBox.stateChanged.connect(
-            lambda state=self.pid.useDTBox.isChecked(), port=dac_port: self.const_dt(state, port))
+            lambda state=self.pid.useDTBox.isChecked(), port=dac_port: self.const_dt(
+                state, port
+            )
+        )
         self.pid.spinFactor.valueChanged.connect(
-            lambda factor=self.pid.spinFactor.value(), port=dac_port: self.change_factor(factor, port))
+            lambda factor=self.pid.spinFactor.value(), port=dac_port: self.change_factor(
+                factor, port
+            )
+        )
         self.pid.spinExp.valueChanged.connect(
-            lambda exponent=self.pid.spinExp.value(), port=dac_port: self.change_exponent(exponent, port))
-        self.pid.polarityBox.currentIndexChanged.connect(lambda index=self.pid.polarityBox.currentIndex(),
-                                                                port=dac_port: self.change_polarity(index, port))
+            lambda exponent=self.pid.spinExp.value(), port=dac_port: self.change_exponent(
+                exponent, port
+            )
+        )
+        self.pid.polarityBox.currentIndexChanged.connect(
+            lambda index=self.pid.polarityBox.currentIndex(), port=dac_port: self.change_polarity(
+                index, port
+            )
+        )
 
         self.pid.show()
 
@@ -249,13 +306,13 @@ class WavemeterClient(QWidget):
             freq = signal[1]
 
             if not self.d[chan].measure_button.isChecked():
-                self.d[chan].current_frequency.setText('Not Measured')
+                self.d[chan].current_frequency.setText("Not Measured")
             elif freq == -3.0:
-                self.d[chan].current_frequency.setText('Under Exposed')
+                self.d[chan].current_frequency.setText("Under Exposed")
             elif freq == -4.0:
-                self.d[chan].current_frequency.setText('Over Exposed')
+                self.d[chan].current_frequency.setText("Over Exposed")
             elif freq == -17.0:
-                self.d[chan].current_frequency.setText('Data Error')
+                self.d[chan].current_frequency.setText("Data Error")
             else:
                 self.d[chan].current_frequency.setText(str(freq)[0:10])
 
@@ -264,8 +321,12 @@ class WavemeterClient(QWidget):
         value = signal[1]
         if dac_port in self.wmChannels:
             try:
-                self.d[self.wmChannels[dac_port]].pid_voltage.setText('DAC Voltage (mV)  ' + "{:.1f}".format(value))
-                self.d[self.wmChannels[dac_port]].pid_indicator.update_slider(value / 1000.0)
+                self.d[self.wmChannels[dac_port]].pid_voltage.setText(
+                    "DAC Voltage (mV)  " + "{:.1f}".format(value)
+                )
+                self.d[self.wmChannels[dac_port]].pid_indicator.update_slider(
+                    value / 1000.0
+                )
             except:
                 pass
 
@@ -383,11 +444,15 @@ class WavemeterClient(QWidget):
 
     @inlineCallbacks
     def change_factor(self, factor, dac_port):
-        yield self.server.set_pid_sensitivity(dac_port, factor, int(self.pid.spinExp.value()))
+        yield self.server.set_pid_sensitivity(
+            dac_port, factor, int(self.pid.spinExp.value())
+        )
 
     @inlineCallbacks
     def change_exponent(self, exponent, dac_port):
-        yield self.server.set_pid_sensitivity(dac_port, self.pid.spinFactor.value(), int(exponent))
+        yield self.server.set_pid_sensitivity(
+            dac_port, self.pid.spinFactor.value(), int(exponent)
+        )
 
     @inlineCallbacks
     def change_polarity(self, index, dac_port):

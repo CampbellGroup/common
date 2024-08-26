@@ -1,21 +1,40 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QPushButton,
+    QWidget,
+    QAction,
+    QTabWidget,
+    QVBoxLayout,
+    QLabel,
+)
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+    QGridLayout,
+)
 import os
 from PyQt5 import uic
 
 
 import os
 
-basepath =  os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "EventEditor.ui")
+basepath = os.path.dirname(__file__)
+path = os.path.join(basepath, "..", "..", "Views", "EventEditor.ui")
 base, form = uic.loadUiType(path)
+
 
 class EventEditor(base, form):
     def __init__(self, parent=None):
@@ -23,12 +42,12 @@ class EventEditor(base, form):
         self.setupUi(self)
         self._dataMapper = QDataWidgetMapper(self)
         self.connect_layout()
-        
+
     def connect_layout(self):
         self.uiBool.clicked.connect(self.on_check)
         self.uiChan.valueChanged.connect(self.on_chan_changed)
         self.uiTime.valueChanged.connect(self.on_time_changed)
-    
+
     def on_check(self):
         self._dataMapper.itemDelegate().commitData.emit(self.uiBool)
 
@@ -50,11 +69,10 @@ class EventEditor(base, form):
     def set_minimum(self, value):
         for widget in [self.uiTime]:
             widget.setMinimum(value)
-    
+
     def set_maximum(self, value):
         for widget in [self.uiTime]:
             widget.setMaximum(value)
-
 
     def setModel(self, proxyModel):
         self._proxyModel = proxyModel

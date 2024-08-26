@@ -15,7 +15,7 @@ class QCustomSwitchChannel(QFrame):
     def makeLayout(self, title, labels):
         layout = QGridLayout()
         title = QLabel(title)
-        title.setFont(QtGui.QFont('MS Shell Dlg 2', pointSize=16))
+        title.setFont(QtGui.QFont("MS Shell Dlg 2", pointSize=16))
         layout.addWidget(title, 0, 0, 1, 3)
 
         # editable fields
@@ -28,6 +28,6 @@ class QCustomSwitchChannel(QFrame):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    icon = QCustomSwitchChannel('369', ('Opened', 'Closed'))
+    icon = QCustomSwitchChannel("369", ("Opened", "Closed"))
     icon.show()
     app.exec_()

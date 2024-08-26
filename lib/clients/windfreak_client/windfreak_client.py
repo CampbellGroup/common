@@ -7,23 +7,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 trigger_modes = (
-    'disabled',
-    'full frequency sweep',
-    'single frequency step',
-    'stop all',
-    'rf enable',
-    'remove interrupts',
-    'reserved',
-    'reserved',
-    'am modulation',
-    'fm modulation',
+    "disabled",
+    "full frequency sweep",
+    "single frequency step",
+    "stop all",
+    "rf enable",
+    "remove interrupts",
+    "reserved",
+    "reserved",
+    "am modulation",
+    "fm modulation",
 )
 
-reference_modes = [
-    'external',
-    'internal 27mhz',
-    'internal 10mhz'
-]
+reference_modes = ["external", "internal 27mhz", "internal 10mhz"]
 
 
 class WindfreakClient(QWidget):
@@ -39,7 +35,8 @@ class WindfreakClient(QWidget):
     @inlineCallbacks
     def connect(self):
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(name='Windfreak GUI')
+
+        self.cxn = yield connectAsync(name="Windfreak GUI")
         self.server = self.cxn.windfreak
         self.initialize_gui()
 
@@ -71,7 +68,7 @@ class WindfreakClient(QWidget):
             init_sweep_freq_step = 0
             init_sweep_time_step = 0
             init_sweep_onoff = False
-            init_sweep_low_power = - 46.0
+            init_sweep_low_power = -46.0
             init_sweep_high_power = -46.0
             init_sweep_single = False
             init_phase = -46.0
@@ -86,34 +83,64 @@ class WindfreakClient(QWidget):
         self.gui.a.sweep_time_step_input.spinLevel.setValue(float(init_sweep_time_step))
         self.gui.a.sweep_onoff_button.setDown(init_sweep_onoff)
         self.gui.a.sweep_low_power_input.spinLevel.setValue(float(init_sweep_low_power))
-        self.gui.a.sweep_high_power_input.spinLevel.setValue(float(init_sweep_high_power))
+        self.gui.a.sweep_high_power_input.spinLevel.setValue(
+            float(init_sweep_high_power)
+        )
         self.gui.a.sweep_single_onoff_button.setDown(init_sweep_single)
         self.gui.a.phase_input.spinLevel.setValue(float(init_phase))
 
         self.gui.a.freq_input.spinLevel.valueChanged.connect(
-            lambda: self.change_freq(0, float(self.gui.a.freq_input.spinLevel.text())))
+            lambda: self.change_freq(0, float(self.gui.a.freq_input.spinLevel.text()))
+        )
         self.gui.a.power_input.spinLevel.valueChanged.connect(
-            lambda: self.change_power(0, float(self.gui.a.power_input.spinLevel.text())))
+            lambda: self.change_power(0, float(self.gui.a.power_input.spinLevel.text()))
+        )
         self.gui.a.onoff_button.toggled.connect(
-            lambda: self.toggle_onoff(0, self.gui.a.onoff_button.isDown()))
+            lambda: self.toggle_onoff(0, self.gui.a.onoff_button.isDown())
+        )
         self.gui.a.sweep_low_power_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_low_power(0, float(self.gui.a.sweep_low_power_input.spinLevel.text())))
+            lambda: self.change_sweep_low_power(
+                0, float(self.gui.a.sweep_low_power_input.spinLevel.text())
+            )
+        )
         self.gui.a.sweep_high_power_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_high_power(0, float(self.gui.a.sweep_high_power_input.spinLevel.text())))
+            lambda: self.change_sweep_high_power(
+                0, float(self.gui.a.sweep_high_power_input.spinLevel.text())
+            )
+        )
         self.gui.a.sweep_low_freq_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_low_lim(0, float(self.gui.a.sweep_low_freq_input.spinLevel.text())))
+            lambda: self.change_sweep_low_lim(
+                0, float(self.gui.a.sweep_low_freq_input.spinLevel.text())
+            )
+        )
         self.gui.a.sweep_high_freq_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_high_lim(0, float(self.gui.a.sweep_high_freq_input.spinLevel.text())))
+            lambda: self.change_sweep_high_lim(
+                0, float(self.gui.a.sweep_high_freq_input.spinLevel.text())
+            )
+        )
         self.gui.a.sweep_freq_step_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_freq_step(0, float(self.gui.a.sweep_freq_step_input.spinLevel.text())))
+            lambda: self.change_sweep_freq_step(
+                0, float(self.gui.a.sweep_freq_step_input.spinLevel.text())
+            )
+        )
         self.gui.a.sweep_time_step_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_time_step(0, float(self.gui.a.sweep_time_step_input.spinLevel.text())))
+            lambda: self.change_sweep_time_step(
+                0, float(self.gui.a.sweep_time_step_input.spinLevel.text())
+            )
+        )
         self.gui.a.sweep_onoff_button.toggled.connect(
-            lambda state=self.gui.a.sweep_onoff_button.isDown(): self.toggle_sweep(0, state))
+            lambda state=self.gui.a.sweep_onoff_button.isDown(): self.toggle_sweep(
+                0, state
+            )
+        )
         self.gui.a.sweep_single_onoff_button.toggled.connect(
-            lambda state=self.gui.a.sweep_single_onoff_button.isDown(): self.toggle_sweep_single(0, state))
+            lambda state=self.gui.a.sweep_single_onoff_button.isDown(): self.toggle_sweep_single(
+                0, state
+            )
+        )
         self.gui.a.phase_input.spinLevel.valueChanged.connect(
-            lambda: self.change_phase(0, float(self.gui.a.phase_input.spinLevel.text())))
+            lambda: self.change_phase(0, float(self.gui.a.phase_input.spinLevel.text()))
+        )
 
         try:
             init_freq = yield self.server.get_freq(1)
@@ -140,34 +167,64 @@ class WindfreakClient(QWidget):
         self.gui.b.sweep_time_step_input.spinLevel.setValue(float(init_sweep_time_step))
         self.gui.b.sweep_onoff_button.setDown(init_sweep_onoff)
         self.gui.b.sweep_low_power_input.spinLevel.setValue(float(init_sweep_low_power))
-        self.gui.b.sweep_high_power_input.spinLevel.setValue(float(init_sweep_high_power))
+        self.gui.b.sweep_high_power_input.spinLevel.setValue(
+            float(init_sweep_high_power)
+        )
         self.gui.b.sweep_single_onoff_button.setDown(init_sweep_single)
         self.gui.b.phase_input.spinLevel.setValue(float(init_phase))
 
         self.gui.b.freq_input.spinLevel.valueChanged.connect(
-            lambda: self.change_freq(1, float(self.gui.b.freq_input.spinLevel.text())))
+            lambda: self.change_freq(1, float(self.gui.b.freq_input.spinLevel.text()))
+        )
         self.gui.b.power_input.spinLevel.valueChanged.connect(
-            lambda: self.change_power(1, float(self.gui.b.power_input.spinLevel.text())))
+            lambda: self.change_power(1, float(self.gui.b.power_input.spinLevel.text()))
+        )
         self.gui.b.onoff_button.toggled.connect(
-            lambda state=self.gui.a.onoff_button.isDown(): self.toggle_onoff(1, state))
+            lambda state=self.gui.a.onoff_button.isDown(): self.toggle_onoff(1, state)
+        )
         self.gui.b.sweep_low_power_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_low_power(1, float(self.gui.b.sweep_low_power_input.spinLevel.text())))
+            lambda: self.change_sweep_low_power(
+                1, float(self.gui.b.sweep_low_power_input.spinLevel.text())
+            )
+        )
         self.gui.b.sweep_high_power_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_high_power(1, float(self.gui.b.sweep_high_power_input.spinLevel.text())))
+            lambda: self.change_sweep_high_power(
+                1, float(self.gui.b.sweep_high_power_input.spinLevel.text())
+            )
+        )
         self.gui.b.sweep_low_freq_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_low_lim(1, float(self.gui.b.sweep_low_freq_input.spinLevel.text())))
+            lambda: self.change_sweep_low_lim(
+                1, float(self.gui.b.sweep_low_freq_input.spinLevel.text())
+            )
+        )
         self.gui.b.sweep_high_freq_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_high_lim(1, float(self.gui.b.sweep_high_freq_input.spinLevel.text())))
+            lambda: self.change_sweep_high_lim(
+                1, float(self.gui.b.sweep_high_freq_input.spinLevel.text())
+            )
+        )
         self.gui.b.sweep_freq_step_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_freq_step(1, float(self.gui.b.sweep_freq_step_input.spinLevel.text())))
+            lambda: self.change_sweep_freq_step(
+                1, float(self.gui.b.sweep_freq_step_input.spinLevel.text())
+            )
+        )
         self.gui.b.sweep_time_step_input.spinLevel.valueChanged.connect(
-            lambda: self.change_sweep_time_step(1, float(self.gui.b.sweep_time_step_input.spinLevel.text())))
+            lambda: self.change_sweep_time_step(
+                1, float(self.gui.b.sweep_time_step_input.spinLevel.text())
+            )
+        )
         self.gui.b.sweep_onoff_button.toggled.connect(
-            lambda state=self.gui.a.sweep_onoff_button.isDown(): self.toggle_sweep(1, state))
+            lambda state=self.gui.a.sweep_onoff_button.isDown(): self.toggle_sweep(
+                1, state
+            )
+        )
         self.gui.b.sweep_single_onoff_button.toggled.connect(
-            lambda state=self.gui.a.sweep_single_onoff_button.isDown(): self.toggle_sweep_single(1, state))
+            lambda state=self.gui.a.sweep_single_onoff_button.isDown(): self.toggle_sweep_single(
+                1, state
+            )
+        )
         self.gui.b.phase_input.spinLevel.valueChanged.connect(
-            lambda: self.change_phase(1, float(self.gui.b.phase_input.spinLevel.text())))
+            lambda: self.change_phase(1, float(self.gui.b.phase_input.spinLevel.text()))
+        )
         try:
             trig_mode = yield self.server.get_trigger_mode()
             init_trigger_mode = trigger_modes.index(trig_mode)
@@ -181,9 +238,11 @@ class WindfreakClient(QWidget):
         self.gui.c.reference_mode.setCurrentIndex(init_reference_mode)
 
         self.gui.c.trigger_mode.activated.connect(
-            lambda: self.change_trigger(self.gui.c.trigger_mode.currentIndex()))
+            lambda: self.change_trigger(self.gui.c.trigger_mode.currentIndex())
+        )
         self.gui.c.reference_mode.activated.connect(
-            lambda: self.change_reference(self.gui.c.reference_mode.currentIndex()))
+            lambda: self.change_reference(self.gui.c.reference_mode.currentIndex())
+        )
 
         layout.addWidget(self.gui)
         # layout.minimumSize()

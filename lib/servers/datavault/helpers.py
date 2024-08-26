@@ -4,16 +4,16 @@ from globals import Globals
 from datetime import datetime
 
 encodings = [
-    ('%', '%p'),
-    ('/', '%f'),
-    ('\\', '%b'),
-    (':', '%c'),
-    ('*', '%a'),
-    ('?', '%q'),
-    ('"', '%r'),
-    ('<', '%l'),
-    ('>', '%g'),
-    ('|', '%v')
+    ("%", "%p"),
+    ("/", "%f"),
+    ("\\", "%b"),
+    (":", "%c"),
+    ("*", "%a"),
+    ("?", "%q"),
+    ('"', "%r"),
+    ("<", "%l"),
+    (">", "%g"),
+    ("|", "%v"),
 ]
 
 
@@ -31,10 +31,11 @@ def ds_decode(name: str) -> str:
 
 def file_dir(path) -> os.path:
     # noinspection PyTypeChecker
-    return os.path.join(Globals.DATADIR, *[ds_encode(d) + '.dir' for d in path[1:]])
+    return os.path.join(Globals.DATADIR, *[ds_encode(d) + ".dir" for d in path[1:]])
 
 
 # time formatting
+
 
 def time_to_str(t: datetime) -> str:
     return t.strftime(Globals.TIME_FORMAT)
@@ -45,9 +46,9 @@ def time_from_str(s: str) -> datetime:
 
 
 # variable parsing
-re_label = re.compile(r'^([^\[(]*)')  # matches up to the first [ or (
-re_legend = re.compile(r'\((.*)\)')  # matches anything inside ()
-re_units = re.compile(r'\[(.*)]')  # matches anything inside [ ]
+re_label = re.compile(r"^([^\[(]*)")  # matches up to the first [ or (
+re_legend = re.compile(r"\((.*)\)")  # matches anything inside ()
+re_units = re.compile(r"\[(.*)]")  # matches anything inside [ ]
 
 
 def get_match(pat, s, default=None):
@@ -61,12 +62,12 @@ def get_match(pat, s, default=None):
 
 def parse_independent(s):
     label = get_match(re_label, s)
-    units = get_match(re_units, s, '')
+    units = get_match(re_units, s, "")
     return label, units
 
 
 def parse_dependent(s):
     label = get_match(re_label, s)
-    legend = get_match(re_legend, s, '')
-    units = get_match(re_units, s, '')
+    legend = get_match(re_legend, s, "")
+    units = get_match(re_units, s, "")
     return label, legend, units

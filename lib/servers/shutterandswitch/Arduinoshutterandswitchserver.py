@@ -21,7 +21,7 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(1.0, 's')
+TIMEOUT = Value(1.0, "s")
 
 
 class TTLDevice(DeviceWrapper):
@@ -29,7 +29,7 @@ class TTLDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a TTL device."""
-        print('connecting to "%s" on port "%s"...' % (server.name, port), end=' ')
+        print('connecting to "%s" on port "%s"...' % (server.name, port), end=" ")
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -55,7 +55,7 @@ class TTLDevice(DeviceWrapper):
 
     @inlineCallbacks
     def query(self, code):
-        """ Write, then read. """
+        """Write, then read."""
         p = self.packet()
         p.write_line(code)
         p.read_line()
@@ -64,15 +64,15 @@ class TTLDevice(DeviceWrapper):
 
 
 class ArduinoTTL(DeviceServer):
-    name = 'ArduinoTTL'
-    deviceName = 'ArduinoTTL'
+    name = "ArduinoTTL"
+    deviceName = "ArduinoTTL"
     deviceWrapper = TTLDevice
 
-    on_switch_changed = Signal(124973, 'signal: on_switch_changed', '(ib)')
+    on_switch_changed = Signal(124973, "signal: on_switch_changed", "(ib)")
 
     @inlineCallbacks
     def initServer(self):
-        print('loading config info...', end=' ')
+        print("loading config info...", end=" ")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
@@ -82,7 +82,7 @@ class ArduinoTTL(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'ArduinoTTL', 'Links'], True)
+        yield reg.cd(["", "Servers", "ArduinoTTL", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -101,7 +101,7 @@ class ArduinoTTL(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
+            devName = "%s - %s" % (serServer, port)
             devs += [(devName, (server, port))]
         returnValue(devs)
 
@@ -116,7 +116,7 @@ class ArduinoTTL(DeviceServer):
         notified.remove(c.ID)
         return notified
 
-    @setting(100, 'TTL Output', chan='i', state='b')
+    @setting(100, "TTL Output", chan="i", state="b")
     def ttlOutput(self, c, chan, state):
         dev = self.selectDevice(c)
         output = (chan << 2) | (state + 2)
@@ -124,28 +124,29 @@ class ArduinoTTL(DeviceServer):
         notified = self.getOtherListeners(c)
         self.on_switch_changed((chan, state), notified)
 
-    @setting(200, 'TTL Read', chan='i', returns='b')
+    @setting(200, "TTL Read", chan="i", returns="b")
     def ttlInput(self, c, chan):
         dev = self.selectDevice(c)
-        output = (chan << 2)
+        output = chan << 2
         status = yield dev.query(chr(output))
-        status = status.encode('hex')
+        status = status.encode("hex")
 
         try:
             status = int(status)
             if status == 1:
-                print('status is 1')
+                print("status is 1")
                 returnValue(True)
             elif status == 0:
-                print('status is 0')
+                print("status is 0")
                 returnValue(False)
             else:
-                print(status, 'invalid TTL', returnValue(False))
+                print(status, "invalid TTL", returnValue(False))
         except ValueError:
-            print(status, 'Error Reading')
+            print(status, "Error Reading")
             returnValue(False)
 
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(ArduinoTTL())

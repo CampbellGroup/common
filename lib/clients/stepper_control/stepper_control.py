@@ -20,6 +20,7 @@ class StepperControl(QtGui.QWidget):
         """
 
         from labrad.wrappers import connectAsync
+
         self.cxn = yield connectAsync()
         self.server = self.cxn.stepper_motor_server
         self.initializeGUI()
@@ -27,9 +28,9 @@ class StepperControl(QtGui.QWidget):
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
 
-        zerowidget = QtGui.QPushButton('Zero')
-        self.degreewidget = QCustomSpinBox('Angle', (-10000, 10000.0))
-        self.angle_label = QtGui.QLabel('0.0')
+        zerowidget = QtGui.QPushButton("Zero")
+        self.degreewidget = QCustomSpinBox("Angle", (-10000, 10000.0))
+        self.angle_label = QtGui.QLabel("0.0")
         self.degreewidget.setStepSize(1.8)
         self.degreewidget.spinLevel.setDecimals(3)
 
@@ -51,9 +52,9 @@ class StepperControl(QtGui.QWidget):
     @inlineCallbacks
     def change_angle(self, angle):
         difference = angle - self.angle
-        steps = difference/self.degree_per_step
+        steps = difference / self.degree_per_step
         steps = int(steps)
-        self.angle = self.angle + self.degree_per_step*steps
+        self.angle = self.angle + self.degree_per_step * steps
         self.angle_label.setText(str(self.angle))
         self.degreewidget.spinLevel.setValue(angle)
         yield self.server.move_steps(steps)
@@ -61,11 +62,14 @@ class StepperControl(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
+
 if __name__ == "__main__":
     a = QtGui.QApplication([])
     import qt4reactor
+
     qt4reactor.install()
     from twisted.internet import reactor
+
     stepper_control_Widget = StepperControl(reactor)
     stepper_control_Widget.show()
     reactor.run()

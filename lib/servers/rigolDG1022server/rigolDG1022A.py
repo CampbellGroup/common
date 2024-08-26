@@ -41,14 +41,21 @@ class RigolWrapper(GPIBDeviceWrapper):
         """
         Provides a lookup table for waveform to GPIB lingo
         """
-        self.lookup = {'sine': 'SIN', 'square': 'SQU', 'ramp': 'RAMP', 'pulse': 'PULS', 'noise': 'NOIS', 'DC': 'DC',
-                       'USER': 'USER'}
+        self.lookup = {
+            "sine": "SIN",
+            "square": "SQU",
+            "ramp": "RAMP",
+            "pulse": "PULS",
+            "noise": "NOIS",
+            "DC": "DC",
+            "USER": "USER",
+        }
 
     def parsechannel(self, channel=None):
         if channel == 2:
-            channel = ':CH2'
+            channel = ":CH2"
         else:
-            channel = ''
+            channel = ""
         return channel
 
     @inlineCallbacks
@@ -73,8 +80,17 @@ class RigolWrapper(GPIBDeviceWrapper):
         Applys waveform from self.lookup dictionary with given parameters
         """
         channel = self.parsechannel(channel)
-        output = "APPL:" + self.lookup[function] + channel + ' ' + str(int(frequency['Hz'])) + ',' + str(
-            amplitude['V']) + ',' + str(offset['V'])
+        output = (
+            "APPL:"
+            + self.lookup[function]
+            + channel
+            + " "
+            + str(int(frequency["Hz"]))
+            + ","
+            + str(amplitude["V"])
+            + ","
+            + str(offset["V"])
+        )
         yield self.write(output)
 
     @inlineCallbacks
@@ -104,7 +120,7 @@ class RigolWrapper(GPIBDeviceWrapper):
             freq = yield self.read()
             returnValue(freq)
         else:
-            output = "FREQ " + channel + str(int(frequency['Hz']))
+            output = "FREQ " + channel + str(int(frequency["Hz"]))
             yield self.write(output)
 
     @inlineCallbacks
@@ -119,7 +135,7 @@ class RigolWrapper(GPIBDeviceWrapper):
             volts = self.read()
             returnValue(volts)
         else:
-            output = 'APPL:DC' + channel + ' DEF,DEF,' + str(voltage['V'])
+            output = "APPL:DC" + channel + " DEF,DEF," + str(voltage["V"])
             yield self.write(output)
 
     @inlineCallbacks
@@ -134,7 +150,7 @@ class RigolWrapper(GPIBDeviceWrapper):
             volts = yield self.read()
             returnValue(volts)
         else:
-            output = "VOLT" + channel + " " + str(voltage['V'])
+            output = "VOLT" + channel + " " + str(voltage["V"])
             yield self.write(output)
 
     @inlineCallbacks
@@ -162,7 +178,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         Set the frequency of AM internal modulation in Hz
         Frequency range: 2mHz to 20kHz
         """
-        output = "AM:INT:FREQ " + str(frequency['Hz'])
+        output = "AM:INT:FREQ " + str(frequency["Hz"])
         yield self.write(output)
 
     @inlineCallbacks
@@ -180,9 +196,9 @@ class RigolWrapper(GPIBDeviceWrapper):
         Disable or enable AM function
         """
         if state:
-            state = 'ON'
+            state = "ON"
         else:
-            state = 'OFF'
+            state = "OFF"
 
         output = "AM:STAT " + state
         yield self.write(output)
@@ -211,7 +227,7 @@ class RigolWrapper(GPIBDeviceWrapper):
         Set the frequency of FM internal modulation in Hz
         Frequency range: 2mHz to 20kHz
         """
-        output = "FM:INT:FREQ " + str(frequency['Hz'])
+        output = "FM:INT:FREQ " + str(frequency["Hz"])
         yield self.write(output)
 
     @inlineCallbacks
@@ -228,48 +244,60 @@ class RigolWrapper(GPIBDeviceWrapper):
         Disable or enable FM function
         """
         if state:
-            state = 'ON'
+            state = "ON"
         else:
-            state = 'OFF'
+            state = "OFF"
 
         output = "FM:STAT " + state
         yield self.write(output)
 
 
 class RigolServer(GPIBManagedServer):
-    name = 'Rigol DG1022A Server'  # Server name
-    deviceName = 'RIGOL TECHNOLOGIES DG1022A'  # Model string returned from *IDN?
+    name = "Rigol DG1022A Server"  # Server name
+    deviceName = "RIGOL TECHNOLOGIES DG1022A"  # Model string returned from *IDN?
     deviceWrapper = RigolWrapper
 
-    @setting(10, 'Output', channel='i', output='b')
-    def deviceOutput(self, c, channel, output=None):  # uses passed context "c" to address specific device
+    @setting(10, "Output", channel="i", output="b")
+    def deviceOutput(
+        self, c, channel, output=None
+    ):  # uses passed context "c" to address specific device
         dev = self.selectedDevice(c)
         yield dev.output(channel, output)
 
-    @setting(69, 'Apply Waveform', channel='i', function='s', frequency=['v[Hz]'], amplitude=['v[V]'], offset=['v[V]'])
-    def applyDeviceWaveform(self, c, function, frequency, amplitude, offset, channel=None):
+    @setting(
+        69,
+        "Apply Waveform",
+        channel="i",
+        function="s",
+        frequency=["v[Hz]"],
+        amplitude=["v[V]"],
+        offset=["v[V]"],
+    )
+    def applyDeviceWaveform(
+        self, c, function, frequency, amplitude, offset, channel=None
+    ):
         dev = self.selectedDevice(c)
         yield dev.apply_waveform(function, frequency, amplitude, offset, channel)
 
-    @setting(707, 'Wave Function', channel='i', function='s')
+    @setting(707, "Wave Function", channel="i", function="s")
     def deviceFunction(self, c, channel, function=None):
         dev = self.selectedDevice(c)
         func = yield dev.wave_function(channel, function)
         returnValue(func)
 
-    @setting(131, 'Amplitude', channel='i', value='v[V]')
+    @setting(131, "Amplitude", channel="i", value="v[V]")
     def Amplitude(self, c, channel, value=None):
         dev = self.selectedDevice(c)
         volts = yield dev.amplitude(channel, value)
         returnValue(volts)
 
-    @setting(92, 'Frequency', channel='i', value='v[Hz]')
+    @setting(92, "Frequency", channel="i", value="v[Hz]")
     def Frequency(self, c, channel, value=None):
         dev = self.selectedDevice(c)
         freq = yield dev.frequency(channel, value)
         returnValue(freq)
 
-    @setting(9, 'Apply DC', channel='i', value='v[V]')
+    @setting(9, "Apply DC", channel="i", value="v[V]")
     def setDC(self, c, channel, value=None):
         dev = self.selectedDevice(c)
         volts = yield dev.set_dc(channel, value)
@@ -278,7 +306,7 @@ class RigolServer(GPIBManagedServer):
 
 __server__ = RigolServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
 
     util.runServer(__server__)

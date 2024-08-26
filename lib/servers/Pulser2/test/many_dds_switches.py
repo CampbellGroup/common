@@ -1,6 +1,6 @@
 import labrad
 
-channel = '866DP'
+channel = "866DP"
 repeats = 2000
 
 with labrad.connect() as cxn:

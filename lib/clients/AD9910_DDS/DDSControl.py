@@ -2,6 +2,7 @@ import time as _time
 from common.lib.clients.qtui.QCustomFreqPower import QCustomFreqPower
 from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt4 import QtGui
+
 try:
     from config.DDS_client_config import DDS_config
 except:
@@ -10,11 +11,11 @@ except:
 
 class DDSclient(QtGui.QWidget):
 
-    def __init__(self, reactor, parent = None):
+    def __init__(self, reactor, parent=None):
         """initializels the GUI creates the reactor
-            and empty dictionary for channel widgets to
-            be stored for iteration. also grabs chan info
-            from wlm_client_config file
+        and empty dictionary for channel widgets to
+        be stored for iteration. also grabs chan info
+        from wlm_client_config file
         """
         super(DDSclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
@@ -29,11 +30,12 @@ class DDSclient(QtGui.QWidget):
         connects incoming signals to relavent functions
         """
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(name = "DDS client")
+
+        self.cxn = yield connectAsync(name="DDS client")
         self.server = self.cxn.dds_device_server
         try:
             self.reg = self.cxn.registry
-            yield self.reg.cd(['', 'settings'])
+            yield self.reg.cd(["", "settings"])
             self.settings = yield self.reg.dir()
         except:
             self.settings = []
@@ -45,27 +47,29 @@ class DDSclient(QtGui.QWidget):
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
         from labrad.units import WithUnit as U
+
         self.U = U
-        qBox = QtGui.QGroupBox('DDS Control')
+        qBox = QtGui.QGroupBox("DDS Control")
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
         layout.addWidget(qBox, 0, 0)
         for chan in self.chaninfo:
             port = self.chaninfo[chan][0]
-            try: self.contexts[port]
+            try:
+                self.contexts[port]
             except:
                 self.contexts[port] = yield self.server.context()
-                yield self.server.select_device(port, context = self.contexts[port])
+                yield self.server.select_device(port, context=self.contexts[port])
             position = self.chaninfo[chan][1]
             channel = self.chaninfo[chan][2]
             initfreq = self.chaninfo[chan][3]
             widget = QCustomFreqPower(chan)
-            MinPower =  self.U(-63, 'dbm')
-            MaxPower =  self.U(-1.1625, 'dbm')
-            MinFreq = self.U(0, 'MHz')
-            MaxFreq = self.U(500, 'MHz')
-            widget.set_power_range((MinPower['dbm'], MaxPower['dbm']))
-            widget.set_freq_range((MinFreq['MHz'], MaxFreq['MHz']))
+            MinPower = self.U(-63, "dbm")
+            MaxPower = self.U(-1.1625, "dbm")
+            MinFreq = self.U(0, "MHz")
+            MaxFreq = self.U(500, "MHz")
+            widget.set_power_range((MinPower["dbm"], MaxPower["dbm"]))
+            widget.set_freq_range((MinFreq["MHz"], MaxFreq["MHz"]))
             if chan in self.settings:
                 value = yield self.reg.get(chan)
                 initstate = value[0]
@@ -74,46 +78,60 @@ class DDSclient(QtGui.QWidget):
             else:
                 initstate = False
                 initpower = MinPower
-                initfreq = MaxFreq/2
+                initfreq = MaxFreq / 2
             widget.set_state_no_signal(initstate)
-            widget.set_power_no_signal(initpower['dbm'])
-            widget.set_freq_no_signal(initfreq['MHz'])
+            widget.set_power_no_signal(initpower["dbm"])
+            widget.set_freq_no_signal(initfreq["MHz"])
 
-            yield self.powerChanged(initpower['dbm'], port, (chan, channel))
-            yield self.freqChanged(initfreq['MHz'], port, (chan, channel))
+            yield self.powerChanged(initpower["dbm"], port, (chan, channel))
+            yield self.freqChanged(initfreq["MHz"], port, (chan, channel))
             yield self.switchChanged(initstate, port, (chan, channel))
 
-            widget.power_spinbox.valueChanged.connect(lambda value =  widget.power_spinbox.value(), port = port, channel = (chan, channel): self.powerChanged(value, port, channel))
-            widget.freq_spinbox.valueChanged.connect(lambda value = widget.freq_spinbox.value(), port = port, channel = (chan, channel) : self.freqChanged(value, port, channel))
-            widget.switch_button.toggled.connect(lambda state = widget.switch_button.isDown(), port = port, channel = (chan, channel) : self.switchChanged(state, port, channel))
+            widget.power_spinbox.valueChanged.connect(
+                lambda value=widget.power_spinbox.value(), port=port, channel=(
+                    chan,
+                    channel,
+                ): self.powerChanged(value, port, channel)
+            )
+            widget.freq_spinbox.valueChanged.connect(
+                lambda value=widget.freq_spinbox.value(), port=port, channel=(
+                    chan,
+                    channel,
+                ): self.freqChanged(value, port, channel)
+            )
+            widget.switch_button.toggled.connect(
+                lambda state=widget.switch_button.isDown(), port=port, channel=(
+                    chan,
+                    channel,
+                ): self.switchChanged(state, port, channel)
+            )
             self.d[port] = widget
             subLayout.addWidget(self.d[port], position[0], position[1])
         self.setLayout(layout)
 
     @inlineCallbacks
     def powerChanged(self, value, port, channel):
-        value = self.U(value, 'dbm')
+        value = self.U(value, "dbm")
         name = channel[0]
         chan = channel[1]
-        yield self.server.amplitude(chan, value, context = self.contexts[port])
-        yield self.updateSettings(name, value, pos = 1)
-        returnValue('test')
-
+        yield self.server.amplitude(chan, value, context=self.contexts[port])
+        yield self.updateSettings(name, value, pos=1)
+        returnValue("test")
 
     @inlineCallbacks
     def freqChanged(self, value, port, channel):
-        value = self.U(value, 'MHz')
+        value = self.U(value, "MHz")
         name = channel[0]
         chan = channel[1]
-        yield self.server.frequency(channel[1], value, context = self.contexts[port])
-        yield self.updateSettings(name, value, pos = 2)
+        yield self.server.frequency(channel[1], value, context=self.contexts[port])
+        yield self.updateSettings(name, value, pos=2)
 
     @inlineCallbacks
     def switchChanged(self, state, port, channel):
         name = channel[0]
         chan = channel[1]
-        yield self.server.output(channel[1], state, context = self.contexts[port])
-        yield self.updateSettings(name, state, pos = 0)
+        yield self.server.output(channel[1], state, context=self.contexts[port])
+        yield self.updateSettings(name, state, pos=0)
 
     @inlineCallbacks
     def updateSettings(self, name, value, pos):
@@ -127,11 +145,14 @@ class DDSclient(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
-if __name__=="__main__":
-    a = QtGui.QApplication( [] )
+
+if __name__ == "__main__":
+    a = QtGui.QApplication([])
     import qt4reactor
+
     qt4reactor.install()
     from twisted.internet import reactor
+
     DDSWidget = DDSclient(reactor)
     DDSWidget.show()
     reactor.run()

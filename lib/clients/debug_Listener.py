@@ -27,10 +27,8 @@ class RecieverWidget(QWidget):
         self.connect_labrad()
 
     def make_gui(self):
-        """
-        
-        """
-        self.setWindowTitle('Signal Listener')
+        """ """
+        self.setWindowTitle("Signal Listener")
 
         # Create a grid layout
         layout = QGridLayout()
@@ -48,9 +46,10 @@ class RecieverWidget(QWidget):
         Make an asynchronous connection to LabRAD
         """
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(name='Debug Signals Client')
 
-        # Connect to emitter server 
+        self.cxn = yield connectAsync(name="Debug Signals Client")
+
+        # Connect to emitter server
         # self.server = self.cxn.interactive_emitter_server
         self.avt_server = self.cxn.avt_indy_server
 
@@ -69,16 +68,20 @@ class RecieverWidget(QWidget):
         # Image is ready for retrieval
         yield self.avt_server.signal__image_available(IMAGE_AVAILABLE_SIGNAL)
 
-        yield self.avt_server.addListener(listener=self.display_signal,
-                                          source=self.avt_server.ID,
-                                          ID=IMAGE_AVAILABLE_SIGNAL)
+        yield self.avt_server.addListener(
+            listener=self.display_signal,
+            source=self.avt_server.ID,
+            ID=IMAGE_AVAILABLE_SIGNAL,
+        )
 
         # Camera is prepared for TTL input
         yield self.avt_server.signal__waiting_for_ttl(READY_4_TTL_SIGNAL)
 
-        yield self.avt_server.addListener(listener=self.display_signal,
-                                          source=self.avt_server.ID,
-                                          ID=READY_4_TTL_SIGNAL)
+        yield self.avt_server.addListener(
+            listener=self.display_signal,
+            source=self.avt_server.ID,
+            ID=READY_4_TTL_SIGNAL,
+        )
 
     def display_signal(self, cntx, signal):
         if self.debug:

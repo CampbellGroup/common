@@ -26,6 +26,7 @@ from twisted.internet.task import LoopingCall
 FREQSIGNAL = 917223
 AMPSIGNAL = 874195
 
+
 class BristolServer(LabradServer):
     """
     Server for Bristol 521 wavelength meter.
@@ -33,11 +34,12 @@ class BristolServer(LabradServer):
     A DLL is required to run this server.  See initServer for the path location
     for the library.
     """
-    name = 'Bristol 521'
+
+    name = "Bristol 521"
 
     # Set up signals to be sent to listeners
-    freqchanged = Signal(FREQSIGNAL, 'signal: frequency changed', 'v')
-    powerchanged = Signal(AMPSIGNAL, 'signal: amplitude changed', 'v')
+    freqchanged = Signal(FREQSIGNAL, "signal: frequency changed", "v")
+    powerchanged = Signal(AMPSIGNAL, "signal: amplitude changed", "v")
 
     def initServer(self):
 
@@ -48,10 +50,9 @@ class BristolServer(LabradServer):
         self.listeners = set()
         self.update_loop = LoopingCall(self.measure)
         self.connected = self.connect_bristol()
-        print self.connected
+        print(self.connected)
         if self.connected:
             self.update_loop.start(0)
-
 
     def connect_bristol(self):
         self.dll = ctypes.CDLL("CLDevIFace.dll")
@@ -85,17 +86,17 @@ class BristolServer(LabradServer):
         notified.remove(c.ID)
         return notified
 
-    @setting(1, "get_wavelength", returns='v')
+    @setting(1, "get_wavelength", returns="v")
     def get_wavelength(self, c):
         yield None
         returnValue(self.wl)
 
-    @setting(2, "get_power", returns='v')
+    @setting(2, "get_power", returns="v")
     def get_power(self, c):
         yield None
         returnValue(self.power)
 
-    @setting(3, "get_status", returns ='w')
+    @setting(3, "get_status", returns="w")
     def get_status(self, c):
         yield None
         returnValue(self.connected)
@@ -107,7 +108,7 @@ class BristolServer(LabradServer):
         self.powerchanged(self.power)
 
 
-
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(BristolServer())

@@ -21,7 +21,7 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(5.0, 's')
+TIMEOUT = Value(5.0, "s")
 
 
 class TPI1001BDevice(DeviceWrapper):
@@ -29,7 +29,9 @@ class TPI1001BDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a Piezo device."""
-        print('connecting to "%s" on port "%s"...' % (server.name, port),)
+        print(
+            'connecting to "%s" on port "%s"...' % (server.name, port),
+        )
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -63,7 +65,7 @@ class TPI1001BDevice(DeviceWrapper):
 
     @inlineCallbacks
     def query(self, code):
-        """ Write, then read. """
+        """Write, then read."""
         p = self.packet()
         p.write_line(code)
         p.read_line()
@@ -72,12 +74,14 @@ class TPI1001BDevice(DeviceWrapper):
 
 
 class TPI1001B(DeviceServer):
-    name = 'TPI1001B'
+    name = "TPI1001B"
     deviceWrapper = TPI1001BDevice
 
     @inlineCallbacks
     def initServer(self):
-        print('loading config info...',)
+        print(
+            "loading config info...",
+        )
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         print(self.serialLinks)
@@ -87,7 +91,7 @@ class TPI1001B(DeviceServer):
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'TPI1001B', 'Links'], True)
+        yield reg.cd(["", "Servers", "TPI1001B", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -106,11 +110,11 @@ class TPI1001B(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
+            devName = "%s - %s" % (serServer, port)
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    @setting(100, 'user_control')
+    @setting(100, "user_control")
     def user_control(self, c):
         dev = self.selectDevice(c)
         yield dev.write()
@@ -118,4 +122,5 @@ class TPI1001B(DeviceServer):
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(TPI1001B())

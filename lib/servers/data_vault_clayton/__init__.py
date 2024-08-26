@@ -1,6 +1,7 @@
 """
 Contains the class structures needed for creating data files and directories.
 """
+
 import os
 import re
 import h5py
@@ -8,22 +9,23 @@ from datetime import datetime
 from weakref import WeakValueDictionary
 
 from . import backend, errors, util
+
 # todo: move session/sessionstore/dataset objects into a different file
 # todo: move shared functions into util
 
 
 # Filename translation.
 _encodings = [
-    ('%', '%p'),  # this one MUST be first for encode/decode to work properly
-    ('/', '%f'),
-    ('\\', '%b'),
-    (':', '%c'),
-    ('*', '%a'),
-    ('?', '%q'),
-    ('"', '%r'),
-    ('<', '%l'),
-    ('>', '%g'),
-    ('|', '%v')
+    ("%", "%p"),  # this one MUST be first for encode/decode to work properly
+    ("/", "%f"),
+    ("\\", "%b"),
+    (":", "%c"),
+    ("*", "%a"),
+    ("?", "%q"),
+    ('"', "%r"),
+    ("<", "%l"),
+    (">", "%g"),
+    ("|", "%v"),
 ]
 # todo: generalize file extension support
 
@@ -54,7 +56,7 @@ def filedir(datadir, path):
 
 
 # time formatting
-TIME_FORMAT = '%Y-%m-%d, %H:%M:%S'
+TIME_FORMAT = "%Y-%m-%d, %H:%M:%S"
 
 
 def time_to_str(t):
@@ -66,9 +68,9 @@ def time_from_str(s):
 
 
 # variable parsing
-_re_label = re.compile(r'^([^\[(]*)')  # matches up to the first [ or (
-_re_legend = re.compile(r'\((.*)\)')  # matches anything inside ( )
-_re_units = re.compile(r'\[(.*)]')  # matches anything inside [ ]
+_re_label = re.compile(r"^([^\[(]*)")  # matches up to the first [ or (
+_re_legend = re.compile(r"\((.*)\)")  # matches anything inside ( )
+_re_units = re.compile(r"\[(.*)]")  # matches anything inside [ ]
 
 
 def _get_match(pat, s, default=None):
@@ -82,14 +84,14 @@ def _get_match(pat, s, default=None):
 
 def parse_independent(s):
     label = _get_match(_re_label, s)
-    units = _get_match(_re_units, s, '')
+    units = _get_match(_re_units, s, "")
     return label, units
 
 
 def parse_dependent(s):
     label = _get_match(_re_label, s)
-    legend = _get_match(_re_legend, s, '')
-    units = _get_match(_re_units, s, '')
+    legend = _get_match(_re_legend, s, "")
+    units = _get_match(_re_units, s, "")
     return label, legend, units
 
 
@@ -103,7 +105,7 @@ def check_if_multiple_datasets(filename):
     """
     # open file
     num_datasets = 0
-    with h5py.File(filename, 'r') as file_tmp:
+    with h5py.File(filename, "r") as file_tmp:
         # todo: more general way of checking; check # of datasets of all groups
         try:
             num_datasets = len(file_tmp["datasets"])
@@ -118,7 +120,7 @@ def check_if_multiple_datasets(filename):
 
 
 # data-url support for storing parameters
-DATA_URL_PREFIX = 'data:application/labrad;base64,'
+DATA_URL_PREFIX = "data:application/labrad;base64,"
 
 
 class SessionStore:
@@ -126,6 +128,7 @@ class SessionStore:
     Handles session objects.
     Acts as main interface between server and files.
     """
+
     # todo: ensure repositories can't contain one another
 
     def __init__(self, datadirs, hub, use_virtual_session=True):
@@ -133,12 +136,13 @@ class SessionStore:
         self.hub = hub
         self.use_virtual_session = use_virtual_session
 
-
         datadirs = [datadirs] if isinstance(datadirs, str) else datadirs
 
         # self.datadirs holds the root directories and the name to represent them as
         # (e.g. {'labrad': C:\\Users\\EGGS1\\Documents\\.labrad})
-        self.datadirs = {os.path.basename(datadir): os.path.dirname(datadir) for datadir in datadirs}
+        self.datadirs = {
+            os.path.basename(datadir): os.path.dirname(datadir) for datadir in datadirs
+        }
 
     def get_all(self):
         return self._sessions.values()
@@ -150,7 +154,12 @@ class SessionStore:
         This does not tell us whether a session object has been
         created for that path.
         """
-        return any([os.path.exists(filedir(datadir, path)) for datadir in self.datadirs.values()])
+        return any(
+            [
+                os.path.exists(filedir(datadir, path))
+                for datadir in self.datadirs.values()
+            ]
+        )
 
     def get(self, path):
         """
@@ -171,18 +180,18 @@ class SessionStore:
         session = None
 
         # return the virtual root directory
-        if path == ('',) and self.use_virtual_session:
+        if path == ("",) and self.use_virtual_session:
             session = VirtualSession(self.datadirs, path, self.hub, self)
         else:
             # redirect the path to the appropriate real directory
-            if path == ('',):
-                path = ('', list(self.datadirs.keys())[0])
+            if path == ("",):
+                path = ("", list(self.datadirs.keys())[0])
             else:
-                path = ('', list(self.datadirs.keys())[0], *path[1:])
+                path = ("", list(self.datadirs.keys())[0], *path[1:])
             datadir = self.datadirs[path[1]]
 
             # return a virtual file directory if filepath contains a real hdf5/h5 file
-            if ('.hdf5' in path[-1]) or ('.h5' in path[-1]):
+            if (".hdf5" in path[-1]) or (".h5" in path[-1]):
                 session = VirtualFileSession(datadir, path, self.hub, self)
             # normal case
             else:
@@ -210,7 +219,7 @@ class Session:
         self.path = path
         self.hub = hub
         self.dir = filedir(datadir, path)
-        self.infofile = os.path.join(str(self.dir), 'session.ini')
+        self.infofile = os.path.join(str(self.dir), "session.ini")
         self.datasets = WeakValueDictionary()
 
         # create new directory if it doesn't exist
@@ -242,18 +251,18 @@ class Session:
         s = util.DVSafeConfigParser()
         s.read(self.infofile)
 
-        sec = 'File System'
-        self.counter = s.getint(sec, 'Counter')
+        sec = "File System"
+        self.counter = s.getint(sec, "Counter")
 
-        sec = 'Information'
-        self.created = time_from_str(s.get(sec, 'Created'))
-        self.accessed = time_from_str(s.get(sec, 'Accessed'))
-        self.modified = time_from_str(s.get(sec, 'Modified'))
+        sec = "Information"
+        self.created = time_from_str(s.get(sec, "Created"))
+        self.accessed = time_from_str(s.get(sec, "Accessed"))
+        self.modified = time_from_str(s.get(sec, "Modified"))
 
         # get tags if they're there
-        if s.has_section('Tags'):
-            self.session_tags = eval(s.get('Tags', 'sessions', raw=True))
-            self.dataset_tags = eval(s.get('Tags', 'datasets', raw=True))
+        if s.has_section("Tags"):
+            self.session_tags = eval(s.get("Tags", "sessions", raw=True))
+            self.dataset_tags = eval(s.get("Tags", "datasets", raw=True))
         else:
             self.session_tags = {}
             self.dataset_tags = {}
@@ -264,22 +273,22 @@ class Session:
         """
         s = util.DVSafeConfigParser()
 
-        sec = 'File System'
+        sec = "File System"
         s.add_section(sec)
-        s.set(sec, 'Counter', repr(self.counter))
+        s.set(sec, "Counter", repr(self.counter))
 
-        sec = 'Information'
+        sec = "Information"
         s.add_section(sec)
-        s.set(sec, 'Created', time_to_str(self.created))
-        s.set(sec, 'Accessed', time_to_str(self.accessed))
-        s.set(sec, 'Modified', time_to_str(self.modified))
+        s.set(sec, "Created", time_to_str(self.created))
+        s.set(sec, "Accessed", time_to_str(self.accessed))
+        s.set(sec, "Modified", time_to_str(self.modified))
 
-        sec = 'Tags'
+        sec = "Tags"
         s.add_section(sec)
-        s.set(sec, 'sessions', repr(self.session_tags))
-        s.set(sec, 'datasets', repr(self.dataset_tags))
+        s.set(sec, "sessions", repr(self.session_tags))
+        s.set(sec, "datasets", repr(self.dataset_tags))
 
-        with open(self.infofile, 'w') as f:
+        with open(self.infofile, "w") as f:
             s.write(f)
 
     def access(self):
@@ -303,18 +312,24 @@ class Session:
         # get directories (objects that end in '.dir' are directories,
         # though we also allow folders that don't end in dir)
         # todo: fix .dir suffix problem, maybe try/except block that does .dir if fails?
-        #dirs = [filename_decode(filename.split('.')[0]) for filename in files if os.path.isdir(os.path.join(self.dir, filename))]
-        dirs = [filename_decode(filename) for filename in files if os.path.isdir(os.path.join(str(self.dir), filename))]
+        # dirs = [filename_decode(filename.split('.')[0]) for filename in files if os.path.isdir(os.path.join(self.dir, filename))]
+        dirs = [
+            filename_decode(filename)
+            for filename in files
+            if os.path.isdir(os.path.join(str(self.dir), filename))
+        ]
 
         # get only valid dataset files (ignore csv since they're partnered with ini files)
-        filetype_suffixes = ('.ini', '.hdf5', '.h5')
+        filetype_suffixes = (".ini", ".hdf5", ".h5")
 
         def valid_datafile(filename):
             if filename == "session.ini":
                 return False
             # hdf5 files with more than multiple datasets are to be treated as virtual directories
-            elif filename.endswith('.hdf5') or filename.endswith('.h5'):
-                multiple_datasets = check_if_multiple_datasets(os.path.join(str(self.dir), filename))
+            elif filename.endswith(".hdf5") or filename.endswith(".h5"):
+                multiple_datasets = check_if_multiple_datasets(
+                    os.path.join(str(self.dir), filename)
+                )
                 # add filename to directories
                 if multiple_datasets:
                     dirs.append(filename_decode(filename))
@@ -322,9 +337,17 @@ class Session:
                 else:
                     return True
             else:
-                return any([filename.endswith(filetype) for filetype in filetype_suffixes])
+                return any(
+                    [filename.endswith(filetype) for filetype in filetype_suffixes]
+                )
 
-        datasets = sorted([filename_decode(filename.split('.')[0]) for filename in files if valid_datafile(filename)])
+        datasets = sorted(
+            [
+                filename_decode(filename.split(".")[0])
+                for filename in files
+                if valid_datafile(filename)
+            ]
+        )
 
         # todo: turn these functions into lambda functions
         # tag filtering functions
@@ -334,21 +357,19 @@ class Session:
             """
             Include only entries that have the specified tag.
             """
-            return [e for e in entries
-                    if (e in tags) and (tag in tags[e])]
+            return [e for e in entries if (e in tags) and (tag in tags[e])]
 
         def exclude(entries, tag, tags):
             """
             Exclude all entries that have the specified tag.
             """
-            return [e for e in entries
-                    if (e not in tags) or (tag not in tags[e])]
+            return [e for e in entries if (e not in tags) or (tag not in tags[e])]
 
         # iteratively apply tag filters
         for tag in tag_filters:
             # choose filter function
             filter_func = include
-            if tag[:1] == '-':
+            if tag[:1] == "-":
                 filter_func = exclude
                 tag = tag[1:]
 
@@ -371,8 +392,8 @@ class Session:
 
         # separate filenames from extensions
         for s in files:
-            base, _, ext = s.rpartition('.')
-            if ext in ['csv', 'hdf5', 'h5']:
+            base, _, ext = s.rpartition(".")
+            if ext in ["csv", "hdf5", "h5"]:
                 filenames.append(filename_decode(base))
         return sorted(filenames)
 
@@ -392,11 +413,16 @@ class Session:
         self.modified = datetime.now()
 
         # todo: this is what makes the datasets have strange numbers in front of it; fix it up
-        name = '%05d - %s' % (num, title)
-        dataset = Dataset(self, name, title, create=True,
-                          independents=independents,
-                          dependents=dependents,
-                          extended=extended)
+        name = "%05d - %s" % (num, title)
+        dataset = Dataset(
+            self,
+            name,
+            title,
+            create=True,
+            independents=independents,
+            dependents=dependents,
+            extended=extended,
+        )
         self.datasets[name] = dataset
         self.access()
 
@@ -428,7 +454,11 @@ class Session:
         filename = filename_encode(name)
         file_base = os.path.join(str(self.dir), filename)
         # if not all(map(os.path.exists, [file_base + suffix for suffix in ['.csv', '.hdf5', '.h5']])):
-        if not (os.path.exists(file_base + '.csv') or os.path.exists(file_base + '.hdf5') or os.path.exists(file_base + '.h5')):
+        if not (
+            os.path.exists(file_base + ".csv")
+            or os.path.exists(file_base + ".hdf5")
+            or os.path.exists(file_base + ".h5")
+        ):
             raise errors.DatasetNotFoundError(name)
 
         # get dataset wrapper if it already exists
@@ -452,13 +482,13 @@ class Session:
                     d[entry] = set()
                 entry_tags = d[entry]
                 for tag in tags:
-                    if tag[:1] == '-':
+                    if tag[:1] == "-":
                         # remove this tag
                         tag = tag[1:]
                         if tag in entry_tags:
                             entry_tags.remove(tag)
                             changed = True
-                    elif tag[:1] == '^':
+                    elif tag[:1] == "^":
                         # toggle this tag
                         tag = tag[1:]
                         if tag in entry_tags:
@@ -572,7 +602,9 @@ class VirtualFileSession(VirtualSession):
         """
         # ignore function call if name is a number
         if isinstance(dataset_name, (int, int)):
-            raise errors.DatasetNotFoundError('{} - {}'.format(self.dataset_filename, dataset_name))
+            raise errors.DatasetNotFoundError(
+                "{} - {}".format(self.dataset_filename, dataset_name)
+            )
 
         # get dataset wrapper if it already exists
         if dataset_name in self.datasets:
@@ -581,9 +613,15 @@ class VirtualFileSession(VirtualSession):
         # otherwise, create new wrapper for dataset
         else:
             # strip filename of extension
-            filename_raw = filename_decode(self.dataset_filename.split('.')[0])
+            filename_raw = filename_decode(self.dataset_filename.split(".")[0])
             # create dataset
-            dataset = Dataset(self, filename_raw, title=dataset_name, create=False, dataset_name=dataset_name)
+            dataset = Dataset(
+                self,
+                filename_raw,
+                title=dataset_name,
+                create=False,
+                dataset_name=dataset_name,
+            )
             self.datasets[dataset_name] = dataset
 
         return dataset
@@ -605,7 +643,17 @@ class Dataset:
     backend object.
     """
 
-    def __init__(self, session, name, title=None, create=False, independents=None, dependents=None, extended=False, dataset_name=None):
+    def __init__(
+        self,
+        session,
+        name,
+        title=None,
+        create=False,
+        independents=None,
+        dependents=None,
+        extended=False,
+        dataset_name=None,
+    ):
         if independents is None:
             independents = []
         if dependents is None:
@@ -636,7 +684,7 @@ class Dataset:
 
     def version(self):
         v = self.data.version
-        return '.'.join(str(x) for x in v)
+        return ".".join(str(x) for x in v)
 
     def access(self):
         """
@@ -655,7 +703,7 @@ class Dataset:
             label, units = label
         else:
             label, units = parse_independent(label)
-        return backend.Independent(label=label, shape=(1,), datatype='v', unit=units)
+        return backend.Independent(label=label, shape=(1,), datatype="v", unit=units)
 
     def make_dependent(self, label, extended):
         """
@@ -667,7 +715,9 @@ class Dataset:
             label, legend, units = label
         else:
             label, legend, units = parse_dependent(label)
-        return backend.Dependent(label=label, legend=legend, shape=(1,), datatype='v', unit=units)
+        return backend.Dependent(
+            label=label, legend=legend, shape=(1,), datatype="v", unit=units
+        )
 
     def get_independents(self):
         return self.data.get_independents()
@@ -730,7 +780,7 @@ class Dataset:
         #
         # if a client calls 'addData', all listeners are notified, and then the set of listeners
         # is cleared.
-        # 
+        #
         # If a client reads, but not to the end of the dataset, it is immediately notified that
         # there is more data for it to read, and then removed from the set of notifiers.
         if self.data.has_more(pos):

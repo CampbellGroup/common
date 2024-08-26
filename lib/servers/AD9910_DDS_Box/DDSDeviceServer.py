@@ -37,41 +37,44 @@ from labrad.units import WithUnit as W
 import time
 import numpy as np
 
+
 class ArduinoDDSDevice(DeviceWrapper):
-    
+
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a Arduino DDS device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print(
+            'connecting to "%s" on port "%s"...' % (server.name, port),
+        )
         self.server = server
         self.ctx = server.context()
         self.port = port
-        print self.port
-        self.settings = {'Amplitude': W(-3, 'dbm'), 'Frequency': W(161, 'MHz')}
+        print(self.port)
+        self.settings = {"Amplitude": W(-3, "dbm"), "Frequency": W(161, "MHz")}
         p = self.packet()
         p.open(port)
         # baudrate of 9600 limits the write time to 100 us per bit.
-        # This should be changed to 115200, this will give a factor of 12 
+        # This should be changed to 115200, this will give a factor of 12
         # speed boost.
         p.baudrate(57600)
-#        p.read() # clear out the read buffer
+        #        p.read() # clear out the read buffer
         p.timeout(TIMEOUT)
         yield p.send()
-        print 'done.'
-        
+        print("done.")
+
     def packet(self):
         """Create a packet in our private context."""
         return self.server.packet(context=self.ctx)
-    
+
     def shutdown(self):
         """Disconnect from the serial port when we shut down."""
         return self.packet().close().send()
-    
+
     @inlineCallbacks
     def write(self, code):
         """Write a data value to arduino."""
         yield self.packet().write_line(code).send()
-        
+
     @inlineCallbacks
     def read(self):
         """Read data from the arduino"""
@@ -79,100 +82,102 @@ class ArduinoDDSDevice(DeviceWrapper):
         p.read()
         ans = yield p.send()
         returnValue(ans.read)
-        
+
     @inlineCallbacks
     def flushinput(self):
         """flush serial data"""
-        yield self.server.flushinput(context = self.ctx)
+        yield self.server.flushinput(context=self.ctx)
 
-    @inlineCallbacks    
-    def setAmplitude(self, chan, amplitude, set = True):
-        voltage = 10**((amplitude['dbm'] -10.0)/20)
-        hexamp =  str(hex(int((voltage - 0.00022387211) * 16383/0.276376)))[2:]
-        hexamp =  hexamp.rjust(4, '0')
-        output = '/I' + str(chan) + 'A' + hexamp
+    @inlineCallbacks
+    def setAmplitude(self, chan, amplitude, set=True):
+        voltage = 10 ** ((amplitude["dbm"] - 10.0) / 20)
+        hexamp = str(hex(int((voltage - 0.00022387211) * 16383 / 0.276376)))[2:]
+        hexamp = hexamp.rjust(4, "0")
+        output = "/I" + str(chan) + "A" + hexamp
         if set:
-            self.settings['Amplitude'] = amplitude
+            self.settings["Amplitude"] = amplitude
         yield self.write(output)
         time.sleep(0.05)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def setFrequency(self, chan, frequency):
-        hexfreq = str(hex(int((frequency['Hz']) * 2147483647/(500e6))))[2:]
-        hexfreq = hexfreq.rjust(8, '0')
-        hexfreq = hexfreq.replace('L', '')
-        self.settings['Frequency'] = frequency
-        output = '/I' + str(chan) + 'F' + hexfreq
+        hexfreq = str(hex(int((frequency["Hz"]) * 2147483647 / (500e6))))[2:]
+        hexfreq = hexfreq.rjust(8, "0")
+        hexfreq = hexfreq.replace("L", "")
+        self.settings["Frequency"] = frequency
+        output = "/I" + str(chan) + "F" + hexfreq
         yield self.write(output)
         time.sleep(0.05)
 
-    @inlineCallbacks    
+    @inlineCallbacks
     def ddsOutput(self, chan, state):
         if state:
-            amp = self.settings['Amplitude']
+            amp = self.settings["Amplitude"]
             yield self.setAmplitude(chan, amp)
         else:
-            yield self.setAmplitude(chan, W(-63, 'dbm'), set = False)
-            
+            yield self.setAmplitude(chan, W(-63, "dbm"), set=False)
+
     @inlineCallbacks
     def getFrequency(self, chan):
 
-        output = '/I' + str(chan) + 'R0e'
+        output = "/I" + str(chan) + "R0e"
         yield self.write(output)
         data = yield self.read()
-        try :
-            data = data.split(',')
+        try:
+            data = data.split(",")
             data = data[2][14:-6]
-            data = data.replace(' ','')
+            data = data.replace(" ", "")
             data = int(data, 16)
-            returnValue(W(data, 'MHz'))
+            returnValue(W(data, "MHz"))
         except:
             time.sleep(0.1)
-            output = '/I' + str(chan) + 'R0e'
+            output = "/I" + str(chan) + "R0e"
             yield self.write(output)
             data = yield self.read()
-            data = data.split(',')
+            data = data.split(",")
             data = data[2][14:-6]
-            data = data.replace(' ','')
-            data = (int(data, 16) * 500)/2147483647.0
-            returnValue(W(data, 'MHz'))
+            data = data.replace(" ", "")
+            data = (int(data, 16) * 500) / 2147483647.0
+            returnValue(W(data, "MHz"))
 
     @inlineCallbacks
     def getAmplitude(self, chan):
-        output = '/I' + str(chan) + 'R0e'
+        output = "/I" + str(chan) + "R0e"
         yield self.write(output)
         data = yield self.read()
-        try :
-            data = data.split(',')
+        try:
+            data = data.split(",")
             data = data[2][8:14]
-            data = data.replace(' ','')
-            data = int(data, 16)*0.276376
-            returnValue(W(data, 'MHz'))
+            data = data.replace(" ", "")
+            data = int(data, 16) * 0.276376
+            returnValue(W(data, "MHz"))
         except:
             time.sleep(0.1)
-            output = '/I' + str(chan) + 'R0e'
+            output = "/I" + str(chan) + "R0e"
             yield self.write(output)
             data = yield self.read()
-            data = data.split(',')
+            data = data.split(",")
             data = data[2][8:14]
-            data = data.replace(' ','')
-            volts = ((int(data,16) * 0.276376)/16383) + 0.00022387211
+            data = data.replace(" ", "")
+            volts = ((int(data, 16) * 0.276376) / 16383) + 0.00022387211
             if volts == 0:
-                returnValue(W(-63,'dbm'))
+                returnValue(W(-63, "dbm"))
             else:
-                amp = 20*np.log10(volts) + 10
-                returnValue(W(amp, 'dbm'))
+                amp = 20 * np.log10(volts) + 10
+                returnValue(W(amp, "dbm"))
 
 
 class DDSDeviceServer(DeviceServer):
-    name = 'DDS Device Server'
+    name = "DDS Device Server"
     deviceWrapper = ArduinoDDSDevice
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print(
+            "loading config info...",
+        )
         yield self.loadConfigInfo()
-        print 'done.'
+        print("done.")
         # Is analogous to a super call?
         yield DeviceServer.initServer(self)
 
@@ -181,10 +186,10 @@ class DDSDeviceServer(DeviceServer):
         """Load configuration information from the registry."""
         reg = self.client.registry
         p = reg.packet()
-        p.cd(['', 'Ports'], True)
-        p.get('ArduinoDDS', '*(ss)', key='links')
+        p.cd(["", "Ports"], True)
+        p.get("ArduinoDDS", "*(ss)", key="links")
         ans = yield p.send()
-        self.serialLinks = ans['links']
+        self.serialLinks = ans["links"]
 
     @inlineCallbacks
     def findDevices(self):
@@ -199,11 +204,11 @@ class DDSDeviceServer(DeviceServer):
             # Checks that expected arduinos are plugged in.
             if port not in ports:
                 continue
-            devName = '%s - %s' % (name, port)
+            devName = "%s - %s" % (name, port)
             devs += [(devName, (server, port))]
         returnValue(devs)
-        
-    @setting(19, chan = 'i', amp = 'v[dbm]', returns = '?')
+
+    @setting(19, chan="i", amp="v[dbm]", returns="?")
     def amplitude(self, c, chan, amp=None):
         """
         Get or set chan's amplitude
@@ -213,44 +218,46 @@ class DDSDeviceServer(DeviceServer):
             dev.setAmplitude(chan, amp)
             return
         else:
-            return dev.getAmplitude(chan)          
-        
-    @setting(20, chan = 'i', freq = 'v[MHz]', returns = '?')
+            return dev.getAmplitude(chan)
+
+    @setting(20, chan="i", freq="v[MHz]", returns="?")
     def frequency(self, c, chan, freq=None):
         """
         Get or set chan's frequency
         """
         dev = self.selectedDevice(c)
-        if freq is not None:        
+        if freq is not None:
             dev.setFrequency(chan, freq)
             return
         else:
             return dev.getFrequency(chan)
-            
-    @setting(21, chan = 'i', state = 'b')
+
+    @setting(21, chan="i", state="b")
     def output(self, c, chan, state):
         dev = self.selectedDevice(c)
         dev.ddsOutput(chan, state)
 
-    @setting(22, chan = 'i', returns = 'v[MHz]')
+    @setting(22, chan="i", returns="v[MHz]")
     def getFreq(self, c, chan):
         dev = self.selectedDevice(c)
         freq = dev.getFrequency(chan)
         return freq
 
-    @setting(23, chan = 'i', returns = 'v[dbm]')
+    @setting(23, chan="i", returns="v[dbm]")
     def getAmp(self, c, chan):
         dev = self.selectedDevice(c)
         amp = dev.getAmplitude(chan)
         return amp
-    
-TIMEOUT = W(1, 's') # serial read timeout
+
+
+TIMEOUT = W(1, "s")  # serial read timeout
 
 #####
 # Create a server instance and run it
 
 __server__ = DDSDeviceServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)

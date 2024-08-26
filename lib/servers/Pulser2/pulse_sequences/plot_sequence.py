@@ -27,6 +27,7 @@ class SequencePlotter:
 
         def flatten(x):
             return [int(i) for i in x]
+
         switches = np.array(map(flatten, l))
         switches = switches.transpose()
         return times, switches
@@ -51,7 +52,7 @@ class SequencePlotter:
     def makePlot(self):
         advance, reset = self.drawTTL()
         self.drawDDS(advance, reset)
-        pyplot.xlabel('Time (sec)')
+        pyplot.xlabel("Time (sec)")
         pyplot.show()
 
     def drawTTL(self):
@@ -64,13 +65,15 @@ class SequencePlotter:
                 x, y = self.getCoords(times, channel)
                 y = 3 * y + self.offset  # offset the y coordinates
                 label = nameDict[str(number)]
-                if label == 'AdvanceDDS':
+                if label == "AdvanceDDS":
                     advanceDDS = x, y
-                if label == 'ResetDDS':
+                if label == "ResetDDS":
                     resetDDS = x, y
-                label = 'TTL ' + label
+                label = "TTL " + label
                 pyplot.plot(x, y)
-                pyplot.annotate(label, xy=(0, self.offset + 1.5), horizontalalignment='right')
+                pyplot.annotate(
+                    label, xy=(0, self.offset + 1.5), horizontalalignment="right"
+                )
                 self.offset += 4
         return advanceDDS, resetDDS
 
@@ -108,16 +111,20 @@ class SequencePlotter:
     def addDDSPlot(self, channel, freqs, ampls, advance):
         # each x coordinate appears twice except for the first one and last one
         x, y = self.getDDSCoordinates(advance, ampls)
-        y = (np.array(y) + 63.0) / 20.0 + self.offset  # normalizes the amplitude -63 to -3 to height between 0 and 3
-        label = 'DDS: ' + channel + ' Amplitude '
+        y = (
+            np.array(y) + 63.0
+        ) / 20.0 + self.offset  # normalizes the amplitude -63 to -3 to height between 0 and 3
+        label = "DDS: " + channel + " Amplitude "
         pyplot.plot(x, y)
-        pyplot.annotate(label, xy=(0, self.offset + 1.5), horizontalalignment='right')
+        pyplot.annotate(label, xy=(0, self.offset + 1.5), horizontalalignment="right")
         self.offset += 4
         x, y = self.getDDSCoordinates(advance, freqs)
-        y = np.array(y) / 250.0 + self.offset  # normalizes the amplitude 0 to 250 to height between 0 and 3
-        pyplot.plot(x, y, label='DDS Freq' + channel)
-        label = 'DDS: ' + channel + ' Frequency '
-        pyplot.annotate(label, xy=(0, self.offset + 1.5), horizontalalignment='right')
+        y = (
+            np.array(y) / 250.0 + self.offset
+        )  # normalizes the amplitude 0 to 250 to height between 0 and 3
+        pyplot.plot(x, y, label="DDS Freq" + channel)
+        label = "DDS: " + channel + " Frequency "
+        pyplot.annotate(label, xy=(0, self.offset + 1.5), horizontalalignment="right")
         self.offset += 4
 
     def getDDSCoordinates(self, advance, ampls):
@@ -131,4 +138,4 @@ class SequencePlotter:
 
     def drawVerticals(self, advances):
         for x in advances:
-            pyplot.axvline(x, alpha=0.3, color='0.35', linestyle='--')
+            pyplot.axvline(x, alpha=0.3, color="0.35", linestyle="--")

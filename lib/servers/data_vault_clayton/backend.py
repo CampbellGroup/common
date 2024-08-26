@@ -1,6 +1,7 @@
 """
 Contains all data file objects used by the server and utilities used to create/open them.
 """
+
 import os
 import h5py
 import base64
@@ -16,15 +17,15 @@ from labrad import types
 from twisted.internet import reactor
 
 # Data types for variable defintions
-Independent = namedtuple('Independent', ['label', 'shape', 'datatype', 'unit'])
-Dependent = namedtuple('Dependent', ['label', 'legend', 'shape', 'datatype', 'unit'])
+Independent = namedtuple("Independent", ["label", "shape", "datatype", "unit"])
+Dependent = namedtuple("Dependent", ["label", "legend", "shape", "datatype", "unit"])
 
-TIME_FORMAT = '%Y-%m-%d, %H:%M:%S'
+TIME_FORMAT = "%Y-%m-%d, %H:%M:%S"
 PRECISION = 12  # digits of precision to use when saving data
-DATA_FORMAT = '%%.%dG' % PRECISION
+DATA_FORMAT = "%%.%dG" % PRECISION
 FILE_TIMEOUT_SEC = 60  # how long to keep datafiles open if not accessed
 DATA_TIMEOUT = 300  # how long to keep data in memory if not accessed
-DATA_URL_PREFIX = 'data:application/labrad;base64,'
+DATA_URL_PREFIX = "data:application/labrad;base64,"
 # todo: break backend up into general stuff (e.g. selfclosingfile, helper functions) and file format implementations
 # todo: note somewhere that versioning uses semantic versioning
 # todo: document versions and differences
@@ -41,14 +42,14 @@ def time_from_str(s):
 
 
 def labrad_urlencode(data):
-    if hasattr(types, 'FlatData'):
+    if hasattr(types, "FlatData"):
         # pylabrad 0.95+
         flat_data = types.flatten(data)
-        flat_cluster = types.flatten((str(flat_data.tag), flat_data.bytes), 'sy')
+        flat_cluster = types.flatten((str(flat_data.tag), flat_data.bytes), "sy")
         all_bytes = flat_cluster.bytes
     else:
         data_bytes, t = types.flatten(data)
-        all_bytes, _ = types.flatten((str(t), data_bytes), 'ss')
+        all_bytes, _ = types.flatten((str(t), data_bytes), "ss")
     data_url = DATA_URL_PREFIX + (base64.urlsafe_b64encode(all_bytes)).decode()
     return data_url
 
@@ -56,15 +57,17 @@ def labrad_urlencode(data):
 def labrad_urldecode(data_url):
     if data_url.startswith(DATA_URL_PREFIX):
         # decode parameter data from dataurl
-        all_bytes = base64.urlsafe_b64decode(data_url[len(DATA_URL_PREFIX):])
-        t, data_bytes = types.unflatten(all_bytes, 'ss')
+        all_bytes = base64.urlsafe_b64decode(data_url[len(DATA_URL_PREFIX) :])
+        t, data_bytes = types.unflatten(all_bytes, "ss")
         # ensure data_bytes is of type bytes
         if isinstance(data_bytes, str):
             data_bytes = data_bytes.encode()
         return types.unflatten(data_bytes, t)
     else:
-        raise ValueError("Trying to labrad_urldecode data that doesn't start "
-                         "with prefix: {}".format(DATA_URL_PREFIX))
+        raise ValueError(
+            "Trying to labrad_urldecode data that doesn't start "
+            "with prefix: {}".format(DATA_URL_PREFIX)
+        )
 
 
 class SelfClosingFile(object):
@@ -75,8 +78,15 @@ class SelfClosingFile(object):
     closed automatically if not accessed within a specified timeout.
     """
 
-    def __init__(self, opener=open, open_args=(), open_kw=None,
-                 timeout=FILE_TIMEOUT_SEC, touch=True, reactor=reactor):
+    def __init__(
+        self,
+        opener=open,
+        open_args=(),
+        open_kw=None,
+        timeout=FILE_TIMEOUT_SEC,
+        touch=True,
+        reactor=reactor,
+    ):
         if open_kw is None:
             open_kw = dict()
         self.opener = opener
@@ -95,10 +105,12 @@ class SelfClosingFile(object):
         (e.g. e = Example, e())
         """
         # open the file if we don't already have one
-        if not hasattr(self, '_file'):
+        if not hasattr(self, "_file"):
             self._file = self.opener(*self.open_args, **self.open_kw)
             # begin the countdown if called after exceeding the timeout
-            self._fileTimeoutCall = self.reactor.callLater(self.timeout, self._file_timeout)
+            self._fileTimeoutCall = self.reactor.callLater(
+                self.timeout, self._file_timeout
+            )
         # otherwise, reset the timer
         else:
             self._fileTimeoutCall.reset(self.timeout)
@@ -142,37 +154,39 @@ class IniData(object):
         s = util.DVSafeConfigParser()
         s.read(self.infofile)
 
-        gen = 'General'
-        self.title = s.get(gen, 'Title', raw=True)
-        self.created = time_from_str(s.get(gen, 'Created'))
-        self.accessed = time_from_str(s.get(gen, 'Accessed'))
-        self.modified = time_from_str(s.get(gen, 'Modified'))
+        gen = "General"
+        self.title = s.get(gen, "Title", raw=True)
+        self.created = time_from_str(s.get(gen, "Created"))
+        self.accessed = time_from_str(s.get(gen, "Accessed"))
+        self.modified = time_from_str(s.get(gen, "Modified"))
 
         def get_ind(i):
-            sec = 'Independent {}'.format(i + 1)
-            label = s.get(sec, 'Label', raw=True)
-            units = s.get(sec, 'Units', raw=True)
-            return Independent(label=label, shape=(1,), datatype='v', unit=units)
+            sec = "Independent {}".format(i + 1)
+            label = s.get(sec, "Label", raw=True)
+            units = s.get(sec, "Units", raw=True)
+            return Independent(label=label, shape=(1,), datatype="v", unit=units)
 
-        count = s.getint(gen, 'Independent')
+        count = s.getint(gen, "Independent")
         self.independents = [get_ind(i) for i in range(count)]
 
         def get_dep(i):
-            sec = 'Dependent {}'.format(i + 1)
-            label = s.get(sec, 'Label', raw=True)
-            units = s.get(sec, 'Units', raw=True)
-            categ = s.get(sec, 'Category', raw=True)
-            return Dependent(label=categ, legend=label, shape=(1,), datatype='v', unit=units)
+            sec = "Dependent {}".format(i + 1)
+            label = s.get(sec, "Label", raw=True)
+            units = s.get(sec, "Units", raw=True)
+            categ = s.get(sec, "Category", raw=True)
+            return Dependent(
+                label=categ, legend=label, shape=(1,), datatype="v", unit=units
+            )
 
-        count = s.getint(gen, 'Dependent')
+        count = s.getint(gen, "Dependent")
         self.dependents = [get_dep(i) for i in range(count)]
 
         self.cols = len(self.independents + self.dependents)
 
         def get_par(i):
-            sec = 'Parameter {}'.format(i + 1)
-            label = s.get(sec, 'Label', raw=True)
-            raw = s.get(sec, 'Data', raw=True)
+            sec = "Parameter {}".format(i + 1)
+            label = s.get(sec, "Label", raw=True)
+            raw = s.get(sec, "Data", raw=True)
             if raw.startswith(DATA_URL_PREFIX):
                 # decode parameter data from dataurl
                 data = labrad_urldecode(raw)
@@ -185,23 +199,26 @@ class IniData(object):
                     # have been created by converting delphi data to python
                     # format. '1.#IND' was produced by old versions of the
                     # delphi labrad api when stringifying NaN.
-                    if '1.#IND' in raw:
-                        data = types.evalLRData(raw.replace('1.#IND', 'nan'))
+                    if "1.#IND" in raw:
+                        data = types.evalLRData(raw.replace("1.#IND", "nan"))
                     else:
-                        raise Exception('unable to parse parameter {}: {}'.format(label, raw))
+                        raise Exception(
+                            "unable to parse parameter {}: {}".format(label, raw)
+                        )
             return dict(label=label, data=data)
 
-        count = s.getint(gen, 'Parameters')
+        count = s.getint(gen, "Parameters")
         self.parameters = [get_par(i) for i in range(count)]
 
         # get comments if they're there
-        if s.has_section('Comments'):
+        if s.has_section("Comments"):
+
             def get_comment(i):
-                sec = 'Comments'
-                time, user, comment = eval(s.get(sec, 'c{}'.format(i), raw=True))
+                sec = "Comments"
+                time, user, comment = eval(s.get(sec, "c{}".format(i), raw=True))
                 return time_from_str(time), user, comment
 
-            count = s.getint(gen, 'Comments')
+            count = s.getint(gen, "Comments")
             self.comments = [get_comment(i) for i in range(count)]
         else:
             self.comments = []
@@ -209,45 +226,45 @@ class IniData(object):
     def save(self):
         s = util.DVSafeConfigParser()
 
-        sec = 'General'
+        sec = "General"
         s.add_section(sec)
-        s.set(sec, 'Created', time_to_str(self.created))
-        s.set(sec, 'Accessed', time_to_str(self.accessed))
-        s.set(sec, 'Modified', time_to_str(self.modified))
-        s.set(sec, 'Title', self.title)
-        s.set(sec, 'Independent', repr(len(self.independents)))
-        s.set(sec, 'Dependent', repr(len(self.dependents)))
-        s.set(sec, 'Parameters', repr(len(self.parameters)))
-        s.set(sec, 'Comments', repr(len(self.comments)))
+        s.set(sec, "Created", time_to_str(self.created))
+        s.set(sec, "Accessed", time_to_str(self.accessed))
+        s.set(sec, "Modified", time_to_str(self.modified))
+        s.set(sec, "Title", self.title)
+        s.set(sec, "Independent", repr(len(self.independents)))
+        s.set(sec, "Dependent", repr(len(self.dependents)))
+        s.set(sec, "Parameters", repr(len(self.parameters)))
+        s.set(sec, "Comments", repr(len(self.comments)))
 
         for i, ind in enumerate(self.independents):
-            sec = 'Independent {}'.format(i + 1)
+            sec = "Independent {}".format(i + 1)
             s.add_section(sec)
-            s.set(sec, 'Label', ind.label)
-            s.set(sec, 'Units', ind.unit)
+            s.set(sec, "Label", ind.label)
+            s.set(sec, "Units", ind.unit)
 
         for i, dep in enumerate(self.dependents):
-            sec = 'Dependent {}'.format(i + 1)
+            sec = "Dependent {}".format(i + 1)
             s.add_section(sec)
-            s.set(sec, 'Label', dep.legend)
-            s.set(sec, 'Units', dep.unit)
-            s.set(sec, 'Category', dep.label)
+            s.set(sec, "Label", dep.legend)
+            s.set(sec, "Units", dep.unit)
+            s.set(sec, "Category", dep.label)
 
         for i, par in enumerate(self.parameters):
-            sec = 'Parameter {}'.format(i + 1)
+            sec = "Parameter {}".format(i + 1)
             s.add_section(sec)
-            s.set(sec, 'Label', par['label'])
+            s.set(sec, "Label", par["label"])
             # encode the parameter value as a data-url
-            data_url = labrad_urlencode(par['data'])
-            s.set(sec, 'Data', data_url)
+            data_url = labrad_urlencode(par["data"])
+            s.set(sec, "Data", data_url)
 
-        sec = 'Comments'
+        sec = "Comments"
         s.add_section(sec)
         for i, (time, user, comment) in enumerate(self.comments):
             time = time_to_str(time)
-            s.set(sec, 'c{}'.format(i), repr((time, user, comment)))
+            s.set(sec, "c{}".format(i), repr((time, user, comment)))
 
-        with open(self.infofile, 'w') as f:
+        with open(self.infofile, "w") as f:
             s.write(f)
 
     def initialize_info(self, title, indep, dep):
@@ -261,7 +278,7 @@ class IniData(object):
 
     @property
     def dtype(self):
-        return np.dtype(','.join(['f8'] * self.cols))
+        return np.dtype(",".join(["f8"] * self.cols))
 
     def access(self):
         self.accessed = datetime.datetime.now()
@@ -275,20 +292,20 @@ class IniData(object):
     def get_row_type(self):
         units = []
         for var in self.independents + self.dependents:
-            units.append('v[{}]'.format(var.unit))
-        type_tag = '*({})'.format(','.join(units))
+            units.append("v[{}]".format(var.unit))
+        type_tag = "*({})".format(",".join(units))
         return type_tag
 
     def get_transpose_type(self):
         units = []
         for var in self.independents + self.dependents:
-            units.append('*v[{}]'.format(var.unit))
-        type_tag = '({})'.format(','.join(units))
+            units.append("*v[{}]".format(var.unit))
+        type_tag = "({})".format(",".join(units))
         return type_tag
 
     def add_param(self, name, data):
         for p in self.parameters:
-            if p['label'] == name:
+            if p["label"] == name:
                 raise errors.ParameterInUseError(name)
         d = dict(label=name, data=data)
         self.parameters.append(d)
@@ -296,15 +313,15 @@ class IniData(object):
     def get_parameter(self, name, case_sensitive=True):
         for p in self.parameters:
             if case_sensitive:
-                if p['label'] == name:
-                    return p['data']
+                if p["label"] == name:
+                    return p["data"]
             else:
-                if p['label'].lower() == name.lower():
-                    return p['data']
+                if p["label"].lower() == name.lower():
+                    return p["data"]
         raise errors.BadParameterError(name)
 
     def get_param_names(self):
-        return [p['label'] for p in self.parameters]
+        return [p["label"] for p in self.parameters]
 
     def add_comment(self, user, comment):
         self.comments.append((datetime.datetime.now(), user, comment))
@@ -313,7 +330,7 @@ class IniData(object):
         if limit is None:
             comments = self.comments[start:]
         else:
-            comments = self.comments[start:start + limit]
+            comments = self.comments[start : start + limit]
         return comments, start + len(comments)
 
     def num_comments(self):
@@ -326,17 +343,19 @@ class CsvListData(IniData):
     Stores the entire contents of the file in memory as a list or numpy array.
     """
 
-    def __init__(self,
-                 filename,
-                 file_timeout=FILE_TIMEOUT_SEC,
-                 data_timeout=DATA_TIMEOUT,
-                 reactor=reactor):
+    def __init__(
+        self,
+        filename,
+        file_timeout=FILE_TIMEOUT_SEC,
+        data_timeout=DATA_TIMEOUT,
+        reactor=reactor,
+    ):
         self.filename = filename
-        self._file = SelfClosingFile(open_args=(filename, 'a+'),
-                                     timeout=file_timeout,
-                                     reactor=reactor)
+        self._file = SelfClosingFile(
+            open_args=(filename, "a+"), timeout=file_timeout, reactor=reactor
+        )
         self.timeout = data_timeout
-        self.infofile = filename[:-4] + '.ini'
+        self.infofile = filename[:-4] + ".ini"
         self.reactor = reactor
 
     @property
@@ -352,17 +371,16 @@ class CsvListData(IniData):
         """Read data from file on demand.
 
         The data is scheduled to be cleared from memory unless accessed."""
-        if not hasattr(self, '_data'):
+        if not hasattr(self, "_data"):
             self._data = []
             self._datapos = 0
-            self._timeout_call = self.reactor.callLater(self.timeout,
-                                                        self._on_timeout)
+            self._timeout_call = self.reactor.callLater(self.timeout, self._on_timeout)
         else:
             self._timeout_call.reset(DATA_TIMEOUT)
         f = self.file
         f.seek(self._datapos)
         lines = f.readlines()
-        self._data.extend([float(n) for n in line.split(',')] for line in lines)
+        self._data.extend([float(n) for n in line.split(",")] for line in lines)
         self._datapos = f.tell()
         return self._data
 
@@ -375,7 +393,7 @@ class CsvListData(IniData):
         f = self.file
         for row in data:
             # always save with dos linebreaks
-            f.write(', '.join(DATA_FORMAT % v for v in row) + '\r\n')
+            f.write(", ".join(DATA_FORMAT % v for v in row) + "\r\n")
         f.flush()
 
     def add_data(self, data):
@@ -389,11 +407,13 @@ class CsvListData(IniData):
 
     def get_data(self, limit, start, transpose, simple_only):
         if transpose:
-            raise RuntimeError("Transpose specified for simple data format: not supported")
+            raise RuntimeError(
+                "Transpose specified for simple data format: not supported"
+            )
         if limit is None:
             data = self.data[start:]
         else:
-            data = self.data[start:start + limit]
+            data = self.data[start : start + limit]
         return data, start + len(data)
 
     def has_more(self, pos):
@@ -409,8 +429,8 @@ class CsvNumpyData(CsvListData):
 
     def __init__(self, filename, reactor=reactor):
         self.filename = filename
-        self._file = SelfClosingFile(open_args=(filename, 'a+'), reactor=reactor)
-        self.infofile = filename[:-4] + '.ini'
+        self._file = SelfClosingFile(open_args=(filename, "a+"), reactor=reactor)
+        self.infofile = filename[:-4] + ".ini"
         self.reactor = reactor
 
     @property
@@ -422,7 +442,7 @@ class CsvNumpyData(CsvListData):
         Read data from file on demand.
         The data is scheduled to be cleared from memory unless accessed.
         """
-        if not hasattr(self, '_data'):
+        if not hasattr(self, "_data"):
             try:
                 # if the file is empty, this line can barf in certain versions
                 # of numpy.  Clearly, if the file does not exist on disk, this
@@ -430,7 +450,7 @@ class CsvNumpyData(CsvListData):
                 # check its size
                 if self._file.size() > 0:
                     self.file.seek(0)
-                    self._data = np.loadtxt(self.file, delimiter=',')
+                    self._data = np.loadtxt(self.file, delimiter=",")
                 else:
                     self._data = np.array([[]])
                 if len(self._data.shape) == 1:
@@ -461,7 +481,7 @@ class CsvNumpyData(CsvListData):
     def _save_data(self, data):
         f = self.file
         # always save with dos linebreaks (requires numpy 1.5.0 or greater)
-        np.savetxt(f, data, fmt=DATA_FORMAT, delimiter=',', newline='\r\n')
+        np.savetxt(f, data, fmt=DATA_FORMAT, delimiter=",", newline="\r\n")
         f.flush()
 
     def add_data(self, data):
@@ -482,12 +502,14 @@ class CsvNumpyData(CsvListData):
 
     def get_data(self, limit, start, transpose, simple_only):
         if transpose:
-            raise RuntimeError("Transpose specified for simple data format: not supported")
+            raise RuntimeError(
+                "Transpose specified for simple data format: not supported"
+            )
 
         if limit is None:
             data = self.data[start:]
         else:
-            data = self.data[start:start + limit]
+            data = self.data[start : start + limit]
         # nrows should be zero for an empty row
         nrows = len(data) if data.size > 0 else 0
         return data, start + nrows
@@ -514,9 +536,9 @@ class HDF5MetaData(object):
     """
 
     comment_type = [
-        ('Timestamp', np.float64),
-        ('User', h5py.special_dtype(vlen=str)),
-        ('Comment', h5py.special_dtype(vlen=str))
+        ("Timestamp", np.float64),
+        ("User", h5py.special_dtype(vlen=str)),
+        ("Comment", h5py.special_dtype(vlen=str)),
     ]
 
     def load(self):
@@ -542,41 +564,44 @@ class HDF5MetaData(object):
         t = time()
 
         attrs = self.dataset.attrs
-        attrs['Title'] = title
-        attrs['Access Time'] = t
-        attrs['Modification Time'] = t
-        attrs['Creation Time'] = t
-        attrs['Comments'] = np.ndarray((0,), dtype=self.comment_type)
+        attrs["Title"] = title
+        attrs["Access Time"] = t
+        attrs["Modification Time"] = t
+        attrs["Creation Time"] = t
+        attrs["Comments"] = np.ndarray((0,), dtype=self.comment_type)
 
         for idx, i in enumerate(indep):
-            prefix = 'Independent{}.'.format(idx)
-            attrs[prefix + 'label'] = i.label
-            attrs[prefix + 'shape'] = i.shape
-            attrs[prefix + 'datatype'] = i.datatype
-            attrs[prefix + 'unit'] = i.unit
+            prefix = "Independent{}.".format(idx)
+            attrs[prefix + "label"] = i.label
+            attrs[prefix + "shape"] = i.shape
+            attrs[prefix + "datatype"] = i.datatype
+            attrs[prefix + "unit"] = i.unit
 
-        for idx, d, in enumerate(dep):
-            prefix = 'Dependent{}.'.format(idx)
-            attrs[prefix + 'label'] = d.label
-            attrs[prefix + 'legend'] = d.legend
-            attrs[prefix + 'shape'] = d.shape
-            attrs[prefix + 'datatype'] = d.datatype
-            attrs[prefix + 'unit'] = d.unit
+        for (
+            idx,
+            d,
+        ) in enumerate(dep):
+            prefix = "Dependent{}.".format(idx)
+            attrs[prefix + "label"] = d.label
+            attrs[prefix + "legend"] = d.legend
+            attrs[prefix + "shape"] = d.shape
+            attrs[prefix + "datatype"] = d.datatype
+            attrs[prefix + "unit"] = d.unit
 
     def access(self):
-        self.dataset.attrs['Access Time'] = time()
+        self.dataset.attrs["Access Time"] = time()
 
     def get_independents(self):
         attrs = self.dataset.attrs
         rv = []
         for idx in range(maxsize):
-            prefix = 'Independent{}.'.format(idx)
-            key = prefix + 'label'
+            prefix = "Independent{}.".format(idx)
+            key = prefix + "label"
             if key in attrs:
-                label = attrs[prefix + 'label']
-                shape = attrs[prefix + 'shape']
-                datatype = attrs[prefix + 'datatype']
-                unit = attrs[prefix + 'unit']
+                label = attrs[prefix + "label"]
+                shape = attrs[prefix + "shape"]
+                datatype = attrs[prefix + "datatype"]
+                unit = attrs[prefix + "unit"]
                 rv.append(Independent(label, shape, datatype, unit))
             else:
                 return rv
@@ -585,14 +610,14 @@ class HDF5MetaData(object):
         attrs = self.dataset.attrs
         rv = []
         for idx in range(maxsize):
-            prefix = 'Dependent{}.'.format(idx)
-            key = prefix + 'label'
+            prefix = "Dependent{}.".format(idx)
+            key = prefix + "label"
             if key in attrs:
-                label = attrs[prefix + 'label']
-                legend = attrs[prefix + 'legend']
-                shape = attrs[prefix + 'shape']
-                datatype = attrs[prefix + 'datatype']
-                unit = attrs[prefix + 'unit']
+                label = attrs[prefix + "label"]
+                legend = attrs[prefix + "legend"]
+                shape = attrs[prefix + "shape"]
+                datatype = attrs[prefix + "datatype"]
+                unit = attrs[prefix + "unit"]
                 rv.append(Dependent(label, legend, shape, datatype, unit))
             else:
                 return rv
@@ -601,46 +626,46 @@ class HDF5MetaData(object):
         column_types = []
         for col in self.get_independents() + self.get_dependents():
             base_type = col.datatype
-            if base_type in ['v', 'c']:
-                unit_tag = '[{}]'.format(col.unit)
+            if base_type in ["v", "c"]:
+                unit_tag = "[{}]".format(col.unit)
             else:
-                unit_tag = ''
+                unit_tag = ""
             if len(col.shape) > 1:
-                shape_tag = '*{}'.format(len(col.shape))
-                comment = util.braced(','.join(str(s) for s in col.shape))
+                shape_tag = "*{}".format(len(col.shape))
+                comment = util.braced(",".join(str(s) for s in col.shape))
             elif col.shape[0] > 1:
-                shape_tag = '*'
+                shape_tag = "*"
                 comment = util.braced(str(col.shape[0]))
             else:
-                shape_tag = ''
-                comment = ''
+                shape_tag = ""
+                comment = ""
             column_types.append(shape_tag + base_type + unit_tag + comment)
-        type_tag = '*({})'.format(','.join(column_types))
+        type_tag = "*({})".format(",".join(column_types))
         return type_tag
 
     def get_transpose_type(self):
         column_type = []
         for col in self.get_independents() + self.get_dependents():
             base_type = col.datatype
-            if base_type in ['v', 'c']:
-                unit_tag = '[{}]'.format(col.unit)
+            if base_type in ["v", "c"]:
+                unit_tag = "[{}]".format(col.unit)
             else:
-                unit_tag = ''
+                unit_tag = ""
             if len(col.shape) > 1:
-                shape_tag = '*{}'.format(len(col.shape) + 1)
-                comment = util.braced('N,' + ','.join(str(s) for s in col.shape))
+                shape_tag = "*{}".format(len(col.shape) + 1)
+                comment = util.braced("N," + ",".join(str(s) for s in col.shape))
             elif col.shape[0] > 1:
-                shape_tag = '*2'
-                comment = util.braced('N,' + str(col.shape[0]))
+                shape_tag = "*2"
+                comment = util.braced("N," + str(col.shape[0]))
             else:
-                shape_tag = '*'
-                comment = ''
+                shape_tag = "*"
+                comment = ""
             column_type.append(shape_tag + base_type + unit_tag + comment)
-        type_tag = '({})'.format(','.join(column_type))
+        type_tag = "({})".format(",".join(column_type))
         return type_tag
 
     def add_param(self, name, data):
-        keyname = 'Param.{}'.format(name)
+        keyname = "Param.{}".format(name)
         if keyname in self.dataset.attrs:
             raise errors.ParameterInUseError(name)
         value = labrad_urlencode(data)
@@ -650,7 +675,7 @@ class HDF5MetaData(object):
         """
         Get a parameter from the dataset.
         """
-        keyname = 'Param.{}'.format(name)
+        keyname = "Param.{}".format(name)
         if case_sensitive:
             if keyname in self.dataset.attrs:
                 return labrad_urldecode(self.dataset.attrs[keyname])
@@ -667,7 +692,7 @@ class HDF5MetaData(object):
         Parameter names in the HDF5 file are prefixed with 'Param.' to avoid
         conflicts with the other metadata.
         """
-        return [str(k[6:]) for k in self.dataset.attrs if k.startswith('Param.')]
+        return [str(k[6:]) for k in self.dataset.attrs if k.startswith("Param.")]
 
     def add_comment(self, user, comment):
         """
@@ -675,23 +700,26 @@ class HDF5MetaData(object):
         """
         t = time()
         new_comment = np.array([(t, user, comment)], dtype=self.comment_type)
-        old_comments = self.dataset.attrs['Comments']
+        old_comments = self.dataset.attrs["Comments"]
         data = np.hstack((old_comments, new_comment))
-        self.dataset.attrs.create('Comments', data, dtype=self.comment_type)
+        self.dataset.attrs.create("Comments", data, dtype=self.comment_type)
 
     def get_comments(self, limit, start):
         """
         Get comments in [(datetime, username, comment), ...] format.
         """
         if limit is None:
-            raw_comments = self.dataset.attrs['Comments'][start:]
+            raw_comments = self.dataset.attrs["Comments"][start:]
         else:
-            raw_comments = self.dataset.attrs['Comments'][start:start + limit]
-        comments = [(datetime.datetime.fromtimestamp(c[0]), str(c[1]), str(c[2])) for c in raw_comments]
+            raw_comments = self.dataset.attrs["Comments"][start : start + limit]
+        comments = [
+            (datetime.datetime.fromtimestamp(c[0]), str(c[1]), str(c[2]))
+            for c in raw_comments
+        ]
         return comments, start + len(comments)
 
     def num_comments(self):
-        return len(self.dataset.attrs['Comments'])
+        return len(self.dataset.attrs["Comments"])
 
 
 class ExtendedHDF5Data(HDF5MetaData):
@@ -704,9 +732,9 @@ class ExtendedHDF5Data(HDF5MetaData):
 
     def __init__(self, fh):
         self._file = fh
-        if 'Version' not in self.file.attrs:
-            self.file.attrs['Version'] = np.asarray([3, 0, 0], dtype=np.int32)
-        self.version = np.asarray(self.file.attrs['Version'], np.int32)
+        if "Version" not in self.file.attrs:
+            self.file.attrs["Version"] = np.asarray([3, 0, 0], dtype=np.int32)
+        self.version = np.asarray(self.file.attrs["Version"], np.int32)
 
     def initialize_info(self, title, indep, dep):
         """
@@ -718,28 +746,32 @@ class ExtendedHDF5Data(HDF5MetaData):
             ttag = col.datatype
             unit = col.unit
             if len(shape) == 1 and shape[0] == 1:
-                shapestr = ''
+                shapestr = ""
             else:
                 shapestr = str(tuple(shape))
-            varname = 'f{}'.format(idx)
-            if unit != '' and ttag not in ['v', 'c']:
-                raise RuntimeError('Unit {} specfied for datatype {}.  Only v and c may have units'.format(unit, ttag))
-            if ttag == 'i':
-                dtype.append((varname, shapestr + 'i4'))
-            elif ttag == 's':
+            varname = "f{}".format(idx)
+            if unit != "" and ttag not in ["v", "c"]:
+                raise RuntimeError(
+                    "Unit {} specfied for datatype {}.  Only v and c may have units".format(
+                        unit, ttag
+                    )
+                )
+            if ttag == "i":
+                dtype.append((varname, shapestr + "i4"))
+            elif ttag == "s":
                 if shapestr:
                     raise ValueError("Cannot create string array column")
                 dtype.append((varname, h5py.special_dtype(vlen=str)))
-            elif ttag == 't':
-                dtype.append((varname, shapestr + 'i8'))
-            elif ttag == 'v':
-                dtype.append((varname, shapestr + 'f8'))
-            elif ttag == 'c':
-                dtype.append((varname, shapestr + 'c16'))
+            elif ttag == "t":
+                dtype.append((varname, shapestr + "i8"))
+            elif ttag == "v":
+                dtype.append((varname, shapestr + "f8"))
+            elif ttag == "c":
+                dtype.append((varname, shapestr + "c16"))
             else:
                 raise RuntimeError("Invalid type tag {}".format(ttag))
 
-        self.file.create_dataset('DataVault', (0,), dtype=dtype, maxshape=(None,))
+        self.file.create_dataset("DataVault", (0,), dtype=dtype, maxshape=(None,))
         HDF5MetaData.initialize_info(self, title, indep, dep)
 
     @property
@@ -757,7 +789,7 @@ class ExtendedHDF5Data(HDF5MetaData):
         new_rows = len(data)
         old_rows = self.dataset.shape[0]
         self.dataset.resize((old_rows + new_rows,))
-        self.dataset[old_rows:(old_rows + new_rows)] = data
+        self.dataset[old_rows : (old_rows + new_rows)] = data
 
     def get_data(self, limit, start, transpose, simple_only):
         """
@@ -779,7 +811,7 @@ class ExtendedHDF5Data(HDF5MetaData):
         struct_data, new_pos = self._get_data(limit, start)
         columns = []
         for idx in range(len(struct_data.dtype)):
-            col = struct_data['f{}'.format(idx)]
+            col = struct_data["f{}".format(idx)]
             # Strings are stored as hdf5 vlen objects.  Numpy can't do
             # variable length strings, so they get encoded as object
             # arrays by hdf5.  we don't know how to flatten object
@@ -793,7 +825,8 @@ class ExtendedHDF5Data(HDF5MetaData):
                 base_type = h5py.check_dtype(vlen=self.dataset.dtype[idx])
                 if not base_type or not issubclass(base_type, str):
                     raise RuntimeError(
-                        "Found object type array, but not vlen str.  Not supported.  This shouldn't happen")
+                        "Found object type array, but not vlen str.  Not supported.  This shouldn't happen"
+                    )
                 col = [base_type(x) for x in col]
             columns.append(col)
         columns = tuple(columns)
@@ -803,7 +836,7 @@ class ExtendedHDF5Data(HDF5MetaData):
         if limit is None:
             struct_data = self.dataset[start:]
         else:
-            struct_data = self.dataset[start:start + limit]
+            struct_data = self.dataset[start : start + limit]
         return struct_data, start + struct_data.shape[0]
 
     def __len__(self):
@@ -827,17 +860,18 @@ class SimpleHDF5Data(HDF5MetaData):
     a filesystem-like tree of datasets within one file. Here, the single dataset
     is stored in /DataVault within the HDF5 file.
     """
+
     def __init__(self, fh):
         self._file = fh
-        if 'Version' not in self.file.attrs:
-            self.file.attrs['Version'] = np.asarray([2, 0, 0], dtype=np.int32)
-        self.version = np.asarray(self.file.attrs['Version'], dtype=np.int32)
+        if "Version" not in self.file.attrs:
+            self.file.attrs["Version"] = np.asarray([2, 0, 0], dtype=np.int32)
+        self.version = np.asarray(self.file.attrs["Version"], dtype=np.int32)
 
     def initialize_info(self, title, indep, dep):
         ncol = len(indep) + len(dep)
-        dtype = [('f{}'.format(idx), np.float64) for idx in range(ncol)]
-        if 'DataVault' not in self.file:
-            self.file.create_dataset('DataVault', (0,), dtype=dtype, maxshape=(None,))
+        dtype = [("f{}".format(idx), np.float64) for idx in range(ncol)]
+        if "DataVault" not in self.file:
+            self.file.create_dataset("DataVault", (0,), dtype=dtype, maxshape=(None,))
         HDF5MetaData.initialize_info(self, title, indep, dep)
 
     @property
@@ -862,21 +896,23 @@ class SimpleHDF5Data(HDF5MetaData):
         # for col in range(data.shape[1]):
         #    field = "f%d" % (col,)
         #    new_data[field] = data[:,col]
-        self.dataset[old_rows:(old_rows + new_rows)] = data
+        self.dataset[old_rows : (old_rows + new_rows)] = data
 
     def get_data(self, limit, start, transpose, simple_only):
         """
         Get up to <limit> rows from a dataset.
         """
         if transpose:
-            raise RuntimeError("Transpose specified for simple data format: not supported")
+            raise RuntimeError(
+                "Transpose specified for simple data format: not supported"
+            )
         if limit is None:
             struct_data = self.dataset[start:]
         else:
-            struct_data = self.dataset[start:start + limit]
+            struct_data = self.dataset[start : start + limit]
         columns = []
         for idx in range(len(struct_data.dtype)):
-            columns.append(struct_data['f{}'.format(idx)])
+            columns.append(struct_data["f{}".format(idx)])
         data = np.column_stack(columns)
         return data, start + data.shape[0]
 
@@ -905,6 +941,7 @@ class ARTIQHDF5Data(HDF5MetaData):
     Here, the dataset(s) are stored in /datasets within the HDF5 file.
     For simplicity, we assume that there is only one dataset.
     """
+
     def __init__(self, fh):
         self._file = fh
         # get datasets
@@ -915,13 +952,13 @@ class ARTIQHDF5Data(HDF5MetaData):
         self.dataset_name = list(self.file["datasets"].keys())[0]
 
         # set versioning
-        if 'Version' not in self.file.attrs:
-            self.file.attrs['Version'] = np.asarray([2, 1, 0], dtype=np.int32)
-        self.version = np.asarray(self.file.attrs['Version'], dtype=np.int32)
+        if "Version" not in self.file.attrs:
+            self.file.attrs["Version"] = np.asarray([2, 1, 0], dtype=np.int32)
+        self.version = np.asarray(self.file.attrs["Version"], dtype=np.int32)
 
         # create comments
-        if 'Comments' not in self.file.attrs:
-            self.dataset.attrs['Comments'] = list()
+        if "Comments" not in self.file.attrs:
+            self.dataset.attrs["Comments"] = list()
 
     @property
     def file(self):
@@ -944,23 +981,23 @@ class ARTIQHDF5Data(HDF5MetaData):
         """
         todo: justify
         """
-        prefix = 'Independent{}.'.format(1)
-        label = prefix + 'label'
+        prefix = "Independent{}.".format(1)
+        label = prefix + "label"
         shape = 1
-        datatype = 'v'
-        unit = 'arb.'
+        datatype = "v"
+        unit = "arb."
         return [Independent(label, shape, datatype, unit)]
 
     def get_dependents(self):
         rv = []
         num_dependents = self.dataset.shape[1] - 1
         for idx in range(num_dependents):
-            prefix = 'Dependent{}.'.format(idx)
-            label = prefix + 'label'
-            legend = prefix + 'legend'
+            prefix = "Dependent{}.".format(idx)
+            label = prefix + "label"
+            legend = prefix + "legend"
             shape = 1
-            datatype = 'v'
-            unit = 'arb.'
+            datatype = "v"
+            unit = "arb."
             rv.append(Dependent(label, legend, shape, datatype, unit))
         return rv
 
@@ -969,8 +1006,14 @@ class ARTIQHDF5Data(HDF5MetaData):
         Get up to <limit> rows from a dataset.
         """
         if transpose:
-            raise RuntimeError("Transpose specified for simple data format: not supported")
-        struct_data = self.dataset[start:] if limit is None else self.dataset[start:start + limit]
+            raise RuntimeError(
+                "Transpose specified for simple data format: not supported"
+            )
+        struct_data = (
+            self.dataset[start:]
+            if limit is None
+            else self.dataset[start : start + limit]
+        )
         columns = []
         for idx in range(len(self.get_independents() + self.get_dependents())):
             columns.append(struct_data[:, idx])
@@ -991,6 +1034,7 @@ class MultipleHDF5Data(HDF5MetaData):
     An HDF5Data object used to represent a single dataset
         when an ARTIQ hdf5 file has multiple datasets.
     """
+
     def __init__(self, fh, dataset_name):
         self._file = fh
         self.dataset_name = dataset_name
@@ -1037,23 +1081,23 @@ class MultipleHDF5Data(HDF5MetaData):
         """
         todo: justify
         """
-        prefix = 'Independent{}.'.format(1)
-        label = prefix + 'label'
+        prefix = "Independent{}.".format(1)
+        label = prefix + "label"
         shape = 1
-        datatype = 'v'
-        unit = 'arb.'
+        datatype = "v"
+        unit = "arb."
         return [Independent(label, shape, datatype, unit)]
 
     def get_dependents(self):
         rv = []
         num_dependents = self.dataset.shape[1] - 1
         for idx in range(num_dependents):
-            prefix = 'Dependent{}.'.format(idx)
-            label = prefix + 'label'
-            legend = prefix + 'legend'
+            prefix = "Dependent{}.".format(idx)
+            label = prefix + "label"
+            legend = prefix + "legend"
             shape = 1
-            datatype = 'v'
-            unit = 'arb.'
+            datatype = "v"
+            unit = "arb."
             rv.append(Dependent(label, legend, shape, datatype, unit))
         return rv
 
@@ -1062,8 +1106,14 @@ class MultipleHDF5Data(HDF5MetaData):
         Get up to <limit> rows from a dataset.
         """
         if transpose:
-            raise RuntimeError("Transpose specified for simple data format: not supported")
-        struct_data = self.dataset[start:] if limit is None else self.dataset[start:start + limit]
+            raise RuntimeError(
+                "Transpose specified for simple data format: not supported"
+            )
+        struct_data = (
+            self.dataset[start:]
+            if limit is None
+            else self.dataset[start : start + limit]
+        )
         columns = []
         for idx in range(len(self.get_independents() + self.get_dependents())):
             columns.append(struct_data[:, idx])
@@ -1091,33 +1141,33 @@ def open_hdf5_file(filename, dataset_name=None):
     # selection of a specific dataset name means we have multiple datasets in the file
     # and we have to use MultipleHDF5Data
     if dataset_name is not None:
-        fh = SelfClosingFile(h5py.File, open_args=(filename, 'r'))
+        fh = SelfClosingFile(h5py.File, open_args=(filename, "r"))
         return MultipleHDF5Data(fh, dataset_name)
 
     # instantiate the file
-    fh = SelfClosingFile(h5py.File, open_args=(filename, 'a'))
+    fh = SelfClosingFile(h5py.File, open_args=(filename, "a"))
 
     # accommodate artiq files
-    if 'artiq_version' in fh().keys():
+    if "artiq_version" in fh().keys():
         return ARTIQHDF5Data(fh)
 
     # instantiate correct data object using versioning
     try:
-        version = fh().attrs['Version']
+        version = fh().attrs["Version"]
         if (version[0] == 2) and (version[1] == 0):
             return SimpleHDF5Data(fh)
         elif version[0] == 3:
             return ExtendedHDF5Data(fh)
     except Exception as e:
-        print('Error:', e)
+        print("Error:", e)
 
 
 def create_backend(filename, title, indep, dep, extended):
     """
     Create a data object for a new dataset.
     """
-    hdf5_file = filename + '.hdf5'
-    fh = SelfClosingFile(h5py.File, open_args=(hdf5_file, 'a'))
+    hdf5_file = filename + ".hdf5"
+    fh = SelfClosingFile(h5py.File, open_args=(hdf5_file, "a"))
     data = ExtendedHDF5Data(fh) if extended else SimpleHDF5Data(fh)
     data.initialize_info(title, indep, dep)
     return data
@@ -1131,9 +1181,9 @@ def open_backend(filename, dataset_name=None):
     file in csv format, we create a backend of the appropriate type. If
     no file exists, we create a new backend to store data in binary form.
     """
-    csv_file = filename + '.csv'
-    hdf5_file = filename + '.hdf5'
-    h5_file = filename + '.h5'
+    csv_file = filename + ".csv"
+    hdf5_file = filename + ".hdf5"
+    h5_file = filename + ".h5"
 
     # check to see whether the CSV file exists
     if os.path.exists(csv_file):

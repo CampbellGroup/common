@@ -1,45 +1,65 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QPushButton,
+    QWidget,
+    QAction,
+    QTabWidget,
+    QVBoxLayout,
+    QLabel,
+)
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+    QGridLayout,
+)
 import os
 from PyQt5 import uic
 
 import os
 
 basepath = os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "SelectionEditor.ui")
+path = os.path.join(basepath, "..", "..", "Views", "SelectionEditor.ui")
 base, form = uic.loadUiType(path)
+
 
 class line_selection_delegate(QAbstractItemDelegate):
     def __init__(self, parent):
         super(line_selection_delegate, self).__init__()
         self.parent = parent
         self.parent.uiValue.activated.connect(self.on_new_index)
-        
+
     def setEditorData(self, editor, index):
         node = index.internalPointer()
         if editor == self.parent.uiName or editor == self.parent.uiCollection:
             editor.setText(node.data(index.column()))
         if index.column() == 3:
-            for data,display in node.data(4).items():
+            for data, display in node.data(4).items():
                 if self.parent.uiValue.findText(display) == -1:
-                    self.parent.uiValue.addItem(display, userData = data)
+                    self.parent.uiValue.addItem(display, userData=data)
             index = self.parent.uiValue.findData(node.data(index.column()))
             self.parent.uiValue.setCurrentIndex(index)
-    
+
     def on_new_index(self, text):
         self.commitData.emit(self.parent.uiValue)
-    
+
     def setModelData(self, editor, model, index):
         if index.column() == 3:
-            data = self.parent.uiValue.itemData(self.parent.uiValue.currentIndex() )
+            data = self.parent.uiValue.itemData(self.parent.uiValue.currentIndex())
             model.setData(index, QtCore.QVariant(data.toString()))
+
 
 class line_selection_editor(base, form):
     def __init__(self, parent=None):

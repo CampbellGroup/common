@@ -1,7 +1,8 @@
 import labrad
 from labrad.units import WithUnit
+
 with labrad.connect() as cxn:
-    duration = WithUnit(50, 'ms')
+    duration = WithUnit(50, "ms")
     pulser = cxn.pulser
     pulser.new_sequence()
     channels = pulser.get_ttl_channels()
@@ -9,9 +10,9 @@ with labrad.connect() as cxn:
     for i in range(len(channels)):
         start = i * duration
         print(start)
-        pulser.add_ttl_pulse((channel_names[i],  start, duration))
+        pulser.add_ttl_pulse((channel_names[i], start, duration))
     pulser.program_sequence()
     pulser.start_number(10)
     pulser.wait_sequence_done()
     pulser.stop_sequence()
-print('done')
+print("done")

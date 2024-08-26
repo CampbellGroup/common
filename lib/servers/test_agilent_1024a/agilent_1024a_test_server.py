@@ -14,15 +14,23 @@ timeout = 20
 ### END NODE INFO
 """
 
-from serialdeviceserver import SerialDeviceServer, setting, inlineCallbacks, SerialDeviceError, SerialConnectionError, PortRegError
+from serialdeviceserver import (
+    SerialDeviceServer,
+    setting,
+    inlineCallbacks,
+    SerialDeviceError,
+    SerialConnectionError,
+    PortRegError,
+)
 from twisted.internet.defer import returnValue
 
-class HPServer( SerialDeviceServer ):
+
+class HPServer(SerialDeviceServer):
     """Controls HP8648A Signal Generator"""
 
-    name = '%LABRADNODE% Agilent 1024A SERVER'
-    regKey = 'Agilent1024A'
+    name = "%LABRADNODE% Agilent 1024A SERVER"
+    regKey = "Agilent1024A"
     port = None
-    serNode = 'magic'
+    serNode = "magic"
     timeout = 1.0
     gpibaddr = 0

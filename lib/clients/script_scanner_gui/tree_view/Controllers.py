@@ -1,16 +1,34 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QPushButton,
+    QWidget,
+    QAction,
+    QTabWidget,
+    QVBoxLayout,
+    QLabel,
+)
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+    QGridLayout,
+)
 
 
 from PyQt5 import uic
-from . Data import Node
+from .Data import Node
 from .FilterModel import FilterModel
 from .Models import ParametersTreeModel
 from .PropertiesEditor import PropertiesEditor
@@ -49,59 +67,61 @@ class ParametersEditor(base, form):
     def add_parameter(self, collection_name, parameter_name, value):
         value_type = value[0]
         info = value[1]
-        if value_type == 'parameter':
+        if value_type == "parameter":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_parameter(parameter_name, info,
-                                                collection_node)
+            node = self._model.insert_parameter(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name] = node
             self._scannable_parameter[collection_name, parameter_name] = node
-        elif value_type == 'scan':
+        elif value_type == "scan":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_scan(parameter_name, info,
-                                           collection_node)
+            node = self._model.insert_scan(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'bool':
+        elif value_type == "bool":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_bool(parameter_name, info,
-                                           collection_node)
+            node = self._model.insert_bool(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'string':
+        elif value_type == "string":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_string(parameter_name, info,
-                                             collection_node)
+            node = self._model.insert_string(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'selection_simple':
+        elif value_type == "selection_simple":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_selection_simple(parameter_name, info,
-                                                       collection_node)
+            node = self._model.insert_selection_simple(
+                parameter_name, info, collection_node
+            )
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'line_selection':
+        elif value_type == "line_selection":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_line_selection(parameter_name, info,
-                                                     collection_node)
+            node = self._model.insert_line_selection(
+                parameter_name, info, collection_node
+            )
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'sideband_selection':
+        elif value_type == "sideband_selection":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_sideband_selection(parameter_name, info,
-                                                         collection_node)
+            node = self._model.insert_sideband_selection(
+                parameter_name, info, collection_node
+            )
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'duration_bandwidth':
+        elif value_type == "duration_bandwidth":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_duration_bandwidth(parameter_name, info,
-                                                         collection_node)
+            node = self._model.insert_duration_bandwidth(
+                parameter_name, info, collection_node
+            )
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'spectrum_sensitivity':
+        elif value_type == "spectrum_sensitivity":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_spectrum_sensitivity(parameter_name, info,
-                                                           collection_node)
+            node = self._model.insert_spectrum_sensitivity(
+                parameter_name, info, collection_node
+            )
             self._parameter[collection_name, parameter_name] = node
-        elif value_type == 'event':
+        elif value_type == "event":
             collection_node = self._collection[collection_name]
-            node = self._model.insert_event(parameter_name, info,
-                                            collection_node)
+            node = self._model.insert_event(parameter_name, info, collection_node)
             self._parameter[collection_name, parameter_name] = node
         else:
-            logger.error('unknown value type', value_type, collection_name, parameter_name)
+            logger.error(
+                "unknown value type", value_type, collection_name, parameter_name
+            )
 
     def set_parameter(self, collection, name, full_info):
         """set value of a parameter stores in the model"""
@@ -109,7 +129,7 @@ class ParametersEditor(base, form):
         self._model.set_parameter(index, full_info[1])
 
     def show_only(self, show):
-        """ set all parameters hidden except for the ones provided in show"""
+        """set all parameters hidden except for the ones provided in show"""
         self._proxyModel.show_only(show)
 
     def show_all(self):
@@ -144,7 +164,9 @@ class ParametersEditor(base, form):
 
     def connect_layout(self):
         self.uiFilter.textChanged.connect(self._proxyModel.setFilterWildcard)
-        self.uiTree.selectionModel().currentChanged.connect(self._propEditor.setSelection)
+        self.uiTree.selectionModel().currentChanged.connect(
+            self._propEditor.setSelection
+        )
         self._model.on_new_parameter.connect(self.on_parameter_change.emit)
 
     def closeEvent(self, event):

@@ -1,27 +1,46 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QPushButton,
+    QWidget,
+    QAction,
+    QTabWidget,
+    QVBoxLayout,
+    QLabel,
+)
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+    QGridLayout,
+)
 import os
 from PyQt5 import uic
 
 import os
 
-basepath =  os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "SelectionEditor.ui")
+basepath = os.path.dirname(__file__)
+path = os.path.join(basepath, "..", "..", "Views", "SelectionEditor.ui")
 base, form = uic.loadUiType(path)
+
 
 class simple_selection_delegate(QAbstractItemDelegate):
     def __init__(self, parent):
         super(simple_selection_delegate, self).__init__()
         self.parent = parent
         self.parent.uiValue.activated.connect(self.on_new_index)
-        
+
     def setEditorData(self, editor, index):
         node = index.internalPointer()
         if editor == self.parent.uiName or editor == self.parent.uiCollection:
@@ -32,13 +51,14 @@ class simple_selection_delegate(QAbstractItemDelegate):
                     self.parent.uiValue.addItem(item)
             index = self.parent.uiValue.findText(node.data(index.column()))
             self.parent.uiValue.setCurrentIndex(index)
-    
+
     def on_new_index(self, text):
         self.commitData.emit(self.parent.uiValue)
-    
+
     def setModelData(self, editor, model, index):
         if index.column() == 3:
             model.setData(index, QtCore.QVariant(self.parent.uiValue.currentText()))
+
 
 class SelectionSimpleEditor(base, form):
     def __init__(self, parent=None):
@@ -53,7 +73,7 @@ class SelectionSimpleEditor(base, form):
         self._dataMapper.addMapping(self.uiName, 0)
         self._dataMapper.addMapping(self.uiCollection, 2)
         self._dataMapper.addMapping(self.uiValue, 3)
-    
+
     def setSelection(self, current):
         self.uiValue.clear()
         parent = current.parent()

@@ -3,6 +3,7 @@ from labrad import types
 
 class NoDatasetError(types.Error):
     """Please open a dataset first."""
+
     code = 2
 
 
@@ -26,6 +27,7 @@ class DirectoryNotFoundError(types.Error):
 
 class EmptyNameError(types.Error):
     """Names of directories or keys cannot be empty"""
+
     code = 6
 
     def __init__(self, path):
@@ -35,6 +37,7 @@ class EmptyNameError(types.Error):
 class ReadOnlyError(types.Error):
     """Points can only be added to datasets created with 'new' or opened with
     'open_appendable'."""
+
     code = 7
 
 
@@ -42,7 +45,7 @@ class BadDataError(types.Error):
     code = 8
 
     def __init__(self, varcount, gotcount):
-        requires_message = 'Dataset requires %d values per datapoint not %d.'
+        requires_message = "Dataset requires %d values per datapoint not %d."
         self.msg = requires_message % (varcount, gotcount)
 
 

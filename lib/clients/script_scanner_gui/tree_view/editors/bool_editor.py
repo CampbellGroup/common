@@ -1,19 +1,38 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QPushButton,
+    QWidget,
+    QAction,
+    QTabWidget,
+    QVBoxLayout,
+    QLabel,
+)
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+    QGridLayout,
+)
 import os
 from PyQt5 import uic
 import os
 
-basepath =  os.path.dirname(__file__)
-path = os.path.join(basepath,"..","..","Views", "BooleanEditor.ui")
+basepath = os.path.dirname(__file__)
+path = os.path.join(basepath, "..", "..", "Views", "BooleanEditor.ui")
 base, form = uic.loadUiType(path)
+
 
 class BoolEditor(base, form):
     def __init__(self, parent=None):
@@ -21,10 +40,10 @@ class BoolEditor(base, form):
         self.setupUi(self)
         self._dataMapper = QDataWidgetMapper(self)
         self.connect_layout()
-        
+
     def connect_layout(self):
         self.uiValue.clicked.connect(self.on_check)
-    
+
     def on_check(self):
         self._dataMapper.itemDelegate().commitData.emit(self.uiValue)
 

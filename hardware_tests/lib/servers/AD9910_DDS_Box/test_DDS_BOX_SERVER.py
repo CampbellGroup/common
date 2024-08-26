@@ -6,6 +6,7 @@ DDS Box 2 on 'COM4'
 
 TODO: Make test code more hardware configuration independent.
 """
+
 from twisted.trial.unittest import TestCase
 import labrad
 import labrad.units as _u
@@ -25,7 +26,7 @@ class Test_DDS_BOX_Server(TestCase):
         self.server = self._get_tester()
 
         # TODO: Check that we need this
-        self.server.select_device('COM4')
+        self.server.select_device("COM4")
 
     def tearDown(self):
         """
@@ -40,7 +41,7 @@ class Test_DDS_BOX_Server(TestCase):
         Make sure the serial server is available, as this device
         depends on it.
         """
-        self.assert_(hasattr(self.cxn, 'coach_k_serial_server_cg'))
+        self.assert_(hasattr(self.cxn, "coach_k_serial_server_cg"))
 
     def _get_tester(self):
         """
@@ -51,21 +52,21 @@ class Test_DDS_BOX_Server(TestCase):
         -------
         cxn.avt_camera: labrad server
         """
-        self.assert_(hasattr(self.cxn, 'dds_box_server'))
+        self.assert_(hasattr(self.cxn, "dds_box_server"))
         return self.cxn.dds_box_server
 
     def test_echo(self):
         """
         Test that server has basic function echo
         """
-        self.assert_(hasattr(self.server, 'echo'))
+        self.assert_(hasattr(self.server, "echo"))
 
     def test_name(self):
         """
         Test server name
         """
         out = self.server.name
-        exp = 'DDS Box Server'
+        exp = "DDS Box Server"
         self.assertEquals(exp, out)
 
     def test_frequency_set(self):
@@ -73,10 +74,10 @@ class Test_DDS_BOX_Server(TestCase):
         Test setting the frequency of channel 4
         """
         server = self.server
-        f = _u.WithUnit(100., 'MHz')
+        f = _u.WithUnit(100.0, "MHz")
         server.frequency(4, f)
         out = server.frequency(4)
-        exp = _u.WithUnit(100., 'MHz')
+        exp = _u.WithUnit(100.0, "MHz")
         self.assertEquals(exp, out)
 
     def test_channel_state_setFalse(self):
@@ -118,7 +119,7 @@ class Test_DDS_BOX_Server(TestCase):
         """
         Test amplitude_hex of channel 4
         """
-        val = 'afd1'
+        val = "afd1"
         self.server.amplitude_hex(4, val)
         out = self.server.amplitude_hex(4)
         exp = val

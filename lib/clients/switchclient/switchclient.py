@@ -3,6 +3,7 @@ from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import Connection
 from PyQt5.QtWidgets import *
 import logging
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -16,9 +17,9 @@ class SwitchClient(QFrame):
 
     def __init__(self, reactor, cxn=None):
         """initializes the GUI creates the reactor
-            and empty dictionary for channel widgets to
-            be stored for iteration. also grabs chan info
-            from switch_config file
+        and empty dictionary for channel widgets to
+        be stored for iteration. also grabs chan info
+        from switch_config file
         """
         super(SwitchClient, self).__init__()
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
@@ -38,15 +39,16 @@ class SwitchClient(QFrame):
         if self.cxn is None:
             self.cxn = Connection(name="Switch Client")
             yield self.cxn.connect()
-        self.server = yield self.cxn.get_server('arduinottl')
-        self.reg = yield self.cxn.get_server('registry')
+        self.server = yield self.cxn.get_server("arduinottl")
+        self.reg = yield self.cxn.get_server("registry")
 
         yield self.server.signal__on_switch_changed(self.SIGNALID)
-        yield self.server.addListener(listener=self.signal_switch_changed,
-                                      source=None, ID=self.SIGNALID)
+        yield self.server.addListener(
+            listener=self.signal_switch_changed, source=None, ID=self.SIGNALID
+        )
 
         try:
-            yield self.reg.cd(['', 'settings'])
+            yield self.reg.cd(["", "settings"])
             self.settings = yield self.reg.dir()
             self.settings = self.settings[1]
         except Exception as e:
@@ -65,16 +67,18 @@ class SwitchClient(QFrame):
             port = self.chaninfo[chan][0]
             inverted = self.chaninfo[chan][1]
 
-            widget = QCustomSwitchChannel(chan, ('Closed', 'Open'))
-            if chan + 'shutter' in self.settings:
-                value = yield self.reg.get(chan + 'shutter')
+            widget = QCustomSwitchChannel(chan, ("Closed", "Open"))
+            if chan + "shutter" in self.settings:
+                value = yield self.reg.get(chan + "shutter")
                 widget.TTLswitch.setChecked(bool(value))
             else:
                 widget.TTLswitch.setChecked(False)
 
-            widget.TTLswitch.toggled.connect(lambda state=widget.TTLswitch.isDown(),
-                                             p=port, c=chan, i=inverted:
-                                             self.change_state(state, p, c, i))
+            widget.TTLswitch.toggled.connect(
+                lambda state=widget.TTLswitch.isDown(), p=port, c=chan, i=inverted: self.change_state(
+                    state, p, c, i
+                )
+            )
             self.d[port] = widget
             self.chan_from_port[port] = chan
             layout.addWidget(self.d[port])
@@ -83,8 +87,8 @@ class SwitchClient(QFrame):
 
     @inlineCallbacks
     def change_state(self, state, port, chan, inverted):
-        if chan + 'shutter' in self.settings:
-            yield self.reg.set(chan + 'shutter', state)
+        if chan + "shutter" in self.settings:
+            yield self.reg.set(chan + "shutter", state)
         if inverted:
             state = not state
         yield self.server.ttl_output(port, state)
@@ -95,8 +99,8 @@ class SwitchClient(QFrame):
         state = signal[1]
         chan = self.chan_from_port[port]
         if port in self.d.keys():
-            if chan + 'shutter' in self.settings:
-                yield self.reg.set(chan + 'shutter', state)
+            if chan + "shutter" in self.settings:
+                yield self.reg.set(chan + "shutter", state)
             inverted = self.chaninfo[chan][1]
             if inverted:
                 state = not state
@@ -109,8 +113,10 @@ class SwitchClient(QFrame):
 if __name__ == "__main__":
     a = QApplication([])
     import qt5reactor
+
     qt5reactor.install()
     from twisted.internet import reactor
+
     switchWidget = SwitchClient(reactor)
     switchWidget.show()
     reactor.run()

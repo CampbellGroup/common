@@ -1,15 +1,13 @@
 from common.lib.clients.qtui.QCustomSpinBox import QCustomSpinBox
 from twisted.internet.defer import inlineCallbacks
 from PyQt4 import QtGui
-from common.lib.clients.qtui.q_custom_text_changing_button import \
-    TextChangingButton
+from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
 
 
 class rigolclient(QtGui.QWidget):
 
-    def __init__(self, reactor, parent = None):
-        """initializels the GUI creates the reactor
-        """
+    def __init__(self, reactor, parent=None):
+        """initializels the GUI creates the reactor"""
         super(rigolclient, self).__init__()
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
@@ -17,12 +15,12 @@ class rigolclient(QtGui.QWidget):
 
     @inlineCallbacks
     def connect(self):
-        """Creates an Asynchronous connection
-        """
+        """Creates an Asynchronous connection"""
         from labrad.wrappers import connectAsync
         from labrad.units import WithUnit as U
+
         self.U = U
-        self.cxn = yield connectAsync(name = "rigol client")
+        self.cxn = yield connectAsync(name="rigol client")
         self.server = self.cxn.rigol_dg1022_server
         self.devicelist = yield self.server.list_devices()
         if self.devicelist:
@@ -33,9 +31,9 @@ class rigolclient(QtGui.QWidget):
 
         layout = QtGui.QGridLayout()
 
-        self.setWindowTitle('Rigol DG1022 Control')
+        self.setWindowTitle("Rigol DG1022 Control")
 
-        qBox = QtGui.QGroupBox('Rigol DG1022')
+        qBox = QtGui.QGroupBox("Rigol DG1022")
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
         layout.addWidget(qBox, 0, 0)
@@ -43,17 +41,16 @@ class rigolclient(QtGui.QWidget):
         self.deviceselect = QtGui.QComboBox(self)
         self.updatedevices()
 
-
-        self.offsetwidget1 = QCustomSpinBox('Offset', (-5, 5))
-        self.offsetwidget2 = QCustomSpinBox('Offset', (-5, 5))
-        self.volt1widget = QCustomSpinBox('Amplitude (Vpp)', (-10, 10))
-        self.freq1widget = QCustomSpinBox('Frequency (Hz)', (0, 40e6))
-        self.volt2widget = QCustomSpinBox('Amplitude (Vpp)', (-10, 10))
-        self.freq2widget = QCustomSpinBox('Frequency (Hz)', (0, 40e6))
+        self.offsetwidget1 = QCustomSpinBox("Offset", (-5, 5))
+        self.offsetwidget2 = QCustomSpinBox("Offset", (-5, 5))
+        self.volt1widget = QCustomSpinBox("Amplitude (Vpp)", (-10, 10))
+        self.freq1widget = QCustomSpinBox("Frequency (Hz)", (0, 40e6))
+        self.volt2widget = QCustomSpinBox("Amplitude (Vpp)", (-10, 10))
+        self.freq2widget = QCustomSpinBox("Frequency (Hz)", (0, 40e6))
         self.waveselect1 = QtGui.QComboBox(self)
         self.waveselect2 = QtGui.QComboBox(self)
-        self.output1 = TextChangingButton(('On','Off'))
-        self.output2 = TextChangingButton(('On','Off'))
+        self.output1 = TextChangingButton(("On", "Off"))
+        self.output2 = TextChangingButton(("On", "Off"))
 
         self.waveselect1.addItem("sine")
         self.waveselect1.addItem("square")
@@ -71,44 +68,80 @@ class rigolclient(QtGui.QWidget):
         self.waveselect2.addItem("DC")
         self.waveselect2.addItem("USER")
 
-        self.output1.toggled.connect(lambda state = self.output1.isDown(), chan = 1, : self.setoutput(chan, state))
-        self.output2.toggled.connect(lambda state = self.output1.isDown(), chan = 2, : self.setoutput(chan, state))
-        self.volt1widget.spinLevel.valueChanged.connect(lambda value = self.volt1widget.spinLevel.value(), chan = 1 : self.voltchanged(chan, value))
-        self.volt2widget.spinLevel.valueChanged.connect(lambda value = self.volt2widget.spinLevel.value(), chan = 2 : self.voltchanged(chan, value))
-        self.freq1widget.spinLevel.valueChanged.connect(lambda value = self.freq1widget.spinLevel.value(), chan = 1 : self.freqchanged(chan, value))
-        self.freq2widget.spinLevel.valueChanged.connect(lambda value = self.freq2widget.spinLevel.value(), chan = 2 : self.freqchanged(chan, value))
-        self.offsetwidget1.spinLevel.valueChanged.connect(lambda value = self.offsetwidget1.spinLevel.value(), chan = 1 : self.offsetchanged(chan, value))
-        self.offsetwidget2.spinLevel.valueChanged.connect(lambda value = self.offsetwidget2.spinLevel.value(), chan = 2 : self.offsetchanged(chan, value))
-        self.waveselect1.activated[str].connect(lambda wave = self.waveselect1.currentText(), chan = 1 : self.waveselect(chan, wave))
-        self.waveselect2.activated[str].connect(lambda wave = self.waveselect2.currentText(), chan = 2 : self.waveselect(chan, wave))
+        self.output1.toggled.connect(
+            lambda state=self.output1.isDown(), chan=1,: self.setoutput(chan, state)
+        )
+        self.output2.toggled.connect(
+            lambda state=self.output1.isDown(), chan=2,: self.setoutput(chan, state)
+        )
+        self.volt1widget.spinLevel.valueChanged.connect(
+            lambda value=self.volt1widget.spinLevel.value(), chan=1: self.voltchanged(
+                chan, value
+            )
+        )
+        self.volt2widget.spinLevel.valueChanged.connect(
+            lambda value=self.volt2widget.spinLevel.value(), chan=2: self.voltchanged(
+                chan, value
+            )
+        )
+        self.freq1widget.spinLevel.valueChanged.connect(
+            lambda value=self.freq1widget.spinLevel.value(), chan=1: self.freqchanged(
+                chan, value
+            )
+        )
+        self.freq2widget.spinLevel.valueChanged.connect(
+            lambda value=self.freq2widget.spinLevel.value(), chan=2: self.freqchanged(
+                chan, value
+            )
+        )
+        self.offsetwidget1.spinLevel.valueChanged.connect(
+            lambda value=self.offsetwidget1.spinLevel.value(), chan=1: self.offsetchanged(
+                chan, value
+            )
+        )
+        self.offsetwidget2.spinLevel.valueChanged.connect(
+            lambda value=self.offsetwidget2.spinLevel.value(), chan=2: self.offsetchanged(
+                chan, value
+            )
+        )
+        self.waveselect1.activated[str].connect(
+            lambda wave=self.waveselect1.currentText(), chan=1: self.waveselect(
+                chan, wave
+            )
+        )
+        self.waveselect2.activated[str].connect(
+            lambda wave=self.waveselect2.currentText(), chan=2: self.waveselect(
+                chan, wave
+            )
+        )
         self.deviceselect.activated[str].connect(self.changedevice)
-        subLayout.addWidget(self.freq1widget, 1,0)
-        subLayout.addWidget(self.volt1widget, 1,1)
-        subLayout.addWidget(self.freq2widget, 1,2)
-        subLayout.addWidget(self.volt2widget, 1,3)
-        subLayout.addWidget(self.waveselect1, 2,0, 1,2)
-        subLayout.addWidget(self.waveselect2, 2,2, 1,2)
-        subLayout.addWidget(self.offsetwidget1, 3,0)
-        subLayout.addWidget(self.offsetwidget2, 3,2)
-        subLayout.addWidget(self.output1,      3,1)
-        subLayout.addWidget(self.output2,      3,3)
-        subLayout.addWidget(self.deviceselect, 0,3)
+        subLayout.addWidget(self.freq1widget, 1, 0)
+        subLayout.addWidget(self.volt1widget, 1, 1)
+        subLayout.addWidget(self.freq2widget, 1, 2)
+        subLayout.addWidget(self.volt2widget, 1, 3)
+        subLayout.addWidget(self.waveselect1, 2, 0, 1, 2)
+        subLayout.addWidget(self.waveselect2, 2, 2, 1, 2)
+        subLayout.addWidget(self.offsetwidget1, 3, 0)
+        subLayout.addWidget(self.offsetwidget2, 3, 2)
+        subLayout.addWidget(self.output1, 3, 1)
+        subLayout.addWidget(self.output2, 3, 3)
+        subLayout.addWidget(self.deviceselect, 0, 3)
 
         self.setLayout(layout)
 
     @inlineCallbacks
     def voltchanged(self, chan, value):
-        value = self.U(value, 'V')
+        value = self.U(value, "V")
         yield self.server.amplitude(chan, value)
 
     @inlineCallbacks
     def freqchanged(self, chan, value):
-        value = self.U(value, 'Hz')
+        value = self.U(value, "Hz")
         yield self.server.frequency(chan, value)
 
     @inlineCallbacks
     def offsetchanged(self, chan, value):
-        value = self.U(value, 'V')
+        value = self.U(value, "V")
         yield self.server.offset(chan, value)
 
     @inlineCallbacks
@@ -117,7 +150,7 @@ class rigolclient(QtGui.QWidget):
 
     @inlineCallbacks
     def waveselect(self, chan, wave):
-        if wave == 'DC':
+        if wave == "DC":
             if chan == 1:
                 self.freq1widget.setEnabled(False)
             else:
@@ -129,13 +162,12 @@ class rigolclient(QtGui.QWidget):
 
     @inlineCallbacks
     def changedevice(self, deviceid):
-        if deviceid == 'Refresh List':
+        if deviceid == "Refresh List":
             yield self.server.refresh()
             self.updatedevices()
         else:
             self.server.release_device()
             self.server.select_device(int(deviceid[1]))
-
 
     @inlineCallbacks
     def updatedevices(self):
@@ -143,17 +175,19 @@ class rigolclient(QtGui.QWidget):
         self.devicelist = yield self.server.list_devices()
         for device in self.devicelist:
             self.deviceselect.addItem(str(device))
-        self.deviceselect.addItem('Refresh List')
-
+        self.deviceselect.addItem("Refresh List")
 
     def closeEvent(self, x):
         self.reactor.stop()
 
+
 if __name__ == "__main__":
     a = QtGui.QApplication([])
     import qt4reactor
+
     qt4reactor.install()
     from twisted.internet import reactor
+
     rigolWidget = rigolclient(reactor)
     rigolWidget.show()
     reactor.run()

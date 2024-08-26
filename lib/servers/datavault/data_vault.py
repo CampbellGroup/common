@@ -56,6 +56,7 @@ import helpers
 
 # filename translation
 
+
 class Session(object):
     """Stores information about a directory on disk.
 
@@ -63,6 +64,7 @@ class Session(object):
     The session object manages reading from and writing to the config
     file, and manages the datasets in this directory.
     """
+
     # keep a dictionary of all created session objects
     _sessions = {}
 
@@ -98,7 +100,7 @@ class Session(object):
         self.path = path
         self.parent = parent
         self.dir = helpers.file_dir(path)
-        self.infofile = os.path.join(self.dir, 'session.ini')
+        self.infofile = os.path.join(self.dir, "session.ini")
         self.datasets = {}
 
         if not os.path.exists(self.dir):
@@ -124,18 +126,18 @@ class Session(object):
         s = SafeConfigParser()
         s.read(self.infofile)
 
-        sec = 'File System'
-        self.counter = s.getint(sec, 'Counter')
+        sec = "File System"
+        self.counter = s.getint(sec, "Counter")
 
-        sec = 'Information'
-        self.created = helpers.time_from_str(s.get(sec, 'Created'))
-        self.accessed = helpers.time_from_str(s.get(sec, 'Accessed'))
-        self.modified = helpers.time_from_str(s.get(sec, 'Modified'))
+        sec = "Information"
+        self.created = helpers.time_from_str(s.get(sec, "Created"))
+        self.accessed = helpers.time_from_str(s.get(sec, "Accessed"))
+        self.modified = helpers.time_from_str(s.get(sec, "Modified"))
 
         # get tags if they're there
-        if s.has_section('Tags'):
-            self.session_tags = eval(s.get('Tags', 'sessions', raw=True))
-            self.dataset_tags = eval(s.get('Tags', 'datasets', raw=True))
+        if s.has_section("Tags"):
+            self.session_tags = eval(s.get("Tags", "sessions", raw=True))
+            self.dataset_tags = eval(s.get("Tags", "datasets", raw=True))
         else:
             self.session_tags = {}
             self.dataset_tags = {}
@@ -144,22 +146,22 @@ class Session(object):
         """Save info to the session.ini file."""
         s = SafeConfigParser()
 
-        sec = 'File System'
+        sec = "File System"
         s.add_section(sec)
-        s.set(sec, 'Counter', repr(self.counter))
+        s.set(sec, "Counter", repr(self.counter))
 
-        sec = 'Information'
+        sec = "Information"
         s.add_section(sec)
-        s.set(sec, 'Created', helpers.time_to_str(self.created))
-        s.set(sec, 'Accessed', helpers.time_to_str(self.accessed))
-        s.set(sec, 'Modified', helpers.time_to_str(self.modified))
+        s.set(sec, "Created", helpers.time_to_str(self.created))
+        s.set(sec, "Accessed", helpers.time_to_str(self.accessed))
+        s.set(sec, "Modified", helpers.time_to_str(self.modified))
 
-        sec = 'Tags'
+        sec = "Tags"
         s.add_section(sec)
-        s.set(sec, 'sessions', repr(self.session_tags))
-        s.set(sec, 'datasets', repr(self.dataset_tags))
+        s.set(sec, "sessions", repr(self.session_tags))
+        s.set(sec, "datasets", repr(self.dataset_tags))
 
-        with open(self.infofile, 'w') as f:
+        with open(self.infofile, "w") as f:
             s.write(f)
 
     def access(self):
@@ -170,23 +172,21 @@ class Session(object):
     def list_contents(self, tag_filters):
         """Get a list of directory names in this directory."""
         files = os.listdir(self.dir)
-        dirs = [helpers.ds_decode(s[:-4]) for s in files if s.endswith('.dir')]
-        datasets = [helpers.ds_decode(s[:-4]) for s in files if s.endswith('.csv')]
+        dirs = [helpers.ds_decode(s[:-4]) for s in files if s.endswith(".dir")]
+        datasets = [helpers.ds_decode(s[:-4]) for s in files if s.endswith(".csv")]
 
         # apply tag filters
 
         def include(entries, tag, tags):
             """Include only entries that have the specified tag."""
-            return [e for e in entries
-                    if e in tags and tag in tags[e]]
+            return [e for e in entries if e in tags and tag in tags[e]]
 
         def exclude(entries, tag, tags):
             """Exclude all entries that have the specified tag."""
-            return [e for e in entries
-                    if e not in tags or tag not in tags[e]]
+            return [e for e in entries if e not in tags or tag not in tags[e]]
 
         for tag in tag_filters:
-            if tag[:1] == '-':
+            if tag[:1] == "-":
                 tag_filter = exclude
                 tag = tag[1:]
             else:
@@ -198,14 +198,14 @@ class Session(object):
     def list_datasets(self):
         """Get a list of dataset names in this directory."""
         files = os.listdir(self.dir)
-        return [helpers.ds_decode(s[:-4]) for s in files if s.endswith('.csv')]
+        return [helpers.ds_decode(s[:-4]) for s in files if s.endswith(".csv")]
 
     def new_dataset(self, title, independents, dependents, dtype):
         num = self.counter
         self.counter += 1
         self.modified = datetime.now()
 
-        name = '%05d - %s' % (num, title)
+        name = "%05d - %s" % (num, title)
         dataset = Dataset(self, name, dtype, title, create=True)
         for i in independents:
             dataset.add_independent(i)
@@ -223,7 +223,7 @@ class Session(object):
         num = self.counter
         self.counter += 1
         self.modified = datetime.now()
-        name = '%05d - %s' % (num, title)
+        name = "%05d - %s" % (num, title)
         dataset = Dataset(self, name, dtype, title, create=True)
         dataset.matrixrows = size[0]
         dataset.matrixcolumns = size[1]
@@ -246,7 +246,7 @@ class Session(object):
             raise DatasetNotFoundError(name)
 
         filename = helpers.ds_encode(name)
-        if not os.path.exists(os.path.join(self.dir, filename + '.csv')):
+        if not os.path.exists(os.path.join(self.dir, filename + ".csv")):
             raise DatasetNotFoundError(name)
 
         if name in self.datasets:
@@ -269,13 +269,13 @@ class Session(object):
                     d[entry] = set()
                 entry_tags = d[entry]
                 for tag in tags:
-                    if tag[:1] == '-':
+                    if tag[:1] == "-":
                         # remove this tag
                         tag = tag[1:]
                         if tag in entry_tags:
                             entry_tags.remove(tag)
                             changed = True
-                    elif tag[:1] == '^':
+                    elif tag[:1] == "^":
                         # toggle this tag
                         tag = tag[1:]
                         if tag in entry_tags:
@@ -308,12 +308,12 @@ class Session(object):
 
 
 class DataVault(LabradServer):
-    name = 'Data Vault'
+    name = "Data Vault"
 
     @inlineCallbacks
     def initServer(self):
         # load configuration info from registry
-        path = ['', 'Servers', self.name, 'Repository']
+        path = ["", "Servers", self.name, "Repository"]
         nodename = util.getNodeName()
         reg = self.client.registry
         try:
@@ -321,32 +321,36 @@ class DataVault(LabradServer):
                 # try to load for this node
                 p = reg.packet()
                 p.cd(path)
-                p.get(nodename, 's')
+                p.get(nodename, "s")
                 ans = yield p.send()
             except Exception as e:
                 print(e)
                 # try to load default
                 p = reg.packet()
                 p.cd(path)
-                p.get('__default__', 's')
+                p.get("__default__", "s")
                 ans = yield p.send()
             Globals.DATADIR = ans.get
             got_location = True
         except Exception as e:
             print(e)
             try:
-                print('Could not load repository location from registry.')
-                print('Please enter data storage directory or hit enter to use the current directory:')
-                Globals.DATADIR = input('>>>')
-                if Globals.DATADIR == '':
-                    Globals.DATADIR = os.path.join(os.path.split(__file__)[0], '__data__')
+                print("Could not load repository location from registry.")
+                print(
+                    "Please enter data storage directory or hit enter to use the current directory:"
+                )
+                Globals.DATADIR = input(">>>")
+                if Globals.DATADIR == "":
+                    Globals.DATADIR = os.path.join(
+                        os.path.split(__file__)[0], "__data__"
+                    )
                 if not os.path.exists(Globals.DATADIR):
                     os.makedirs(Globals.DATADIR)
                 # set as default and for this node
                 p = reg.packet()
                 p.cd(path, True)
                 p.set(nodename, Globals.DATADIR)
-                p.set('__default__', Globals.DATADIR)
+                p.set("__default__", Globals.DATADIR)
                 yield p.send()
                 print(Globals.DATADIR, "has been saved in the registry")
                 print("as the data location.")
@@ -360,13 +364,13 @@ class DataVault(LabradServer):
                 sys.exit()
         # create root session
         # root = Session([''], self)
-        self.root = Session([''], self)
+        self.root = Session([""], self)
 
     def initContext(self, c):
         # start in the root session
-        c['path'] = ['']
+        c["path"] = [""]
         # start listening to the root session
-        Session([''], self).listeners.add(c.ID)
+        Session([""], self).listeners.add(c.ID)
 
     def expireContext(self, c):
         """Stop sending any signals to this context."""
@@ -385,34 +389,41 @@ class DataVault(LabradServer):
 
     def get_session(self, c):
         """Get a session object for the current path."""
-        return Session(c['path'], self)
+        return Session(c["path"], self)
 
     def get_dataset(self, c):
         """Get a dataset object for the current dataset."""
-        if 'dataset' not in c:
+        if "dataset" not in c:
             raise NoDatasetError()
         session = self.get_session(c)
-        return session.datasets[c['dataset']]
+        return session.datasets[c["dataset"]]
 
     # session signals
-    onNewDir = Signal(543617, 'signal: new dir', 's')
-    onNewDirectory = Signal(543624, 'signal: new directory', 's')  # MK
-    onNewDataset = Signal(543618, 'signal: new dataset', 's')
-    onNewDatasetDir = Signal(543623, 'signal: new dataset dir', '(s,?)')  # MR
-    onTagsUpdated = Signal(543622, 'signal: tags updated', '*(s*s)*(s*s)')
+    onNewDir = Signal(543617, "signal: new dir", "s")
+    onNewDirectory = Signal(543624, "signal: new directory", "s")  # MK
+    onNewDataset = Signal(543618, "signal: new dataset", "s")
+    onNewDatasetDir = Signal(543623, "signal: new dataset dir", "(s,?)")  # MR
+    onTagsUpdated = Signal(543622, "signal: tags updated", "*(s*s)*(s*s)")
 
     # dataset signals
-    onDataAvailable = Signal(543619, 'signal: data available', '')
-    onNewParameterDataset = Signal(543620, 'signal: new parameter dataset', '(i, s, ?, s)')
-    onNewParameter = Signal(543625, 'signal: new parameter', '')
-    onNewAdditionalHeader = Signal(543626, 'signal: new additional header', '')
-    onNewAdditionalHeaderDataset = Signal(543627, 'signal: new additional header dataset', '(i, s, ?, s)')
-    onCommentsAvailable = Signal(543621, 'signal: comments available', '')
+    onDataAvailable = Signal(543619, "signal: data available", "")
+    onNewParameterDataset = Signal(
+        543620, "signal: new parameter dataset", "(i, s, ?, s)"
+    )
+    onNewParameter = Signal(543625, "signal: new parameter", "")
+    onNewAdditionalHeader = Signal(543626, "signal: new additional header", "")
+    onNewAdditionalHeaderDataset = Signal(
+        543627, "signal: new additional header dataset", "(i, s, ?, s)"
+    )
+    onCommentsAvailable = Signal(543621, "signal: comments available", "")
 
-    @setting(6, tag_filters=['s', '*s'], include_tags='b',
-             returns=['*s{subdirs}, *s{datasets}',
-                      '*(s*s){subdirs}, *(s*s){datasets}'])
-    def dir(self, c, tag_filters=('-trash',), include_tags=None):
+    @setting(
+        6,
+        tag_filters=["s", "*s"],
+        include_tags="b",
+        returns=["*s{subdirs}, *s{datasets}", "*(s*s){subdirs}, *(s*s){datasets}"],
+    )
+    def dir(self, c, tag_filters=("-trash",), include_tags=None):
         """Get subdirectories and datasets in the current directory."""
         # print 'dir:', tagFilters, includeTags
         if isinstance(tag_filters, str):
@@ -423,12 +434,17 @@ class DataVault(LabradServer):
             dirs, datasets = sess.get_tags(dirs, datasets)
         return dirs, datasets
 
-    @setting(7, path=['s{get current directory}',
-                      's{change into this directory}',
-                      '*s{change into each directory in sequence}',
-                      'w{go up by this many directories}'],
-             create='b',
-             returns='*s')
+    @setting(
+        7,
+        path=[
+            "s{get current directory}",
+            "s{change into this directory}",
+            "*s{change into each directory in sequence}",
+            "w{go up by this many directories}",
+        ],
+        create="b",
+        returns="*s",
+    )
     def cd(self, c, path=None, create=False):
         """Change the current directory.
 
@@ -437,33 +453,33 @@ class DataVault(LabradServer):
         Returns the path to the new current directory.
         """
         if path is None:
-            return c['path']
+            return c["path"]
 
-        temp = c['path'][:]  # copy the current path
+        temp = c["path"][:]  # copy the current path
         if isinstance(path, int):
             if path > 0:
                 temp = temp[:-path]
                 if not len(temp):
-                    temp = ['']
+                    temp = [""]
         else:
             if isinstance(path, str):
                 path = [path]
             for directory in path:
-                if directory == '':
-                    temp = ['']
+                if directory == "":
+                    temp = [""]
                 else:
                     temp.append(directory)
                 if not Session.exists(temp) and not create:
                     raise DirectoryNotFoundError(temp)
                 session = Session(temp, self)  # touch the session
-        if c['path'] != temp:
+        if c["path"] != temp:
             # stop listening to old session and start listening to new session
-            Session(c['path'], self).listeners.remove(c.ID)
+            Session(c["path"], self).listeners.remove(c.ID)
             Session(temp, self).listeners.add(c.ID)
-            c['path'] = temp
-        return c['path']
+            c["path"] = temp
+        return c["path"]
 
-    @setting(8, name='s', returns='*s')
+    @setting(8, name="s", returns="*s")
     def mkdir(self, c, name):
         """Make a new subdirectory in the current directory.
 
@@ -472,19 +488,24 @@ class DataVault(LabradServer):
         Directory name cannot be empty.  Returns the path to the
         created directory.
         """
-        if name == '':
+        if name == "":
             raise EmptyNameError(path=None)
-        path = c['path'] + [name]
+        path = c["path"] + [name]
         self.onNewDirectory(str(path), self.root.listeners)  # MK
         if Session.exists(path):
             raise DirectoryExistsError(path)
         sess = Session(path, self)  # make the new directory
         return path
 
-    @setting(9, name='s', independents=['*s', '*(ss)'],
-             dependents=['*s', '*(sss)'], dtype='s',
-             returns='(*s{path}, s{name})')
-    def new(self, c, name, independents, dependents, dtype='f'):
+    @setting(
+        9,
+        name="s",
+        independents=["*s", "*(ss)"],
+        dependents=["*s", "*(sss)"],
+        dtype="s",
+        returns="(*s{path}, s{name})",
+    )
+    def new(self, c, name, independents, dependents, dtype="f"):
         """Create a new Dataset.
 
         Independent and dependent variables can be specified either
@@ -496,35 +517,37 @@ class DataVault(LabradServer):
         a legend entry that should be unique for each trace.
         Returns the path and name for this dataset.
         """
-        if len(dtype) != 1 or dtype not in 'fs':
+        if len(dtype) != 1 or dtype not in "fs":
             raise TypeError("dtype keyword only accepts 'f' or 's'")
         session = self.get_session(c)
-        dataset = session.new_dataset(name or 'untitled', independents, dependents, dtype)
+        dataset = session.new_dataset(
+            name or "untitled", independents, dependents, dtype
+        )
         self.onNewDatasetDir((dataset.name, session.path), self.root.listeners)  # MR
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['filepos'] = 0  # start at the beginning
-        c['commentpos'] = 0
-        c['writing'] = True
-        return c['path'], c['dataset']
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["filepos"] = 0  # start at the beginning
+        c["commentpos"] = 0
+        c["writing"] = True
+        return c["path"], c["dataset"]
 
-    @setting(73, name='s', dtype='s', size='*i', returns='(*s{path}, s{name})')
+    @setting(73, name="s", dtype="s", size="*i", returns="(*s{path}, s{name})")
     def new_matrix(self, c, name, size, dtype):
         """Create a new Matrix dataset
 
         the size specifies dimensions [row, column]
         """
-        if len(dtype) != 1 or dtype not in 'fs':
+        if len(dtype) != 1 or dtype not in "fs":
             raise TypeError("dtype keyword only accepts 'f' or 's'")
         session = self.get_session(c)
-        dataset = session.new_matrix_dataset(name or 'untitled', size, dtype)
+        dataset = session.new_matrix_dataset(name or "untitled", size, dtype)
         self.onNewDatasetDir((dataset.name, session.path), self.root.listeners)  # MR
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['filepos'] = 0  # start at the beginning
-        c['commentpos'] = 0
-        c['writing'] = True
-        return c['path'], c['dataset']
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["filepos"] = 0  # start at the beginning
+        c["commentpos"] = 0
+        c["writing"] = True
+        return c["path"], c["dataset"]
 
-    @setting(10, name=['s', 'w'], returns='(*s{path}, s{name})')
+    @setting(10, name=["s", "w"], returns="(*s{path}, s{name})")
     def open(self, c, name):
         """Open a Dataset for reading.
 
@@ -533,15 +556,15 @@ class DataVault(LabradServer):
         """
         session = self.get_session(c)
         dataset = session.open_dataset(name)
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['filepos'] = 0
-        c['commentpos'] = 0
-        c['writing'] = False
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["filepos"] = 0
+        c["commentpos"] = 0
+        c["writing"] = False
         dataset.keep_streaming(c.ID, 0)
         dataset.keep_streaming_comments(c.ID, 0)
-        return c['path'], c['dataset']
+        return c["path"], c["dataset"]
 
-    @setting(11, name=['s', 'w'], returns='(*s{path}, s{name})')
+    @setting(11, name=["s", "w"], returns="(*s{path}, s{name})")
     def open_appendable(self, c, name):
         """Open a Dataset for reading and appending.
 
@@ -550,18 +573,24 @@ class DataVault(LabradServer):
         """
         session = self.get_session(c)
         dataset = session.open_dataset(name)
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['filepos'] = 0
-        c['commentpos'] = 0
-        c['writing'] = True
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["filepos"] = 0
+        c["commentpos"] = 0
+        c["writing"] = True
         dataset.keep_streaming(c.ID, 0)
         dataset.keep_streaming_comments(c.ID, 0)
-        return c['path'], c['dataset']
+        return c["path"], c["dataset"]
 
-    @setting(20, data=['*v: add one row of data',
-                       '*2v: add multiple rows of data',
-                       '*s: add string of data',
-                       '*2s: add multiple strings'], returns='')
+    @setting(
+        20,
+        data=[
+            "*v: add one row of data",
+            "*2v: add multiple rows of data",
+            "*s: add string of data",
+            "*2s: add multiple strings",
+        ],
+        returns="",
+    )
     def add(self, c, data):
         """Add data to the current dataset.
 
@@ -570,11 +599,11 @@ class DataVault(LabradServer):
         (independents + dependents).
         """
         dataset = self.get_dataset(c)
-        if not c['writing']:
+        if not c["writing"]:
             raise ReadOnlyError()
         dataset.add_data(data)
 
-    @setting(21, limit='w', start_over='b', returns=['*2v', '*2s', '*s'])
+    @setting(21, limit="w", start_over="b", returns=["*2v", "*2s", "*s"])
     def get(self, c, limit=None, start_over=False):
         """Get data from the current dataset.
 
@@ -585,14 +614,14 @@ class DataVault(LabradServer):
         in this context is returned.
         """
         dataset = self.get_dataset(c)
-        c['filepos'] = 0 if start_over else c['filepos']
-        data, c['filepos'] = dataset.get_data(limit, c['filepos'])
-        dataset.keep_streaming(c.ID, c['filepos'])
+        c["filepos"] = 0 if start_over else c["filepos"]
+        data, c["filepos"] = dataset.get_data(limit, c["filepos"])
+        dataset.keep_streaming(c.ID, c["filepos"])
         return data
 
     # Add in saving camera images as a .npy with the dataset
 
-    @setting(22, data='*i', image_size='*i', repetitions='i', filename='s', returns='')
+    @setting(22, data="*i", image_size="*i", repetitions="i", filename="s", returns="")
     def save_image(self, c, data, image_size, repetitions, filename):
         """
         Save a CCD image of the open dataest to a .npy file
@@ -603,7 +632,7 @@ class DataVault(LabradServer):
         image = Image(session, filename)
         image.add_data(data)
 
-    @setting(100, returns='(*(ss){independents}, *(sss){dependents})')
+    @setting(100, returns="(*(ss){independents}, *(sss){dependents})")
     def variables(self, c):
         """Get the independent and dependent variables for the current dataset.
 
@@ -613,31 +642,31 @@ class DataVault(LabradServer):
         traces, while legend is unique to each trace.
         """
         ds = self.get_dataset(c)
-        ind = [(i['label'], i['units']) for i in ds.independents]
-        dep = [(d['category'], d['label'], d['units']) for d in ds.dependents]
+        ind = [(i["label"], i["units"]) for i in ds.independents]
+        dep = [(d["category"], d["label"], d["units"]) for d in ds.dependents]
         return ind, dep
 
-    @setting(120, returns='*s')
+    @setting(120, returns="*s")
     def parameters(self, c):
         """Get a list of parameter names."""
         dataset = self.get_dataset(c)
         # send a message when new parameters are added
         dataset.param_listeners.add(c.ID)
-        return [par['label'] for par in dataset.parameters]
+        return [par["label"] for par in dataset.parameters]
 
-    @setting(121, 'add parameter', name='s', returns='')
+    @setting(121, "add parameter", name="s", returns="")
     def add_parameter(self, c, name, data):
         """Add a new parameter to the current dataset."""
         dataset = self.get_dataset(c)
         dataset.add_parameter(name, data)
 
-    @setting(122, 'get parameter', name='s')
+    @setting(122, "get parameter", name="s")
     def get_parameter(self, c, name, case_sensitive=True):
         """Get the value of a parameter."""
         dataset = self.get_dataset(c)
         return dataset.get_parameter(name, case_sensitive)
 
-    @setting(123, 'get parameters')
+    @setting(123, "get parameters")
     def get_parameters(self, c):
         """Get all parameters.
 
@@ -646,7 +675,7 @@ class DataVault(LabradServer):
         are not allowed).
         """
         dataset = self.get_dataset(c)
-        names = [par['label'] for par in dataset.parameters]
+        names = [par["label"] for par in dataset.parameters]
         params = tuple((name, dataset.get_parameter(name)) for name in names)
         # send a message when new parameters are added
         dataset.param_listeners.add(c.ID)
@@ -689,13 +718,18 @@ class DataVault(LabradServer):
                     curdirs = [(list(key[1]), item)]
                     yield self.read_pars_int(c, ctx, dataset, curdirs, subdirs)
                 else:
-                    dataset.add_parameter(' -> '.join(key[1]), item, save_now=False)
+                    dataset.add_parameter(" -> ".join(key[1]), item, save_now=False)
 
-    @setting(125, 'import parameters',
-             subdirs=[' : Import current directory',
-                      'w: Include this many levels of subdirectories (0=all)',
-                      '*s: Include these subdirectories'],
-             returns='')
+    @setting(
+        125,
+        "import parameters",
+        subdirs=[
+            " : Import current directory",
+            "w: Include this many levels of subdirectories (0=all)",
+            "*s: Include these subdirectories",
+        ],
+        returns="",
+    )
     def import_parameters(self, c, subdirs=None):
         """Reads all entries from the current registry directory, optionally
         including subdirectories, as parameters into the current dataset."""
@@ -711,13 +745,13 @@ class DataVault(LabradServer):
         yield self.read_pars_int(c, ctx, dataset, curdirs, subdirs)
         dataset.save()  # make sure the new parameters get saved
 
-    @setting(126, 'add parameter over write', name='s', returns='')
+    @setting(126, "add parameter over write", name="s", returns="")
     def add_parameter_over_write(self, c, name, data):
         """Add a new parameter to the current dataset."""
         dataset = self.get_dataset(c)
         dataset.add_parameter_overwrite(name, data)
 
-    @setting(127, 'wait for parameter', name='s', timeout='i')
+    @setting(127, "wait for parameter", name="s", timeout="i")
     def wait_for_parameter(self, c, name, timeout=60):
         """Wait for parameter"""
         dataset = self.get_dataset(c)
@@ -731,24 +765,35 @@ class DataVault(LabradServer):
         result = yield d
         returnValue(result)
 
-    @setting(200, 'add comment', comment=['s'], user=['s'], returns=[''])
-    def add_comment(self, c, comment, user='anonymous'):
+    @setting(200, "add comment", comment=["s"], user=["s"], returns=[""])
+    def add_comment(self, c, comment, user="anonymous"):
         """Add a comment to the current dataset."""
         dataset = self.get_dataset(c)
         return dataset.add_comment(user, comment)
 
-    @setting(201, 'get comments', limit=['w'], start_over=['b'],
-             returns=['*(t, s{user}, s{comment})'])
+    @setting(
+        201,
+        "get comments",
+        limit=["w"],
+        start_over=["b"],
+        returns=["*(t, s{user}, s{comment})"],
+    )
     def get_comments(self, c, limit=None, start_over=False):
         """Get comments for the current dataset."""
         dataset = self.get_dataset(c)
-        c['commentpos'] = 0 if start_over else c['commentpos']
-        comments, c['commentpos'] = dataset.get_comments(limit, c['commentpos'])
-        dataset.keep_streaming_comments(c.ID, c['commentpos'])
+        c["commentpos"] = 0 if start_over else c["commentpos"]
+        comments, c["commentpos"] = dataset.get_comments(limit, c["commentpos"])
+        dataset.keep_streaming_comments(c.ID, c["commentpos"])
         return comments
 
-    @setting(300, 'update tags', tags=['s', '*s'], dirs=['s', '*s'],
-             datasets=['s', '*s'], returns='')
+    @setting(
+        300,
+        "update tags",
+        tags=["s", "*s"],
+        dirs=["s", "*s"],
+        datasets=["s", "*s"],
+        returns="",
+    )
     def update_tags(self, c, tags, dirs, datasets=None):
         """Update the tags for the specified directories and datasets.
 
@@ -770,8 +815,9 @@ class DataVault(LabradServer):
         sess = self.get_session(c)
         sess.update_tags(tags, dirs, datasets)
 
-    @setting(301, 'get tags', dirs=['s', '*s'], datasets=['s', '*s'],
-             returns='*(s*s)*(s*s)')
+    @setting(
+        301, "get tags", dirs=["s", "*s"], datasets=["s", "*s"], returns="*(s*s)*(s*s)"
+    )
     def get_tags(self, c, dirs, datasets):
         """Get tags for directories and datasets in the current dir."""
         sess = self.get_session(c)
@@ -781,7 +827,7 @@ class DataVault(LabradServer):
             datasets = [datasets]
         return sess.get_tags(dirs, datasets)
 
-    @setting(128, 'add additional header', header_name='s', name='s', returns='')
+    @setting(128, "add additional header", header_name="s", name="s", returns="")
     def add_additional_header(self, c, header_name, name, data):
         """
         Add a new additional header to the current dataset.
@@ -790,7 +836,7 @@ class DataVault(LabradServer):
         dataset = self.get_dataset(c)
         dataset.add_additional_header(header_name, name, data)
 
-    @setting(129, returns='*(ss)')
+    @setting(129, returns="*(ss)")
     def additional_headers(self, c):
         """Get a list of additional header (header_name, name) tuples."""
         dataset = self.get_dataset(c)
@@ -802,13 +848,13 @@ class DataVault(LabradServer):
                 additional_headers.append((header, item["label"]))
         return additional_headers
 
-    @setting(130, 'get additional header', header_name='s', name='s')
+    @setting(130, "get additional header", header_name="s", name="s")
     def get_additional_header(self, c, header_name, name, case_sensitive=True):
         """Get the value of an additional header."""
         dataset = self.get_dataset(c)
         return dataset.get_additional_header(header_name, name, case_sensitive)
 
-    @setting(131, 'get additional headers')
+    @setting(131, "get additional headers")
     def get_additional_headers(self, c):
         """Get all additional headers.
 
@@ -829,7 +875,7 @@ class DataVault(LabradServer):
 
 __server__ = DataVault()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
 
     util.runServer(__server__)

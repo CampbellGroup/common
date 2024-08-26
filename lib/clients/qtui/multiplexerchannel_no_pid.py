@@ -2,8 +2,9 @@ import sys
 from PyQt4 import QtGui, QtCore
 from common.lib.clients.qtui.QCustomPowerMeter import MQProgressBar
 from common.lib.clients.qtui.QCustomSlideIndicator import SlideIndicator
-from common.lib.clients.qtui.q_custom_text_changing_button import \
-    TextChangingButton as _TextChangingButton
+from common.lib.clients.qtui.q_custom_text_changing_button import (
+    TextChangingButton as _TextChangingButton,
+)
 
 
 class StretchedLabel(QtGui.QLabel):
@@ -37,7 +38,7 @@ class QCustomWavemeterChannel(QtGui.QFrame):
     def makeLayout(self, name, wmChannel, frequency, stretchedlabel):
         layout = QtGui.QGridLayout()
 
-        shell_font = 'MS Shell Dlg 2'
+        shell_font = "MS Shell Dlg 2"
         chanName = QtGui.QLabel(name)
         chanName.setFont(QtGui.QFont(shell_font, pointSize=16))
         chanName.setAlignment(QtCore.Qt.AlignCenter)
@@ -55,18 +56,17 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         else:
             self.currentfrequency = QtGui.QLabel(frequency)
 
-
         self.currentfrequency.setFont(QtGui.QFont(shell_font, pointSize=40))
         self.currentfrequency.setAlignment(QtCore.Qt.AlignCenter)
         self.currentfrequency.setMinimumWidth(500)
 
-        exposurelabel = QtGui.QLabel('Set Exposure (ms): ')
+        exposurelabel = QtGui.QLabel("Set Exposure (ms): ")
         exposurelabel.setAlignment(QtCore.Qt.AlignLeft)
         exposurelabel.setFont(QtGui.QFont(shell_font, pointSize=13))
 
-        self.measSwitch = TextChangingButton('WLM Measure')
+        self.measSwitch = TextChangingButton("WLM Measure")
 
-        self.lockChannel = TextChangingButton('Lock Channel')
+        self.lockChannel = TextChangingButton("Lock Channel")
         self.lockChannel.setMinimumWidth(180)
         self.lockChannel.setMaximumWidth(300)
 
@@ -78,14 +78,14 @@ class QCustomWavemeterChannel(QtGui.QFrame):
         self.spinExp.setRange(0, 10000.0)
         self.spinExp.setKeyboardTracking(False)
 
-        layout.addWidget(self.spinExp,          4, 3)
-        layout.addWidget(self.measSwitch,       0, 3)
-        layout.addWidget(self.lockChannel,      1, 3)
-        layout.addWidget(chanName,              0, 1)
-        layout.addWidget(configtitle,           2, 3)
+        layout.addWidget(self.spinExp, 4, 3)
+        layout.addWidget(self.measSwitch, 0, 3)
+        layout.addWidget(self.lockChannel, 1, 3)
+        layout.addWidget(chanName, 0, 1)
+        layout.addWidget(configtitle, 2, 3)
         layout.addWidget(self.currentfrequency, 1, 1, 4, 1)
-        layout.addWidget(exposurelabel,         3, 3)
-        layout.addWidget(self.powermeter,       0, 0, 5, 1)
+        layout.addWidget(exposurelabel, 3, 3)
+        layout.addWidget(self.powermeter, 0, 0, 5, 1)
 
         layout.minimumSize()
 
@@ -100,6 +100,6 @@ class QCustomWavemeterChannel(QtGui.QFrame):
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    icon = QCustomWavemeterChannel('Repumper', 1, 4, 'Under Exposed', False, True)
+    icon = QCustomWavemeterChannel("Repumper", 1, 4, "Under Exposed", False, True)
     icon.show()
     app.exec_()

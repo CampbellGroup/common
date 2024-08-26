@@ -23,15 +23,19 @@ class Sequence:
         # dictionary in the form "time:switches"
         # "time" is expressed as timestep with the given resolution
         # "switches" is a ttl_channel_count-long array with 1 to switch ON, -1 to switch OFF, 0 to do nothing
-        self.ttl_switching_times = {0: numpy.zeros(self.ttl_channel_count, dtype=numpy.int8)}
+        self.ttl_switching_times = {
+            0: numpy.zeros(self.ttl_channel_count, dtype=numpy.int8)
+        }
         # same as the number of keys in the ttl_switching_times dictionary
         self.ttl_switches = 1  # keeps track of how many switches are to be performed
         # for storing information about dds switches, in the format:
         # timestep: {channel_name: integer representing the state}
         self.dds_setting_list = []
 
-        self.advance_dds = PulserConfiguration.ttl_channel_dict['AdvanceDDS'].channel_number
-        self.reset_dds = PulserConfiguration.ttl_channel_dict['ResetDDS'].channel_number
+        self.advance_dds = PulserConfiguration.ttl_channel_dict[
+            "AdvanceDDS"
+        ].channel_number
+        self.reset_dds = PulserConfiguration.ttl_channel_dict["ResetDDS"].channel_number
 
     def add_dds_pulse(self, name: str, start: float, num, typ: str) -> None:
         """
@@ -66,7 +70,7 @@ class Sequence:
 
     def _sec_to_step(self, sec) -> int:
         """converts seconds to time steps"""
-        start = '{0:.9f}'.format(sec)  # round to nanoseconds
+        start = "{0:.9f}".format(sec)  # round to nanoseconds
         start = Decimal(start)  # convert to decimal
         step = (start / self.time_resolution).to_integral_value()
         step = int(step)
@@ -99,13 +103,21 @@ class Sequence:
                 if self.ttl_switching_times[time_step][chan] * value == -1:
                     self.ttl_switching_times[time_step][chan] = 0
                 else:
-                    raise Exception('Double switch at time {} for channel {}'.format(time_step, chan))
+                    raise Exception(
+                        "Double switch at time {} for channel {}".format(
+                            time_step, chan
+                        )
+                    )
             else:
                 self.ttl_switching_times[time_step][chan] = value
         else:
             if self.ttl_switches == self.max_switches:
-                raise Exception("Exceeded maximum number of switches {}".format(self.ttl_switches))
-            self.ttl_switching_times[time_step] = numpy.zeros(self.ttl_channel_count, dtype=numpy.int8)
+                raise Exception(
+                    "Exceeded maximum number of switches {}".format(self.ttl_switches)
+                )
+            self.ttl_switching_times[time_step] = numpy.zeros(
+                self.ttl_channel_count, dtype=numpy.int8
+            )
             self.ttl_switches += 1
             self.ttl_switching_times[time_step][chan] = value
 
@@ -132,12 +144,16 @@ class Sequence:
             return None
         # get the state of the pulser. This will be a dict of the form {name: channel_number}:
         state = self.parent.get_current_dds()
-        pulses_end = {}.fromkeys(state, (0, 'stop'))  # time / boolean whether in a middle of a pulse
-        dds_program = {}.fromkeys(state, b'')
+        pulses_end = {}.fromkeys(
+            state, (0, "stop")
+        )  # time / boolean whether in a middle of a pulse
+        dds_program = {}.fromkeys(state, b"")
         last_time = 0
         start = None
-        entries = sorted(self.dds_setting_list, key=lambda t: t[1])  # sort by starting time
-        possible_error = (0, '')
+        entries = sorted(
+            self.dds_setting_list, key=lambda t: t[1]
+        )  # sort by starting time
+        possible_error = (0, "")
         while True:
             try:
                 name, start, num, typ = entries.pop(0)
@@ -147,35 +163,46 @@ class Sequence:
                     # still have unprogrammed entries
                     self.add_to_program(dds_program, state)
                     self._add_new_switch(last_time, self.advance_dds, 1)
-                    self._add_new_switch(last_time + self.reset_step_duration, self.advance_dds, -1)
+                    self._add_new_switch(
+                        last_time + self.reset_step_duration, self.advance_dds, -1
+                    )
                 # add termination
                 for name in dds_program.keys():
-                    dds_program[name] += b'\x00\x00'
+                    dds_program[name] += b"\x00\x00"
                 # at the end of the sequence, reset dds
                 last_ttl = max(self.ttl_switching_times.keys())
                 self._add_new_switch(last_ttl, self.reset_dds, 1)
-                self._add_new_switch(last_ttl + self.reset_step_duration, self.reset_dds, -1)
+                self._add_new_switch(
+                    last_ttl + self.reset_step_duration, self.reset_dds, -1
+                )
                 return dds_program
             end_time, end_typ = pulses_end[name]
             if start > last_time:
                 # the time has advanced, so need to program the previous state
                 if possible_error[0] == last_time and len(possible_error[1]):
-                    raise Exception(possible_error[1])  # if error exists and belongs to that time
+                    raise Exception(
+                        possible_error[1]
+                    )  # if error exists and belongs to that time
                 self.add_to_program(dds_program, state)
                 if not last_time == 0:
                     self._add_new_switch(last_time, self.advance_dds, 1)
-                    self._add_new_switch(last_time + self.reset_step_duration, self.advance_dds, -1)
+                    self._add_new_switch(
+                        last_time + self.reset_step_duration, self.advance_dds, -1
+                    )
                 last_time = start
             if start == end_time:
                 # overwrite only when extending pulse
-                if end_typ == 'stop' and typ == 'start':
-                    possible_error = (0, '')
+                if end_typ == "stop" and typ == "start":
+                    possible_error = (0, "")
                     state[name] = num
                     pulses_end[name] = (start, typ)
-                elif end_typ == 'start' and typ == 'stop':
-                    possible_error = (0, '')
+                elif end_typ == "start" and typ == "stop":
+                    possible_error = (0, "")
             elif end_typ == typ:
-                possible_error = (start, 'Found Overlap Of Two Pules for channel {}'.format(name))
+                possible_error = (
+                    start,
+                    "Found Overlap Of Two Pules for channel {}".format(name),
+                )
                 state[name] = num
                 pulses_end[name] = (start, typ)
             else:
@@ -197,9 +224,11 @@ class Sequence:
         last_channels = numpy.zeros(self.ttl_channel_count)
         power_array = 2 ** numpy.arange(self.ttl_channel_count, dtype=numpy.uint64)
         for key, new_channels in sorted(self.ttl_switching_times.items()):
-            channels = last_channels + new_channels  # computes the action of switching on the state
+            channels = (
+                last_channels + new_channels
+            )  # computes the action of switching on the state
             if (channels < 0).any():
-                raise Exception('Trying to switch off channel that is not already on')
+                raise Exception("Trying to switch off channel that is not already on")
             channel_int = numpy.dot(channels, power_array)
             # convert the new state to hex and adds it to the sequence
             rep = rep + self._num_to_hex(key) + self._num_to_hex(channel_int)
@@ -207,14 +236,18 @@ class Sequence:
         rep = rep + 2 * self._num_to_hex(0)  # adding termination
         return rep
 
-    def human_representation(self) -> Tuple[numpy.array, List[Tuple[str, float, float]]]:
+    def human_representation(
+        self,
+    ) -> Tuple[numpy.array, List[Tuple[str, float, float]]]:
         """Returns the human-readable version of the sequence for FPGA for debugging"""
         dds, ttl = self.prog_representation(parse=False)
         ttl = self.ttl_human_representation(ttl)
         dds = self.dds_human_representation(dds)
         return ttl, dds
 
-    def dds_human_representation(self, dds: Dict[str, bytes]) -> List[Tuple[str, float, float]]:
+    def dds_human_representation(
+        self, dds: Dict[str, bytes]
+    ) -> List[Tuple[str, float, float]]:
         """
         returns a human-readable representation of the DDSes in the sequence.
         :param dds: the dds program, as output by self.parse_dds
@@ -222,7 +255,7 @@ class Sequence:
         """
         program = []
         for name, buf in dds.items():
-            arr = array.array('B', buf)
+            arr = array.array("B", buf)
             arr = arr[:-2]  # remove termination
             channel = PulserConfiguration.dds_channel_dict[name]
             coherent = channel.phase_coherent_model
@@ -230,23 +263,48 @@ class Sequence:
             ampl_min, ampl_max = channel.board_ampl_range
 
             def chunks(arr, n):
-                """ Yield successive n-sized chunks from arr."""
+                """Yield successive n-sized chunks from arr."""
                 for i in range(0, len(arr), n):
-                    yield arr[i:i + n]
+                    yield arr[i : i + n]
 
             if not coherent:
                 for a, b, c, d in chunks(arr, 4):
-                    freq_num = (256 * b + a)
-                    ampl_num = (256 * d + c)
-                    freq = freq_min + freq_num * (freq_max - freq_min) / float(16 ** 4 - 1)
-                    ampl = ampl_min + ampl_num * (ampl_max - ampl_min) / float(16 ** 4 - 1)
+                    freq_num = 256 * b + a
+                    ampl_num = 256 * d + c
+                    freq = freq_min + freq_num * (freq_max - freq_min) / float(
+                        16**4 - 1
+                    )
+                    ampl = ampl_min + ampl_num * (ampl_max - ampl_min) / float(
+                        16**4 - 1
+                    )
                     program.append((name, freq, ampl))
             else:
-                for a0, a1, amp0, amp1, a2, a3, a4, a5, f0, f1, f2, f3, f4, f5, f6, f7, in chunks(arr, 16):
-                    freq_num = 256 ** 2 * (256 * f7 + f6) + (256 * f5 + f4)
+                for (
+                    a0,
+                    a1,
+                    amp0,
+                    amp1,
+                    a2,
+                    a3,
+                    a4,
+                    a5,
+                    f0,
+                    f1,
+                    f2,
+                    f3,
+                    f4,
+                    f5,
+                    f6,
+                    f7,
+                ) in chunks(arr, 16):
+                    freq_num = 256**2 * (256 * f7 + f6) + (256 * f5 + f4)
                     ampl_num = 256 * amp1 + amp0
-                    freq = freq_min + freq_num * (freq_max - freq_min) / float(16 ** 8 - 1)
-                    ampl = ampl_min + ampl_num * (ampl_max - ampl_min) / float(16 ** 4 - 1)
+                    freq = freq_min + freq_num * (freq_max - freq_min) / float(
+                        16**8 - 1
+                    )
+                    ampl = ampl_min + ampl_num * (ampl_max - ampl_min) / float(
+                        16**4 - 1
+                    )
                     program.append((name, freq, ampl))
         return program
 
@@ -260,11 +318,13 @@ class Sequence:
         # noinspection PyArgumentList
         # arr = numpy.fromstring(rep, dtype=numpy.uint16)  # does the decoding from the string
         arr = numpy.frombuffer(rep, dtype=numpy.uint16)
-        arr = numpy.array(arr, dtype=numpy.uint32)  # once decoded, need to be able to manipulate large numbers
+        arr = numpy.array(
+            arr, dtype=numpy.uint32
+        )  # once decoded, need to be able to manipulate large numbers
         # arr = numpy.array(rep,dtype = numpy.uint16)
         arr = arr.reshape(-1, 4)
         times = (65536 * arr[:, 0] + arr[:, 1]) * float(self.time_resolution)
-        channels = (65536 * arr[:, 2] + arr[:, 3])
+        channels = 65536 * arr[:, 2] + arr[:, 3]
 
         def expand_channel(ch):
             """function for getting the binary representation, i.e 2**32 is 1000...0"""

@@ -1,5 +1,3 @@
-
-
 class experiment_info(object):
     """
     holds information about the experiment
@@ -10,8 +8,9 @@ class experiment_info(object):
     parameters: TreeDict
     required_parameters: list
     """
+
     required_parameters = []
-    name = ''
+    name = ""
 
     def __init__(self, name=None, required_parameters=None):
         if name is not None:

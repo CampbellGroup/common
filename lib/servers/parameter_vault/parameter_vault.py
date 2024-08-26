@@ -15,6 +15,7 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
+
 from labrad.server import LabradServer, setting, Signal
 from twisted.internet.defer import inlineCallbacks
 
@@ -23,9 +24,10 @@ class ParameterVault(LabradServer):
     """
     Data Server for storing ongoing experimental parameters
     """
+
     name = "ParameterVault"
-    registryDirectory = ['', 'Servers', 'Parameter Vault']
-    onParameterChange = Signal(612512, 'signal: parameter change', '(ss)')
+    registryDirectory = ["", "Servers", "Parameter Vault"]
+    onParameterChange = Signal(612512, "signal: parameter change", "(ss)")
 
     @inlineCallbacks
     def initServer(self):
@@ -81,7 +83,7 @@ class ParameterVault(LabradServer):
         """save the latest parameters into registry"""
         reg_dir = self.registryDirectory
         for key, value in self.parameters.items():
-            print('saving parameter to {1}: {0}'.format(key[1], key[0]))
+            print("saving parameter to {1}: {0}".format(key[1], key[0]))
             key = list(key)
             parameter_name = key.pop()
             full_dir = reg_dir + key
@@ -90,7 +92,7 @@ class ParameterVault(LabradServer):
 
     def _save_full(self, key, value):
         t, item = self.parameters[key]
-        if t == 'parameter':
+        if t == "parameter":
             parameter_bound = "Parameter {} Out of Bound"
             assert item[0] <= value <= item[1], parameter_bound.format(key[1])
             item[2] = value
@@ -115,42 +117,49 @@ class ParameterVault(LabradServer):
         parameter_bound = "Parameter {} Out of Bound"
         bad_selection = "Incorrect selection made in {}"
 
-        if param_type == 'parameter' or param_type == 'duration_bandwidth':
+        if param_type == "parameter" or param_type == "duration_bandwidth":
             assert item[0] <= item[2] <= item[1], parameter_bound.format(key)
             return item[2]
 
-        elif param_type == 'string':
+        elif param_type == "string":
             return item
 
-        elif param_type == 'bool':
+        elif param_type == "bool":
             return item
 
-        elif param_type == 'sideband_selection':
+        elif param_type == "sideband_selection":
             return item
 
-        elif param_type == 'spectrum_sensitivity':
+        elif param_type == "spectrum_sensitivity":
             return item
 
-        elif param_type == 'scan':
+        elif param_type == "scan":
             minim, maxim = item[0]
             start, stop, steps = item[1]
             assert minim <= start <= maxim, parameter_bound.format(key)
             assert minim <= stop <= maxim, parameter_bound.format(key)
             return start, stop, steps
 
-        elif param_type == 'selection_simple':
+        elif param_type == "selection_simple":
             assert item[0] in item[1], bad_selection.format(key)
             return item[0]
 
-        elif param_type == 'line_selection':
+        elif param_type == "line_selection":
             assert item[0] in dict(item[1]).keys(), bad_selection.format(key)
             return item[0]
 
         else:  # parameter type not known
             return value
 
-    @setting(0, "Set Parameter", collection='s', parameter_name='s', value='?',
-             full_info='b', returns='')
+    @setting(
+        0,
+        "Set Parameter",
+        collection="s",
+        parameter_name="s",
+        value="?",
+        full_info="b",
+        returns="",
+    )
     def set_parameter(self, c, collection, parameter_name, value, full_info=False):
         """Set Parameter"""
         key = (collection, parameter_name)
@@ -163,8 +172,14 @@ class ParameterVault(LabradServer):
         notified = self.get_other_listeners(c)
         self.onParameterChange((key[0], key[1]), notified)
 
-    @setting(1, "Get Parameter", collection='s', parameter_name='s',
-             checked='b', returns=['?'])
+    @setting(
+        1,
+        "Get Parameter",
+        collection="s",
+        parameter_name="s",
+        checked="b",
+        returns=["?"],
+    )
     def get_parameter(self, c, collection, parameter_name, checked=True):
         """Get Parameter Value"""
         key = (collection, parameter_name)
@@ -175,39 +190,39 @@ class ParameterVault(LabradServer):
             value = self._check_parameter(key, value)
         return value
 
-    @setting(2, "Get Parameter Names", collection='s', returns='*s')
+    @setting(2, "Get Parameter Names", collection="s", returns="*s")
     def get_parameter_names(self, c, collection):
         """Get Parameter Names"""
         parameter_names = self._get_parameter_names(collection)
         return parameter_names
 
-    @setting(3, "Save Parameters To Registry", returns='')
+    @setting(3, "Save Parameters To Registry", returns="")
     def save_parameters_to_registry(self, c):
         """Get Experiment Parameter Names"""
         yield self.save_parameters()
 
-    @setting(4, "Get Collections", returns='*s')
+    @setting(4, "Get Collections", returns="*s")
     def get_collection_names(self, c):
         collections = self._get_collections()
         return collections
 
-    @setting(5, "Refresh Parameters", returns='')
+    @setting(5, "Refresh Parameters", returns="")
     def refresh_parameters(self, c):
         """Saves Parameters To Registry, then reloads them"""
         yield self.save_parameters()
         yield self.load_parameters()
 
-    @setting(6, "Reload Parameters", returns='')
+    @setting(6, "Reload Parameters", returns="")
     def reload_parameters(self, c):
         """Discards current parameters and reloads them from registry"""
         yield self.load_parameters()
 
     @inlineCallbacks
     def stopServer(self):
-        print('stop signal received')
+        print("stop signal received")
         try:
             yield self.save_parameters()
-            print('parameters saved')
+            print("parameters saved")
         except AttributeError:
             # if values don't exist yet, i.e. stopServer was called due to an
             # Identification Error
@@ -216,4 +231,5 @@ class ParameterVault(LabradServer):
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(ParameterVault())

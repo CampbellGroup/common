@@ -5,7 +5,9 @@ from common.lib.clients.script_scanner_gui.scheduled_widget import ScheduledComb
 from common.lib.clients.script_scanner_gui.running_scans_widget import RunningCombined
 from common.lib.clients.script_scanner_gui.queued_widget import queued_combined
 from common.lib.clients.script_scanner_gui.docstring_widget import docstring_widget
-from common.lib.clients.script_scanner_gui.experiment_selector_widget import experiment_selector_widget
+from common.lib.clients.script_scanner_gui.experiment_selector_widget import (
+    experiment_selector_widget,
+)
 
 
 class ScriptingWidget(QWidget):
@@ -36,11 +38,11 @@ class ScriptingWidget(QWidget):
         self.running = RunningCombined(self.reactor)
         self.scheduled = ScheduledCombined(self.reactor)
         self.queued = queued_combined(self.reactor)
-        layout.addWidget(self.selector,  0, 0, 1, 1)
+        layout.addWidget(self.selector, 0, 0, 1, 1)
         layout.addWidget(self.docstring, 1, 0, 5, 1)
         layout.addWidget(self.scheduled, 6, 0, 2, 1)
-        layout.addWidget(self.queued,    8, 0, 2, 1)
-        layout.addWidget(self.running,   10, 0, 2, 1)
+        layout.addWidget(self.queued, 8, 0, 2, 1)
+        layout.addWidget(self.running, 10, 0, 2, 1)
         self.setLayout(layout)
 
     def get_scannable_parameters(self):

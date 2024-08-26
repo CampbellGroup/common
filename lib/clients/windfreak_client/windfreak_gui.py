@@ -23,7 +23,7 @@ class QCustomWindfreakSubGui(QFrame):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.title = title
         self.make_layout()
-        self.font = QtGui.QFont('MS Shell Dlg 2', pointSize=16)
+        self.font = QtGui.QFont("MS Shell Dlg 2", pointSize=16)
 
     def make_layout(self):
         layout = QHBoxLayout()
@@ -32,7 +32,7 @@ class QCustomWindfreakSubGui(QFrame):
         sweep = self.make_sweep_widget()
 
         self.tabWidget = QTabWidget()
-        self.tabWidget.addTab(control, '&Control')
+        self.tabWidget.addTab(control, "&Control")
         self.tabWidget.addTab(sweep, "&Sweep")
 
         layout.addWidget(self.tabWidget)
@@ -42,11 +42,11 @@ class QCustomWindfreakSubGui(QFrame):
         qwidget = QWidget()
         grid_layout = QGridLayout()
 
-        self.freq_input = QCustomSpinBox('Freq (MHz)', (53.0, 14800.0), parent=self)
-        self.power_input = QCustomSpinBox('Power (dBm)', (-80.0, 17.0), parent=self)
-        self.onoff_button = TextChangingButton('RF output', parent=self)
+        self.freq_input = QCustomSpinBox("Freq (MHz)", (53.0, 14800.0), parent=self)
+        self.power_input = QCustomSpinBox("Power (dBm)", (-80.0, 17.0), parent=self)
+        self.onoff_button = TextChangingButton("RF output", parent=self)
         #
-        self.phase_input = QCustomSpinBox('Phase (deg)', (0.0, 360.0), parent=self)
+        self.phase_input = QCustomSpinBox("Phase (deg)", (0.0, 360.0), parent=self)
 
         grid_layout.addWidget(self.freq_input, 0, 0, 1, 1)
         grid_layout.addWidget(self.power_input, 0, 1, 1, 1)
@@ -61,19 +61,31 @@ class QCustomWindfreakSubGui(QFrame):
         qwidget = QWidget()
         grid_layout = QGridLayout()
 
-        self.sweep_low_freq_input = QCustomSpinBox('Sweep Low Freq (MHz)', (53.0, 14800.0), parent=self)
-        self.sweep_high_freq_input = QCustomSpinBox('Sweep High Freq (MHz)', (53.0, 14800.0), parent=self)
+        self.sweep_low_freq_input = QCustomSpinBox(
+            "Sweep Low Freq (MHz)", (53.0, 14800.0), parent=self
+        )
+        self.sweep_high_freq_input = QCustomSpinBox(
+            "Sweep High Freq (MHz)", (53.0, 14800.0), parent=self
+        )
 
-        self.sweep_freq_step_input = QCustomSpinBox('Sweep Freq Step (MHz)', (0.001, 50.0), parent=self)
-        self.sweep_time_step_input = QCustomSpinBox('Sweep Time Step (ms)', (4.0, 10000.0), parent=self)
+        self.sweep_freq_step_input = QCustomSpinBox(
+            "Sweep Freq Step (MHz)", (0.001, 50.0), parent=self
+        )
+        self.sweep_time_step_input = QCustomSpinBox(
+            "Sweep Time Step (ms)", (4.0, 10000.0), parent=self
+        )
 
-        self.sweep_low_power_input = QCustomSpinBox('Sweep Low Power (dBm)', (-80.0, 17.0), parent=self)
+        self.sweep_low_power_input = QCustomSpinBox(
+            "Sweep Low Power (dBm)", (-80.0, 17.0), parent=self
+        )
         self.sweep_low_power_input.setDecimals(1)
-        self.sweep_high_power_input = QCustomSpinBox('Sweep High Power (dBm)', (-80.0, 17.0), parent=self)
+        self.sweep_high_power_input = QCustomSpinBox(
+            "Sweep High Power (dBm)", (-80.0, 17.0), parent=self
+        )
         self.sweep_high_power_input.setDecimals(1)
 
-        self.sweep_onoff_button = TextChangingButton('Sweep', parent=self)
-        self.sweep_single_onoff_button = TextChangingButton('Sweep Single', parent=self)
+        self.sweep_onoff_button = TextChangingButton("Sweep", parent=self)
+        self.sweep_single_onoff_button = TextChangingButton("Sweep Single", parent=self)
 
         grid_layout.addWidget(self.sweep_low_freq_input, 3, 0, 1, 1)
         grid_layout.addWidget(self.sweep_high_freq_input, 3, 1, 1, 1)
@@ -100,7 +112,7 @@ class QCustomWindfreakSubGuiRef(QFrame):
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.title = title
         self.make_layout()
-        self.font = QtGui.QFont('MS Shell Dlg 2', pointSize=16)
+        self.font = QtGui.QFont("MS Shell Dlg 2", pointSize=16)
 
     def make_layout(self):
         # qBox = QGroupBox(self.title)
@@ -108,23 +120,21 @@ class QCustomWindfreakSubGuiRef(QFrame):
 
         self.reference_mode = QComboBox()
         self.trigger_mode = QComboBox()
-        self.reference_mode.addItems([
-            'external',
-            'internal 27mhz',
-            'internal 10mhz'
-        ])
-        self.trigger_mode.addItems([
-            'disabled',
-            'full frequency sweep',
-            'single frequency step',
-            'stop all',
-            'rf enable',
-            'remove interrupts',
-            'reserved',
-            'reserved',
-            'am modulation',
-            'fm modulation',
-        ])
+        self.reference_mode.addItems(["external", "internal 27mhz", "internal 10mhz"])
+        self.trigger_mode.addItems(
+            [
+                "disabled",
+                "full frequency sweep",
+                "single frequency step",
+                "stop all",
+                "rf enable",
+                "remove interrupts",
+                "reserved",
+                "reserved",
+                "am modulation",
+                "fm modulation",
+            ]
+        )
 
         layout.addWidget(QLabel("Reference Mode:"))
         layout.addWidget(self.reference_mode)
@@ -157,7 +167,7 @@ class QCustomWindfreakGui(QFrame):
         # layout.addWidget(self.tabWidget)
 
         layout = QGridLayout()
-        qBox = QGroupBox('Windfreak SynthHD')
+        qBox = QGroupBox("Windfreak SynthHD")
         #        sublayout = QHBoxLayout()
         sublayout = QGridLayout()
         self.a = QCustomWindfreakSubGui(title="Channel A")

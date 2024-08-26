@@ -1,6 +1,7 @@
 import traceback
 import labrad
 
+
 class experiment_info(object):
     """
     holds informaton about the experiment
@@ -11,8 +12,9 @@ class experiment_info(object):
     parameters: TreeDict
     required_parameters: list
     """
+
     required_parameters = []
-    name = ''
+    name = ""
 
     def __init__(self, name=None, required_parameters=None):
         if name is not None:
@@ -21,11 +23,17 @@ class experiment_info(object):
             self.required_parameters = required_parameters
         self.parameters = dict()
 
-        
+
 class experiment(experiment_info):
 
-    def __init__(self, name=None, required_parameters=None, cxn=None,
-                 min_progress=0.0, max_progress=100.0,):
+    def __init__(
+        self,
+        name=None,
+        required_parameters=None,
+        cxn=None,
+        min_progress=0.0,
+        max_progress=100.0,
+    ):
         required_parameters = self.all_required_parameters()
         super(experiment, self).__init__(name, required_parameters)
         self.cxn = cxn
@@ -41,22 +49,22 @@ class experiment(experiment_info):
             try:
                 self.cxn = labrad.connect()
             except Exception as error:
-                error_message = str(error) + '\n' + "Not able to connect to LabRAD"
+                error_message = str(error) + "\n" + "Not able to connect to LabRAD"
                 raise Exception(error_message)
         try:
-            self.sc = self.cxn.servers['ScriptScanner']
+            self.sc = self.cxn.servers["ScriptScanner"]
         except KeyError as error:
-            error_message = str(error) + '\n' + "ScriptScanner is not running"
+            error_message = str(error) + "\n" + "ScriptScanner is not running"
             raise KeyError(error_message)
         try:
-            self.pv = self.cxn.servers['ParameterVault']
+            self.pv = self.cxn.servers["ParameterVault"]
         except KeyError as error:
-            error_message = str(error) + '\n' + "ParameterVault is not running"
+            error_message = str(error) + "\n" + "ParameterVault is not running"
             raise KeyError(error_message)
         try:
             self.context = self.cxn.context()
         except Exception as error:
-            error_message = str(error) + '\n' + "self.cxn.context is not available"
+            error_message = str(error) + "\n" + "self.cxn.context is not available"
             raise Exception(error_message)
 
     def execute(self, ident):
@@ -72,10 +80,10 @@ class experiment(experiment_info):
         except Exception as e:
             reason = traceback.format_exc()
             print(reason)
-            if hasattr(self, 'sc'):
+            if hasattr(self, "sc"):
                 self.sc.error_finish_confirmed(self.ident, reason)
         finally:
-            if hasattr(self, 'cxn'):
+            if hasattr(self, "cxn"):
                 if self.cxn is not None:
                     self.cxn.disconnect()
                     self.cxn = None
@@ -100,10 +108,12 @@ class experiment(experiment_info):
                 value = self.pv.get_parameter(collection, parameter_name)
             except Exception as e:
                 print(e)
-                message = "In {}: Parameter {} not found among Parameter Vault parameters"
+                message = (
+                    "In {}: Parameter {} not found among Parameter Vault parameters"
+                )
                 raise Exception(message.format(self.name, (collection, parameter_name)))
             else:
-                d['{0}.{1}'.format(collection, parameter_name)] = value
+                d["{0}.{1}".format(collection, parameter_name)] = value
         return d
 
     def set_parameters(self, parameter_dict):
@@ -114,7 +124,7 @@ class experiment(experiment_info):
         if isinstance(parameter_dict, dict):
             update_dict = dict()
             for (collection, parameter_name), value in parameter_dict.items():
-                update_dict['{0}.{1}'.format(collection, parameter_name)] = value
+                update_dict["{0}.{1}".format(collection, parameter_name)] = value
         # elif isinstance(parameter_dict, TreeDict):
         #     update_dict = parameter_dict
         else:

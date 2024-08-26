@@ -5,6 +5,7 @@ must be running to test this code.
 TODO: better implementation where LabRAD is started somehow from this code/or
 overall code testing on Magic to make this more automatic.
 """
+
 from twisted.trial.unittest import TestCase
 import labrad
 
@@ -36,17 +37,17 @@ class TestPulser(TestCase):
         -------
         cxn.pulser: labrad server
         """
-        self.assert_(hasattr(self.cxn, 'pulser'))
+        self.assert_(hasattr(self.cxn, "pulser"))
         return self.cxn.pulser
 
     def test_echo(self):
         """
         Test that server has basic function echo
         """
-        self.assert_(hasattr(self.pulser, 'echo'))
+        self.assert_(hasattr(self.pulser, "echo"))
 
     def test_name(self):
         """
         Test server name
         """
-        self.assertEquals(self.pulser.name, 'Pulser')
+        self.assertEquals(self.pulser.name, "Pulser")

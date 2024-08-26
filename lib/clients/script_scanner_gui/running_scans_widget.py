@@ -3,6 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import *
 from common.lib.clients.script_scanner_gui.qtui import FixedWidthButton, ProgressBar
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +28,7 @@ class ScriptStatusWidget(QWidget):
 
     def setup_layout(self):
         layout = QHBoxLayout()
-        self.id_label = QLabel('{0}'.format(self.ident))
+        self.id_label = QLabel("{0}".format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setMinimumHeight(15)
@@ -56,7 +57,7 @@ class ScriptStatusWidget(QWidget):
         self.pause_button.pressed.connect(self.on_user_pause)
 
     def on_user_pause(self):
-        if self.pause_button.text() == 'Pause':
+        if self.pause_button.text() == "Pause":
             self.on_pause.emit()
         else:
             self.on_continue.emit()
@@ -66,9 +67,9 @@ class ScriptStatusWidget(QWidget):
 
     def set_paused(self, is_paused):
         if is_paused:
-            self.pause_button.setText('Continue')
+            self.pause_button.setText("Continue")
         else:
-            self.pause_button.setText('Pause')
+            self.pause_button.setText("Pause")
 
     def set_status(self, status, percentage):
         self.progress_bar.set_status(status, percentage)
@@ -88,7 +89,7 @@ class RunningScansList(QTableWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setup_layout()
         self.d = {}
         self.setSelectionMode(QAbstractItemView.NoSelection)
@@ -111,16 +112,15 @@ class RunningScansList(QTableWidget):
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     def add(self, ident, name):
         ident = int(ident)
         row_count = self.rowCount()
         self.setRowCount(row_count + 1)
-        widget = ScriptStatusWidget(self.reactor,
-                                    parent=self.parent,
-                                    ident=ident, name=name)
+        widget = ScriptStatusWidget(
+            self.reactor, parent=self.parent, ident=ident, name=name
+        )
         # set up signal mapping
         self.mapper_continue.setMapping(widget, ident)
         widget.on_continue.connect(self.mapper_continue.map)
@@ -182,6 +182,7 @@ class RunningCombined(QWidget):
     TODO: more descriptive class name
     TODO: rename class with proper syntax
     """
+
     def __init__(self, reactor, font=None, parent=None):
         """
         Parameters
@@ -195,7 +196,7 @@ class RunningCombined(QWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setupLayout()
 
     def clear_all(self):

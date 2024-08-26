@@ -7,11 +7,12 @@ class PulseSequence:
     Base class for all Pulse Sequences
     Version 1.1
     """
+
     required_parameters = []
     required_subsequences = []
     replaced_parameters = {}
 
-    def __init__(self, parameter_dict, start=WithUnit(1.0, 'us')):
+    def __init__(self, parameter_dict, start=WithUnit(1.0, "us")):
         """
         The VHDL hardware will not accept a t = 0.0 initial start time.
         The 1.0 microsecond is added for this reason and only affects the sequence with an initial 1 microsecond
@@ -46,20 +47,35 @@ class PulseSequence:
 
     def fill_parameters(self, params, replace):
         if not len(params) == len(set(params)):
-            raise Exception("Duplicate required parameters found in {0}".format(self.__class__.__name__))
+            raise Exception(
+                "Duplicate required parameters found in {0}".format(
+                    self.__class__.__name__
+                )
+            )
         new_dict = dict()
         for collection, parameter_name in params:
-            treedict_key = '{0}.{1}'.format(collection, parameter_name)
+            treedict_key = "{0}.{1}".format(collection, parameter_name)
             try:
                 new_dict[treedict_key] = replace[treedict_key]
             except KeyError:
                 raise Exception(
-                    '{0} {1} value not provided for the {2} Pulse Sequence'.format(collection, parameter_name,
-                                                                                   self.__class__.__name__))
+                    "{0} {1} value not provided for the {2} Pulse Sequence".format(
+                        collection, parameter_name, self.__class__.__name__
+                    )
+                )
         return new_dict
 
-    def add_dds(self, channel, start, duration, frequency, amplitude, phase=WithUnit(0, 'deg'),
-                ramp_rate=WithUnit(0, 'MHz'), amp_ramp_rate=WithUnit(0, 'dB')):
+    def add_dds(
+        self,
+        channel,
+        start,
+        duration,
+        frequency,
+        amplitude,
+        phase=WithUnit(0, "deg"),
+        ramp_rate=WithUnit(0, "MHz"),
+        amp_ramp_rate=WithUnit(0, "dB"),
+    ):
         """
         add a dds pulse to the pulse sequence
         """
@@ -72,7 +88,18 @@ class PulseSequence:
             phase = dds_channel.phase_conversion(phase)
             ramp_rate = dds_channel.ramprate_conversion(ramp_rate)
             amp_ramp_rate = dds_channel.amp_ramp_rate_conversion(amp_ramp_rate)
-        self._dds_pulses.append((channel, start, duration, frequency, amplitude, phase, ramp_rate, amp_ramp_rate))
+        self._dds_pulses.append(
+            (
+                channel,
+                start,
+                duration,
+                frequency,
+                amplitude,
+                phase,
+                ramp_rate,
+                amp_ramp_rate,
+            )
+        )
 
     def add_ttl(self, channel, start, duration):
         """
@@ -86,15 +113,19 @@ class PulseSequence:
         if sequence not in self.required_subsequences:
             raise Exception(
                 "Adding subsequence {0} that is not listed in the required subsequences".format(
-                    sequence.__class__.__name__))
+                    sequence.__class__.__name__
+                )
+            )
         for replacement_key in replacement_dict.keys():
-            parsed = tuple(replacement_key.split('.'))
+            parsed = tuple(replacement_key.split("."))
             key_list = self.replaced_parameters.get(sequence, [])
             if parsed not in key_list:
                 raise Exception(
-                    "Error in {0}: replacing the key {1} in the sequence {2}" +
-                    "that is not listed among the replacement parameters".format(
-                        self, replacement_key, sequence))
+                    "Error in {0}: replacing the key {1} in the sequence {2}"
+                    + "that is not listed among the replacement parameters".format(
+                        self, replacement_key, sequence
+                    )
+                )
         if position is None:
             position = self.end
         # replacement conists of global replacement and keyword arguments

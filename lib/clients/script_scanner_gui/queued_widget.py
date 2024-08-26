@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
-from common.lib.clients.script_scanner_gui.qtui  import FixedWidthButton
+from common.lib.clients.script_scanner_gui.qtui import FixedWidthButton
 
 
 class queued_widget(QWidget):
@@ -19,18 +19,16 @@ class queued_widget(QWidget):
 
     def setup_layout(self):
         layout = QHBoxLayout()
-        self.id_label = QLabel('{0}'.format(self.ident))
+        self.id_label = QLabel("{0}".format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setMinimumHeight(15)
         self.id_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.id_label.setSizePolicy(QSizePolicy.Fixed,
-                                    QSizePolicy.Fixed)
+        self.id_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.name_label = QLabel(self.name)
         self.name_label.setFont(self.font)
         self.name_label.setAlignment(QtCore.Qt.AlignLeft)
-        self.name_label.setSizePolicy(QSizePolicy.MinimumExpanding,
-                                      QSizePolicy.Fixed)
+        self.name_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
         self.cancel_button = FixedWidthButton("Cancel", (75, 23))
@@ -54,7 +52,7 @@ class queued_list(QTableWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setupLayout()
         self.d = {}  # stores identification: corresponding widget
@@ -71,15 +69,13 @@ class queued_list(QTableWidget):
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     def add(self, ident, name, order):
         # make the widget
         ident = int(ident)
         order = int(order)
-        widget = queued_widget(self.reactor, parent=self.parent,
-                               ident=ident, name=name)
+        widget = queued_widget(self.reactor, parent=self.parent, ident=ident, name=name)
         self.mapper.setMapping(widget.cancel_button, ident)
         widget.cancel_button.pressed.connect(self.mapper.map)
         self.d[ident] = widget
@@ -120,7 +116,7 @@ class queued_combined(QWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setupLayout()
         self.connect_layout()
 
@@ -150,11 +146,14 @@ class queued_combined(QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
+
 if __name__ == "__main__":
-    a = QApplication( sys.argv )
+    a = QApplication(sys.argv)
     import qt5reactor
+
     qt5reactor.install()
-    from twisted.internet import reactor  
+    from twisted.internet import reactor
+
     widget = queued_combined(reactor)
     widget.show()
     reactor.run()

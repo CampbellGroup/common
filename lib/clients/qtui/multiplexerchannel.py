@@ -5,7 +5,9 @@ import sys
 from common.lib.clients.qtui.QCustomPowerMeter import MQProgressBar
 from common.lib.clients.qtui.QCustomSlideIndicator import SlideIndicator
 
-from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton as _TextChangingButton
+from common.lib.clients.qtui.q_custom_text_changing_button import (
+    TextChangingButton as _TextChangingButton,
+)
 
 
 class StretchedLabel(QLabel):
@@ -27,18 +29,41 @@ class TextChangingButton(_TextChangingButton):
 
 # noinspection PyArgumentList
 class QCustomWavemeterChannel(QFrame):
-    def __init__(self, chan_name, wm_channel, dac_port, frequency,
-                 stretched_label, display_pid_voltage=None, display_channel_lock=None,
-                 parent=None):
+    def __init__(
+        self,
+        chan_name,
+        wm_channel,
+        dac_port,
+        frequency,
+        stretched_label,
+        display_pid_voltage=None,
+        display_channel_lock=None,
+        parent=None,
+    ):
         QWidget.__init__(self, parent)
         self.setFrameStyle(0x0001 | 0x0030)
-        self.make_layout(chan_name, wm_channel, dac_port, frequency,
-                         stretched_label, display_pid_voltage, display_channel_lock)
+        self.make_layout(
+            chan_name,
+            wm_channel,
+            dac_port,
+            frequency,
+            stretched_label,
+            display_pid_voltage,
+            display_channel_lock,
+        )
 
-    def make_layout(self, name, wm_channel, dac_port, frequency,
-                    stretched_label, display_pid_voltage, display_channel_lock):
+    def make_layout(
+        self,
+        name,
+        wm_channel,
+        dac_port,
+        frequency,
+        stretched_label,
+        display_pid_voltage,
+        display_channel_lock,
+    ):
 
-        shell_font = 'MS Shell Dlg 2'
+        shell_font = "MS Shell Dlg 2"
         chan_name = QLabel(name)
         chan_name.setFont(QFont(shell_font, pointSize=16))
         chan_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -51,7 +76,7 @@ class QCustomWavemeterChannel(QFrame):
         wm_chan_label.setFont(QFont(shell_font, pointSize=13))
         wm_chan_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.pid_voltage = QLabel('DAC Voltage (mV)  -.-')
+        self.pid_voltage = QLabel("DAC Voltage (mV)  -.-")
         self.pid_voltage.setFont(QFont(shell_font, pointSize=12))
 
         if display_pid_voltage:
@@ -69,25 +94,27 @@ class QCustomWavemeterChannel(QFrame):
 
         self.current_frequency.setFont(QFont(shell_font, pointSize=60))
         self.current_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.current_frequency.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        self.current_frequency.setSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+        )
 
-        frequency_label = QLabel('Set Frequency')
+        frequency_label = QLabel("Set Frequency")
         frequency_label.setAlignment(Qt.AlignmentFlag.AlignBottom)
         frequency_label.setFont(QFont(shell_font, pointSize=13))
 
-        exposure_label = QLabel('Set Exposure (ms)')
+        exposure_label = QLabel("Set Exposure (ms)")
         exposure_label.setAlignment(Qt.AlignmentFlag.AlignBottom)
         exposure_label.setFont(QFont(shell_font, pointSize=13))
 
-        self.set_pid_button = QPushButton('Set PID')
+        self.set_pid_button = QPushButton("Set PID")
         self.set_pid_button.setMaximumHeight(30)
         self.set_pid_button.setFont(QFont(shell_font, pointSize=10))
 
-        self.measure_button = TextChangingButton('WLM Measure')
+        self.measure_button = TextChangingButton("WLM Measure")
 
-        self.lock_channel_button = TextChangingButton('Lock Channel')
+        self.lock_channel_button = TextChangingButton("Lock Channel")
 
-        self.zero_voltage_button = QPushButton('Zero Voltage')
+        self.zero_voltage_button = QPushButton("Zero Voltage")
         self.zero_voltage_button.setMaximumHeight(30)
         self.zero_voltage_button.setFont(QFont(shell_font, pointSize=10))
 
@@ -103,7 +130,9 @@ class QCustomWavemeterChannel(QFrame):
         self.exposure_spinbox.setFont(QFont(shell_font, pointSize=16))
         self.exposure_spinbox.setDecimals(0)
         self.exposure_spinbox.setSingleStep(1)
-        self.exposure_spinbox.setRange(0, 10000.0)  # 10 seconds is the max exposure time
+        self.exposure_spinbox.setRange(
+            0, 10000.0
+        )  # 10 seconds is the max exposure time
         self.exposure_spinbox.setKeyboardTracking(False)
 
         layout = QHBoxLayout()
@@ -155,6 +184,6 @@ class QCustomWavemeterChannel(QFrame):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    icon = QCustomWavemeterChannel('Repumper', 1, 4, 'Under Exposed', False, True)
+    icon = QCustomWavemeterChannel("Repumper", 1, 4, "Under Exposed", False, True)
     icon.show()
     app.exec_()

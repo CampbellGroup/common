@@ -28,112 +28,95 @@ class TypesServer(LabradServer):
     This is intended as a server for testing and understanding LabRAD types,
     in particular how they are handled.
     """
-    
-    name = 'Types Server'
 
+    name = "Types Server"
 
-
-    @setting(1, returns='b')
+    @setting(1, returns="b")
     def return_bool(self, c):
 
         return True
 
-        
-    @setting(2, returns='i')
+    @setting(2, returns="i")
     def return_int(self, c):
 
         return 23
 
-
-    @setting(3, returns='w')
+    @setting(3, returns="w")
     def return_uint(self, c):
 
         return 86
 
-
-    @setting(4, returns='v[Hz]')
+    @setting(4, returns="v[Hz]")
     def return_v_unit(self, c):
 
-        return _u.WithUnit(60.0, 'Hz')
+        return _u.WithUnit(60.0, "Hz")
 
-
-    @setting(5, returns='v[]')
+    @setting(5, returns="v[]")
     def return_v_brackets(self, c):
-        
-        return 34.
 
+        return 34.0
 
-    @setting(6, returns='c[m]')
+    @setting(6, returns="c[m]")
     def return_c_unit(self, c):
 
-        return _u.WithUnit(60.0, 'm')
+        return _u.WithUnit(60.0, "m")
 
-
-    @setting(7, returns='c[]')
+    @setting(7, returns="c[]")
     def return_c_brackets(self, c):
-        
-        return 1. + 1j*34.
-        
 
-    @setting(8, returns='*v[]')
+        return 1.0 + 1j * 34.0
+
+    @setting(8, returns="*v[]")
     def return_star_v_brackets(self, c):
-        
-        return [5., 6., 7.]       
 
+        return [5.0, 6.0, 7.0]
 
-
-
-    @setting(20, 'return_floatList', returns= '?')
+    @setting(20, "return_floatList", returns="?")
     def return_floatList(self, c):
         """
         Returns
         -------
         [87.04, 0.001, -1.09, 1e-5, 2.]
         """
-        
+
         yield None
-        returnValue([87.04, 0.001, -1.09, 1e-5, 2.])
+        returnValue([87.04, 0.001, -1.09, 1e-5, 2.0])
 
-
-    @setting(21, 'return_npArray1D', returns= '?')
+    @setting(21, "return_npArray1D", returns="?")
     def return_npArray1D(self, c):
         """
         Returns
         -------
         _n.array([1., 2., 1e-5, 237])
         """
-        
-        yield None
-        returnValue(_n.array([1., 2., 1e-5, 237]) )
- 
 
-    @setting(22, 'return_npArray2D', returns= '?')
+        yield None
+        returnValue(_n.array([1.0, 2.0, 1e-5, 237]))
+
+    @setting(22, "return_npArray2D", returns="?")
     def return_npArray2D(self, c):
         """
         Returns
         -------
         _n.array([[1., 4.6, 1e-5], [45, -1, 1./45.]])
         """
-        
+
         yield None
-        returnValue(_n.array([[1., 4.6, 1e-5], [45, -1, 1./45.]]) )   
-    
-    
-    @setting(23, 'return_npArray3D', returns= '?')
+        returnValue(_n.array([[1.0, 4.6, 1e-5], [45, -1, 1.0 / 45.0]]))
+
+    @setting(23, "return_npArray3D", returns="?")
     def return_npArray3D(self, c):
         """
         Returns
         -------
         _n.empty( (492, 656, 1) )
         """
-        
-        yield None
-        returnValue(_n.empty( (492, 656, 1) ) )   
-    
-        
 
+        yield None
+        returnValue(_n.empty((492, 656, 1)))
 
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(TypesServer())

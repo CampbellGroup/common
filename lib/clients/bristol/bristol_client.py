@@ -3,6 +3,7 @@ from common.lib.clients.connection import Connection
 from PyQt4 import QtGui
 import os
 from common.lib.clients.qtui import RGBconverter as RGB
+
 SIGNALID1 = 125366
 SIGNALID2 = 525466
 
@@ -14,7 +15,7 @@ class bristol_client(QtGui.QWidget):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
         self.RGB = RGB.RGBconverter()
-        self.password = os.environ['LABRADPASSWORD']
+        self.password = os.environ["LABRADPASSWORD"]
         self.connect()
         self.initializeGUI()
 
@@ -26,26 +27,27 @@ class bristol_client(QtGui.QWidget):
         """
 
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(
-                                      name='bristol client',
-                                      password=self.password)
+
+        self.cxn = yield connectAsync(name="bristol client", password=self.password)
         self.server = yield self.cxn.bristol_521
 
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__amplitude_changed(SIGNALID2)
-        yield self.server.addListener(listener=self.updateFrequency,
-                                      source=None, ID=SIGNALID1)
-        yield self.server.addListener(listener=self.updatePower, source=None,
-                                      ID=SIGNALID2)
+        yield self.server.addListener(
+            listener=self.updateFrequency, source=None, ID=SIGNALID1
+        )
+        yield self.server.addListener(
+            listener=self.updatePower, source=None, ID=SIGNALID2
+        )
 
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
-        self.freqlabel = QtGui.QLabel('Frequency (THz)')
-        self.powerlabel = QtGui.QLabel('Power (mW)')
-        self.freqwidget = QtGui.QLabel('')
-        self.powerwidget = QtGui.QLabel('')
+        self.freqlabel = QtGui.QLabel("Frequency (THz)")
+        self.powerlabel = QtGui.QLabel("Power (mW)")
+        self.freqwidget = QtGui.QLabel("")
+        self.powerwidget = QtGui.QLabel("")
 
-        shell_font = 'MS Shell Dlg 2'
+        shell_font = "MS Shell Dlg 2"
         self.freqlabel.setFont(QtGui.QFont(shell_font, pointSize=28))
         self.powerlabel.setFont(QtGui.QFont(shell_font, pointSize=28))
         self.freqwidget.setFont(QtGui.QFont(shell_font, pointSize=35))
@@ -57,11 +59,11 @@ class bristol_client(QtGui.QWidget):
         self.setLayout(layout)
 
     def updateFrequency(self, c, signal):
-        color = int(2.998e8/(float(signal)))
+        color = int(2.998e8 / (float(signal)))
         color = self.RGB.wav2RGB(color)
         color = tuple(color)
-        self.freqwidget.setStyleSheet('color: rgb' + str(color))
-        self.freqwidget.setText(str(signal*1e-3)[0:7])
+        self.freqwidget.setStyleSheet("color: rgb" + str(color))
+        self.freqwidget.setText(str(signal * 1e-3)[0:7])
 
     def updatePower(self, c, signal):
         self.powerwidget.setText(str(signal)[0:5])
@@ -69,11 +71,14 @@ class bristol_client(QtGui.QWidget):
     def closeEvent(self, x):
         self.reactor.stop()
 
+
 if __name__ == "__main__":
     a = QtGui.QApplication([])
     import qt4reactor
+
     qt4reactor.install()
     from twisted.internet import reactor
+
     bristolclientWidget = bristol_client(reactor)
     bristolclientWidget.show()
     reactor.run()

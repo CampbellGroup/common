@@ -37,7 +37,7 @@ class API(object):
             iden = tmp.GetDeviceID()
             if iden == self.okDeviceID:
                 self.xem = tmp
-                print('Connected to {}'.format(iden))
+                print("Connected to {}".format(iden))
                 self.program_ok_board()
                 return True
         return False
@@ -115,7 +115,7 @@ class API(object):
 
     def is_seq_done(self):
         """check if the pulse sequence is done executing or not"""
-        self.xem.SetWireInValue(0x00, 0x00, 0xf0)
+        self.xem.SetWireInValue(0x00, 0x00, 0xF0)
         self.xem.UpdateWireIns()
         self.xem.UpdateWireOuts()
         done = self.xem.GetWireOutValue(0x21)
@@ -130,12 +130,12 @@ class API(object):
     def get_resolved_counts(self, number):
         """Get the time-tagged photon data."""
         buf = bytearray(number * 2)
-        self.xem.ReadFromBlockPipeOut(0xa0, 2, buf)
+        self.xem.ReadFromBlockPipeOut(0xA0, 2, buf)
         return buf
 
     def get_normal_total(self):
         """Get the number of normal PMT counts. (How many data in the FIFO)"""
-        self.xem.SetWireInValue(0x00, 0x40, 0xf0)
+        self.xem.SetWireInValue(0x00, 0x40, 0xF0)
         self.xem.UpdateWireIns()
         self.xem.UpdateWireOuts()
         done = self.xem.GetWireOutValue(0x21)
@@ -144,12 +144,12 @@ class API(object):
     def get_normal_counts(self, number):
         """Get the normal PMT counts from the FIFO."""
         buf = bytearray(number * 2)
-        self.xem.ReadFromBlockPipeOut(0xa1, 2, buf)
+        self.xem.ReadFromBlockPipeOut(0xA1, 2, buf)
         return buf
 
     def get_readout_total(self):
         """Get the number of readout count."""
-        self.xem.SetWireInValue(0x00, 0x80, 0xf0)
+        self.xem.SetWireInValue(0x00, 0x80, 0xF0)
         self.xem.UpdateWireIns()
         self.xem.UpdateWireOuts()
         done = self.xem.GetWireOutValue(0x21)
@@ -158,12 +158,12 @@ class API(object):
     def get_readout_counts(self, number):
         """Get the readout count data."""
         buf = bytearray(number * 2)
-        self.xem.ReadFromBlockPipeOut(0xa2, 2, buf)
+        self.xem.ReadFromBlockPipeOut(0xA2, 2, buf)
         return buf
 
     def how_many_sequences_done(self):
         """Get the number of iterations executed."""
-        self.xem.SetWireInValue(0x00, 0x20, 0xf0)
+        self.xem.SetWireInValue(0x00, 0x20, 0xF0)
         self.xem.UpdateWireIns()
         self.xem.UpdateWireOuts()
         completed = self.xem.GetWireOutValue(0x21)
@@ -177,20 +177,20 @@ class API(object):
 
     def set_auto(self, channel, inversion):
         """Set the logic of the TTL to be auto or not"""
-        self.xem.SetWireInValue(0x02, 0x00, 2 ** channel)
+        self.xem.SetWireInValue(0x02, 0x00, 2**channel)
         if not inversion:
-            self.xem.SetWireInValue(0x03, 0x00, 2 ** channel)
+            self.xem.SetWireInValue(0x03, 0x00, 2**channel)
         else:
-            self.xem.SetWireInValue(0x03, 2 ** channel, 2 ** channel)
+            self.xem.SetWireInValue(0x03, 2**channel, 2**channel)
         self.xem.UpdateWireIns()
 
     def set_manual(self, channel, state):
         """Set the logic of the TTL to be manual or not"""
-        self.xem.SetWireInValue(0x02, 2 ** channel, 2 ** channel)
+        self.xem.SetWireInValue(0x02, 2**channel, 2**channel)
         if state:
-            self.xem.SetWireInValue(0x03, 2 ** channel, 2 ** channel)
+            self.xem.SetWireInValue(0x03, 2**channel, 2**channel)
         else:
-            self.xem.SetWireInValue(0x03, 0x00, 2 ** channel)
+            self.xem.SetWireInValue(0x03, 0x00, 2**channel)
         self.xem.UpdateWireIns()
 
     def reset_all_dds(self):
@@ -218,7 +218,7 @@ class API(object):
         """program the dds channel with a list of frequencies and amplitudes.
         The channel of the particular channel must be selected first"""
         # add the initial padding
-        prog = bytearray.fromhex(u'0000') + prog
+        prog = bytearray.fromhex("0000") + prog
         # pad to a multiple of 16 bytes
         prog_padded = self.pad_to_16(prog)
         # very important !!! second argument below needs to be 16. Don't change this.

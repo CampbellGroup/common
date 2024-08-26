@@ -16,7 +16,7 @@ class QCustomSpinBox(QWidget):
         self.spinLevel = None
         self.title = None
         basepath = os.path.dirname(__file__)
-        path = os.path.join(basepath, 'titlespin.ui')
+        path = os.path.join(basepath, "titlespin.ui")
         uic.loadUi(path, self)
         self.title.setText(title)
         self.levelRange = levelRange
@@ -86,8 +86,8 @@ class QCustomSpinBox(QWidget):
         self.spinLevel.blockSignals(False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    icon = QCustomSpinBox('Control', (-10.0, 10.0))
+    icon = QCustomSpinBox("Control", (-10.0, 10.0))
     icon.show()
     app.exec_()

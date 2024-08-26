@@ -22,12 +22,11 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(5, 's')  # serial read timeout
+TIMEOUT = Value(5, "s")  # serial read timeout
 BAUDRATE = 115200
 
 
 class StepperController(DeviceWrapper):
-
     """
     arduino dual stepper devices
     """
@@ -36,7 +35,9 @@ class StepperController(DeviceWrapper):
     def connect(self, server, port):
         """Here we make a connection to the serial server in LabRAD where all
         the serial communication is handled"""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print(
+            'connecting to "%s" on port "%s"...' % (server.name, port),
+        )
         self.server = server
         self.ctx = server.context()  # grabs an identification number from the server
         self.port = port
@@ -63,7 +64,7 @@ class StepperController(DeviceWrapper):
 
     @inlineCallbacks
     def query(self, code):
-        """ Write, then read. """
+        """Write, then read."""
         p = self.packet()
         p.write_line(code)
         p.read_line()
@@ -73,8 +74,8 @@ class StepperController(DeviceWrapper):
 
 class StepperMotorServer(DeviceServer):
 
-    deviceName = 'stepper_motor_server'
-    name = 'stepper_motor_server'
+    deviceName = "stepper_motor_server"
+    name = "stepper_motor_server"
     deviceWrapper = StepperController
 
     @inlineCallbacks
@@ -83,7 +84,9 @@ class StepperMotorServer(DeviceServer):
         Makes a connection to the registry where port information and other server
         specific settings can be retrieved.
         """
-        print 'loading config info...',
+        print(
+            "loading config info...",
+        )
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)  # starts server after configurations loaded
@@ -95,7 +98,7 @@ class StepperMotorServer(DeviceServer):
         e.g. ("qsimexpcontrol Serial Server", "/dev/ttyACMarduinoTTL")
         """
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'StepperMotor', 'Links'], True)  # opens folder
+        yield reg.cd(["", "Servers", "StepperMotor", "Links"], True)  # opens folder
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -114,11 +117,11 @@ class StepperMotorServer(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
+            devName = "%s - %s" % (serServer, port)
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    @setting(101, 'move_steps', steps='i')
+    @setting(101, "move_steps", steps="i")
     def move_steps(self, c, steps):
         """
         moves stepper motor N steps, if positive the move CW else CCW
@@ -127,6 +130,8 @@ class StepperMotorServer(DeviceServer):
         dev = self.selectDevice(c)
         value = yield dev.write(str(steps))
 
+
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(StepperMotorServer())

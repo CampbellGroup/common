@@ -12,6 +12,7 @@ except ImportError:
 import numpy as np
 from . import errors
 from os import remove
+
 # todo: implement ability to delete things
 # todo: fix documentation
 # todo: fix up function names
@@ -22,7 +23,8 @@ class DataVault(LabradServer):
     """
     Stores and manages data/datasets using the HDF5 format.
     """
-    name = 'Data Vault'
+
+    name = "Data Vault"
 
     # SETUP
 
@@ -31,17 +33,17 @@ class DataVault(LabradServer):
         self.session_store = session_store
 
         # session signals
-        self.onNewDir = Signal(543617, 'signal: new dir', 's')
-        self.onNewDataset = Signal(543618, 'signal: new dataset', 's')
-        self.onTagsUpdated = Signal(543622, 'signal: tags updated', '*(s*s)*(s*s)')
+        self.onNewDir = Signal(543617, "signal: new dir", "s")
+        self.onNewDataset = Signal(543618, "signal: new dataset", "s")
+        self.onTagsUpdated = Signal(543622, "signal: tags updated", "*(s*s)*(s*s)")
         # dataset signals
-        self.onDataAvailable = Signal(543619, 'signal: data available', '')
-        self.onNewParameter = Signal(543620, 'signal: new parameter', '')
-        self.onCommentsAvailable = Signal(543621, 'signal: comments available', '')
+        self.onDataAvailable = Signal(543619, "signal: data available", "")
+        self.onNewParameter = Signal(543620, "signal: new parameter", "")
+        self.onCommentsAvailable = Signal(543621, "signal: comments available", "")
 
     def initServer(self):
         # create root session
-        _root = self.session_store.get([''])
+        _root = self.session_store.get([""])
         # close all datasets on program shutdown
         if win32api:
             win32api.SetConsoleCtrlHandler(self._close_all_datasets, True)
@@ -59,7 +61,13 @@ class DataVault(LabradServer):
         all_sessions = list(self.session_store.get_all())
         all_datasets = [session.datasets.values() for session in all_sessions]
         # flatten list of datasets
-        all_containers = set([dataset.data for session_datasets in all_datasets for dataset in session_datasets])
+        all_containers = set(
+            [
+                dataset.data
+                for session_datasets in all_datasets
+                for dataset in session_datasets
+            ]
+        )
 
         # flush (i.e. save) all file data
         for container in all_containers:
@@ -67,7 +75,7 @@ class DataVault(LabradServer):
                 # container is Data object (e.g. SimpleHDF5Data)
                 # container._file is SelfClosingFile
                 # container._file._file is actual data file object
-                if hasattr(container._file, '_file'):
+                if hasattr(container._file, "_file"):
                     container._file._file.flush()
             except Exception as e:
                 print(e)
@@ -81,13 +89,19 @@ class DataVault(LabradServer):
         all_sessions = list(self.session_store.get_all())
         all_datasets = [session.datasets.values() for session in all_sessions]
         # flatten list of datasets
-        all_containers = set([dataset.data for session_datasets in all_datasets for dataset in session_datasets])
+        all_containers = set(
+            [
+                dataset.data
+                for session_datasets in all_datasets
+                for dataset in session_datasets
+            ]
+        )
 
         # close all the files
         for container in all_containers:
             datafile = container._file
             # cancel the timeout poll loop if it exists
-            if hasattr(datafile, '_fileTimeoutCall'):
+            if hasattr(datafile, "_fileTimeoutCall"):
                 datafile._fileTimeoutCall.cancel()
             # close the file
             try:
@@ -105,10 +119,10 @@ class DataVault(LabradServer):
 
     def initContext(self, c):
         # start in the root session
-        c['path'] = ['']
+        c["path"] = [""]
         # start listening to the root session
-        c['session'] = self.session_store.get([''])
-        c['session'].listeners.add(self.context_key(c))
+        c["session"] = self.session_store.get([""])
+        c["session"].listeners.add(self.context_key(c))
 
     def expireContext(self, c):
         """
@@ -133,29 +147,31 @@ class DataVault(LabradServer):
         """
         Get a session object for the current path.
         """
-        return c['session']
+        return c["session"]
 
     def get_dataset(self, c):
         """
         Get a dataset object for the current dataset.
         """
-        if 'dataset' not in c:
+        if "dataset" not in c:
             raise errors.NoDatasetError()
-        return c['datasetObj']
+        return c["datasetObj"]
 
     # GENERAL
 
-    @setting(5, returns=['*s'])
+    @setting(5, returns=["*s"])
     def dump_existing_sessions(self, c):
-        return ['/'.join(session.path)
-                for session in self.session_store.get_all()]
+        return ["/".join(session.path) for session in self.session_store.get_all()]
 
     # DIRECTORY NAVIGATION
 
-    @setting(6, tag_filters=['s', '*s'], include_tags='b',
-             returns=['*s{subdirs}, *s{datasets}',
-                      '*(s*s){subdirs}, *(s*s){datasets}'])
-    def dir(self, c, tag_filters='-trash', include_tags=False):
+    @setting(
+        6,
+        tag_filters=["s", "*s"],
+        include_tags="b",
+        returns=["*s{subdirs}, *s{datasets}", "*(s*s){subdirs}, *(s*s){datasets}"],
+    )
+    def dir(self, c, tag_filters="-trash", include_tags=False):
         """
         Get subdirectories and datasets in the current directory.
         """
@@ -171,12 +187,17 @@ class DataVault(LabradServer):
             dirs, datasets = sess.get_tags(dirs, datasets)
         return dirs, datasets
 
-    @setting(7, path=['{get current directory}',
-                      's{change into this directory}',
-                      '*s{change into each directory in sequence}',
-                      'w{go up by this many directories}'],
-             create='b',
-             returns='*s')
+    @setting(
+        7,
+        path=[
+            "{get current directory}",
+            "s{change into this directory}",
+            "*s{change into each directory in sequence}",
+            "w{go up by this many directories}",
+        ],
+        create="b",
+        returns="*s",
+    )
     def cd(self, c, path=None, create=False):
         """
         Change the current directory.
@@ -187,17 +208,17 @@ class DataVault(LabradServer):
         """
         # empty call returns current path
         if path is None:
-            return c['path']
+            return c["path"]
 
         # copy the current path
-        temp = c['path'][:]
+        temp = c["path"][:]
 
         # go up directories if path is word/int
         if isinstance(path, (int, int)):
             if path > 0:
                 temp = temp[:-path]
                 if not len(temp):
-                    temp = ['']
+                    temp = [""]
 
         # go down directories if path is str
         else:
@@ -206,8 +227,8 @@ class DataVault(LabradServer):
             # go down each subdirectory specified
             for segment in path:
                 # empty calls in the directory list moves us back to the root directory
-                if segment == '':
-                    temp = ['', 'data']
+                if segment == "":
+                    temp = ["", "data"]
                 else:
                     temp.append(segment)
                 # check that subdirectory will exist
@@ -217,22 +238,22 @@ class DataVault(LabradServer):
                 _session = self.session_store.get(temp)
 
         # change sessions
-        if c['path'] != temp:
+        if c["path"] != temp:
             # remove context as listener to old session
             key = self.context_key(c)
-            c['session'].listeners.remove(key)
+            c["session"].listeners.remove(key)
             # add context as listener to new session
             session = self.session_store.get(temp)
             session.listeners.add(key)
             # store new values
-            c['session'] = session
-            c['path'] = temp
+            c["session"] = session
+            c["path"] = temp
 
-        return c['path']
+        return c["path"]
 
     # CREATING DATASETS/DIRECTORIES
 
-    @setting(8, name='s', returns='*s')
+    @setting(8, name="s", returns="*s")
     def mkdir(self, c, name):
         """
         Make a new subdirectory in the current directory.
@@ -242,9 +263,9 @@ class DataVault(LabradServer):
         Directory name cannot be empty.
         Returns the path to the created directory.
         """
-        if name == '':
+        if name == "":
             raise errors.EmptyNameError()
-        path = c['path'] + [name]
+        path = c["path"] + [name]
 
         if self.session_store.exists(path):
             raise errors.DirectoryExistsError(path)
@@ -252,10 +273,13 @@ class DataVault(LabradServer):
         _sess = self.session_store.get(path)
         return path
 
-    @setting(9, name='s',
-             independents=['*s', '*(ss)'],
-             dependents=['*s', '*(sss)'],
-             returns='(*s{path}, s{name})')
+    @setting(
+        9,
+        name="s",
+        independents=["*s", "*(ss)"],
+        dependents=["*s", "*(sss)"],
+        returns="(*s{path}, s{name})",
+    )
     def new(self, c, name, independents, dependents):
         """
         Create a new Dataset.
@@ -274,18 +298,17 @@ class DataVault(LabradServer):
             raise Exception("Error: invalid title (contains periods).")
 
         session = self.get_session(c)
-        dataset = session.new_dataset(name or 'untitled', independents, dependents)
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['datasetObj'] = dataset
-        c['filepos'] = 0  # start at the beginning
-        c['commentpos'] = 0
-        c['writing'] = True
-        return c['path'], c['dataset']
+        dataset = session.new_dataset(name or "untitled", independents, dependents)
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["datasetObj"] = dataset
+        c["filepos"] = 0  # start at the beginning
+        c["commentpos"] = 0
+        c["writing"] = True
+        return c["path"], c["dataset"]
 
-    @setting(1009, name='s',
-             independents='*(s*iss)',
-             dependents='*(ss*iss)',
-             returns=['*ss'])
+    @setting(
+        1009, name="s", independents="*(s*iss)", dependents="*(ss*iss)", returns=["*ss"]
+    )
     def new_ex(self, c, name, independents, dependents):
         """
         Create a new extended dataset.
@@ -320,14 +343,14 @@ class DataVault(LabradServer):
 
         session = self.get_session(c)
         dataset = session.new_dataset(name, independents, dependents, extended=True)
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['datasetObj'] = dataset
-        c['filepos'] = 0  # start at the beginning
-        c['commentpos'] = 0
-        c['writing'] = True
-        return c['path'], c['dataset']
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["datasetObj"] = dataset
+        c["filepos"] = 0  # start at the beginning
+        c["commentpos"] = 0
+        c["writing"] = True
+        return c["path"], c["dataset"]
 
-    @setting(10, name=['s', 'w'], append='b', returns='(*s{path}, s{name})')
+    @setting(10, name=["s", "w"], append="b", returns="(*s{path}, s{name})")
     def open(self, c, name, append=False):
         """
         Open a Dataset for reading.
@@ -337,17 +360,17 @@ class DataVault(LabradServer):
         """
         session = self.get_session(c)
         dataset = session.open_dataset(name)
-        c['dataset'] = dataset.name  # not the same as name; has number prefixed
-        c['datasetObj'] = dataset
-        c['filepos'] = 0
-        c['commentpos'] = 0
-        c['writing'] = append
+        c["dataset"] = dataset.name  # not the same as name; has number prefixed
+        c["datasetObj"] = dataset
+        c["filepos"] = 0
+        c["commentpos"] = 0
+        c["writing"] = append
         key = self.context_key(c)
         dataset.keep_streaming(key, 0)
         dataset.keep_streaming_comments(key, 0)
-        return c['path'], c['dataset']
+        return c["path"], c["dataset"]
 
-    @setting(11, name=['s', 'w'], returns='b')
+    @setting(11, name=["s", "w"], returns="b")
     def delete(self, c, name):
         """
         # todo: make inclusive of folders as well as datasets
@@ -368,7 +391,13 @@ class DataVault(LabradServer):
         all_sessions = list(self.session_store.get_all())
         all_datasets = [session.datasets.values() for session in all_sessions]
         # flatten list of datasets
-        all_containers = set([dataset.data for session_datasets in all_datasets for dataset in session_datasets])
+        all_containers = set(
+            [
+                dataset.data
+                for session_datasets in all_datasets
+                for dataset in session_datasets
+            ]
+        )
 
         # flush (i.e. save) all file data
         for container in all_containers:
@@ -376,7 +405,7 @@ class DataVault(LabradServer):
                 # container is Data object (e.g. SimpleHDF5Data)
                 # container._file is SelfClosingFile
                 # container._file._file is actual data file object
-                if hasattr(container._file, '_file'):
+                if hasattr(container._file, "_file"):
                     container._file._file.flush()
             except Exception as e:
                 print(e)
@@ -384,7 +413,7 @@ class DataVault(LabradServer):
 
     # GET DATA
 
-    @setting(1010, returns='s')
+    @setting(1010, returns="s")
     def get_version(self, c):
         """
         Get version of current dataset.
@@ -397,9 +426,11 @@ class DataVault(LabradServer):
         dataset = self.get_dataset(c)
         return dataset.version()
 
-    @setting(20, data=['*v: add one row of data',
-                       '*2v: add multiple rows of data'],
-             returns='')
+    @setting(
+        20,
+        data=["*v: add one row of data", "*2v: add multiple rows of data"],
+        returns="",
+    )
     def add(self, c, data):
         """
         Add data to the current dataset.
@@ -409,7 +440,7 @@ class DataVault(LabradServer):
         (independents + dependents).
         """
         dataset = self.get_dataset(c)
-        if not c['writing']:
+        if not c["writing"]:
             raise errors.ReadOnlyError()
         data = np.atleast_2d(np.asarray(data))
         # fromarrays is faster than fromrecords, and when we have a simple 2-D array
@@ -417,7 +448,7 @@ class DataVault(LabradServer):
         rec_data = np.core.records.fromarrays(data.T, dtype=dataset.data.dtype)
         dataset.add_data(rec_data)
 
-    @setting(1020, data='?', returns='')
+    @setting(1020, data="?", returns="")
     def add_ex(self, c, data):
         """
         Add data to the current dataset in the extended format.
@@ -430,12 +461,14 @@ class DataVault(LabradServer):
         of clusters, consider using add_ex_t for performance.
         """
         dataset = self.get_dataset(c)
-        if not c['writing']:
+        if not c["writing"]:
             raise errors.ReadOnlyError()
         list_data = [tuple(row) for row in data]
-        dataset.add_data(np.core.records.fromrecords(list_data, dtype=dataset.data.dtype))
+        dataset.add_data(
+            np.core.records.fromrecords(list_data, dtype=dataset.data.dtype)
+        )
 
-    @setting(2020, data='?', returns='')
+    @setting(2020, data="?", returns="")
     def add_ex_t(self, c, data):
         """
         Add data to the current dataset in the extended format.
@@ -445,11 +478,11 @@ class DataVault(LabradServer):
         performance.
         """
         dataset = self.get_dataset(c)
-        if not c['writing']:
+        if not c["writing"]:
             raise errors.ReadOnlyError()
         dataset.add_data(np.core.records.fromarrays(data, dtype=dataset.data.dtype))
 
-    @setting(21, limit='w', start_over='b', returns='*2v')
+    @setting(21, limit="w", start_over="b", returns="*2v")
     def get(self, c, limit=None, start_over=False):
         """
         Get data from the current dataset.
@@ -461,13 +494,13 @@ class DataVault(LabradServer):
         in this context is returned.
         """
         dataset = self.get_dataset(c)
-        c['filepos'] = 0 if start_over else c['filepos']
-        data, c['filepos'] = dataset.get_data(limit, c['filepos'], simple_only=True)
+        c["filepos"] = 0 if start_over else c["filepos"]
+        data, c["filepos"] = dataset.get_data(limit, c["filepos"], simple_only=True)
         key = self.context_key(c)
-        dataset.keep_streaming(key, c['filepos'])
+        dataset.keep_streaming(key, c["filepos"])
         return data
 
-    @setting(1021, limit='w', start_over='b', returns='?')
+    @setting(1021, limit="w", start_over="b", returns="?")
     def get_ex(self, c, limit=None, start_over=False):
         """
         Get data from the current dataset in the extended format.
@@ -478,13 +511,13 @@ class DataVault(LabradServer):
         performance.
         """
         dataset = self.get_dataset(c)
-        c['filepos'] = 0 if start_over else c['filepos']
-        data, c['filepos'] = dataset.get_data(limit, c['filepos'], transpose=False)
+        c["filepos"] = 0 if start_over else c["filepos"]
+        data, c["filepos"] = dataset.get_data(limit, c["filepos"], transpose=False)
         ctx = self.context_key(c)
-        dataset.keep_streaming(ctx, c['filepos'])
+        dataset.keep_streaming(ctx, c["filepos"])
         return data
 
-    @setting(2021, limit='w', start_over='b', returns='?')
+    @setting(2021, limit="w", start_over="b", returns="?")
     def get_ex_t(self, c, limit=None, start_over=False):
         """
         Get data from the current dataset in the extended format.
@@ -497,15 +530,15 @@ class DataVault(LabradServer):
         code.
         """
         dataset = self.get_dataset(c)
-        c['filepos'] = 0 if start_over else c['filepos']
-        data, c['filepos'] = dataset.get_data(limit, c['filepos'], transpose=True)
+        c["filepos"] = 0 if start_over else c["filepos"]
+        data, c["filepos"] = dataset.get_data(limit, c["filepos"], transpose=True)
         ctx = self.context_key(c)
-        dataset.keep_streaming(ctx, c['filepos'])
+        dataset.keep_streaming(ctx, c["filepos"])
         return data
 
     # VARIABLES
 
-    @setting(100, returns='(*(ss){independents}, *(sss){dependents})')
+    @setting(100, returns="(*(ss){independents}, *(sss){dependents})")
     def variables(self, c):
         """
         Get the independent and dependent variables for the current dataset.
@@ -520,7 +553,7 @@ class DataVault(LabradServer):
         dep = [(d.label, d.legend, d.unit) for d in ds.get_dependents()]
         return ind, dep
 
-    @setting(101, returns='*(s*iss), *(ss*iss)')
+    @setting(101, returns="*(s*iss), *(ss*iss)")
     def variables_ex(self, c):
         """
         Get the independent and dependent variables for the current dataset in the extended format
@@ -537,7 +570,7 @@ class DataVault(LabradServer):
         dep = ds.get_dependents()
         return ind, dep
 
-    @setting(102, returns='s')
+    @setting(102, returns="s")
     def row_type(self, c):
         """
         Returns the labrad typetag for a single row of the current dataset.
@@ -546,7 +579,7 @@ class DataVault(LabradServer):
         ds = self.get_dataset(c)
         return ds.get_row_type()
 
-    @setting(103, returns='s')
+    @setting(103, returns="s")
     def transpose_type(self, c):
         """
         Returns the labrad typetag for accessing the dataset with the transpose commands
@@ -555,7 +588,7 @@ class DataVault(LabradServer):
         ds = self.get_dataset(c)
         return ds.get_transpose_type()
 
-    @setting(104, returns='(i, i)')
+    @setting(104, returns="(i, i)")
     def shape(self, c):
         """
         Returns the shape of the dataset.
@@ -565,7 +598,7 @@ class DataVault(LabradServer):
 
     # METADATA
 
-    @setting(120, 'Parameters', returns='*s')
+    @setting(120, "Parameters", returns="*s")
     def parameters(self, c):
         """
         Get a list of parameter names.
@@ -575,7 +608,7 @@ class DataVault(LabradServer):
         dataset.param_listeners.add(key)  # send a message when new parameters are added
         return dataset.get_param_names()
 
-    @setting(121, name='s', returns='')
+    @setting(121, name="s", returns="")
     def add_parameter(self, c, name, data):
         """
         Add a new parameter to the current dataset.
@@ -583,7 +616,7 @@ class DataVault(LabradServer):
         dataset = self.get_dataset(c)
         dataset.add_parameter(name, data)
 
-    @setting(124, 'add parameters', params='?{((s?)(s?)...)}', returns='')
+    @setting(124, "add parameters", params="?{((s?)(s?)...)}", returns="")
     def add_parameters(self, c, params):
         """
         Add a new parameter to the current dataset.
@@ -591,7 +624,7 @@ class DataVault(LabradServer):
         dataset = self.get_dataset(c)
         dataset.add_parameters(params)
 
-    @setting(126, 'get name', returns='s')
+    @setting(126, "get name", returns="s")
     def get_name(self, c):
         """
         Get the name of the current dataset.
@@ -600,7 +633,7 @@ class DataVault(LabradServer):
         name = dataset.name
         return name
 
-    @setting(122, 'get parameter', name='s')
+    @setting(122, "get parameter", name="s")
     def get_parameter(self, c, name, case_sensitive=True):
         """
         Get the value of a parameter.
@@ -608,7 +641,7 @@ class DataVault(LabradServer):
         dataset = self.get_dataset(c)
         return dataset.get_parameter(name, case_sensitive)
 
-    @setting(123, 'get parameters')
+    @setting(123, "get parameters")
     def get_parameters(self, c):
         """
         Get all parameters.
@@ -625,30 +658,40 @@ class DataVault(LabradServer):
         if len(params):
             return params
 
-    @setting(200, 'add comment', comment=['s'], user=['s'], returns=[''])
-    def add_comment(self, c, comment, user='anonymous'):
+    @setting(200, "add comment", comment=["s"], user=["s"], returns=[""])
+    def add_comment(self, c, comment, user="anonymous"):
         """
         Add a comment to the current dataset.
         """
         dataset = self.get_dataset(c)
         return dataset.add_comment(user, comment)
 
-    @setting(201, 'get comments', limit=['w'], start_over=['b'],
-             returns=['*(t, s{user}, s{comment})'])
+    @setting(
+        201,
+        "get comments",
+        limit=["w"],
+        start_over=["b"],
+        returns=["*(t, s{user}, s{comment})"],
+    )
     def get_comments(self, c, limit=None, start_over=False):
         """
         Get comments for the current dataset.
         """
         dataset = self.get_dataset(c)
-        c['commentpos'] = 0 if start_over else c['commentpos']
-        comments, c['commentpos'] = dataset.get_comments(limit, c['commentpos'])
+        c["commentpos"] = 0 if start_over else c["commentpos"]
+        comments, c["commentpos"] = dataset.get_comments(limit, c["commentpos"])
         key = self.context_key(c)
-        dataset.keep_streaming_comments(key, c['commentpos'])
+        dataset.keep_streaming_comments(key, c["commentpos"])
         return comments
 
-    @setting(300, 'update tags', tags=['s', '*s'],
-             dirs=['s', '*s'], datasets=['s', '*s'],
-             returns='')
+    @setting(
+        300,
+        "update tags",
+        tags=["s", "*s"],
+        dirs=["s", "*s"],
+        datasets=["s", "*s"],
+        returns="",
+    )
     def update_tags(self, c, tags, dirs, datasets=None):
         """
         Update the tags for the specified directories and datasets.
@@ -671,9 +714,9 @@ class DataVault(LabradServer):
         sess = self.get_session(c)
         sess.update_tags(tags, dirs, datasets)
 
-    @setting(301, 'get tags',
-             dirs=['s', '*s'], datasets=['s', '*s'],
-             returns='*(s*s)*(s*s)')
+    @setting(
+        301, "get tags", dirs=["s", "*s"], datasets=["s", "*s"], returns="*(s*s)*(s*s)"
+    )
     def get_tags(self, c, dirs, datasets):
         """
         Get tags for directories and datasets in the current dir.
@@ -720,14 +763,14 @@ class DataVaultMultiHead(DataVault):
     def keepalive(self):
         print("sending keepalive to {}:{}".format(self.host, self.port))
         try:
-            yield self.client.manager.echo('ping')
+            yield self.client.manager.echo("ping")
         except:
             pass  # We don't care about errors, dropped connections will be recognized automatically
 
     def context_key(self, c):
         return ExtendedContext(self, c.ID)
 
-    @setting(401, 'get servers', returns='*(swb)')
+    @setting(401, "get servers", returns="*(swb)")
     def get_servers(self, c):
         """
         Returns the list of running servers as tuples of (host, port, connected?).
@@ -741,7 +784,7 @@ class DataVaultMultiHead(DataVault):
             rv.append((host, port, running))
         return rv
 
-    @setting(402, 'add server', host='s', port='w', password='s')
+    @setting(402, "add server", host="s", port="w", password="s")
     def add_server(self, c, host, port=None, password=None):
         """
         Add new server to the list.
@@ -750,19 +793,19 @@ class DataVaultMultiHead(DataVault):
         password = password if password is not None else self.password
         self.hub.add_server(host, port, password)
 
-    @setting(403, 'Ping Managers')
+    @setting(403, "Ping Managers")
     def ping_managers(self, c):
         self.hub.ping()
 
-    @setting(404, 'Kick Managers', host_regex='s', port='w')
+    @setting(404, "Kick Managers", host_regex="s", port="w")
     def kick_managers(self, c, host_regex, port=0):
         self.hub.kick(host_regex, port)
 
-    @setting(405, 'Reconnect', host_regex='s', port='w')
+    @setting(405, "Reconnect", host_regex="s", port="w")
     def reconnect(self, c, host_regex, port=0):
         self.hub.reconnect(host_regex, port)
 
-    @setting(406, 'Refresh Managers')
+    @setting(406, "Refresh Managers")
     def refresh_managers(self, c):
         return self.hub.refresh_managers()
 

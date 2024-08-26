@@ -20,7 +20,7 @@ class ScheduledWidget(QWidget):
 
     def setup_layout(self):
         layout = QHBoxLayout()
-        self.id_label = QLabel('{0}'.format(self.ident))
+        self.id_label = QLabel("{0}".format(self.ident))
         self.id_label.setFont(self.font)
         self.id_label.setMinimumWidth(30)
         self.id_label.setMinimumHeight(15)
@@ -29,15 +29,14 @@ class ScheduledWidget(QWidget):
         self.name_label = QLabel(self.name)
         self.name_label.setFont(self.font)
         self.name_label.setAlignment(QtCore.Qt.AlignLeft)
-        self.name_label.setSizePolicy(QSizePolicy.MinimumExpanding,
-                                      QSizePolicy.Fixed)
+        self.name_label.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         self.name_label.setMinimumWidth(150)
         self.name_label.setMinimumHeight(15)
         self.scheduled_duration = QSpinBox()
         self.scheduled_duration.setMinimumHeight(20)
         self.scheduled_duration.setRange(1, 3600)
         self.scheduled_duration.setKeyboardTracking(False)
-        self.scheduled_duration.setSuffix(' sec')
+        self.scheduled_duration.setSuffix(" sec")
         self.scheduled_duration.setValue(self.duration)
         self.cancel_button = FixedWidthButton("Cancel", (75, 23))
         layout.addWidget(self.id_label)
@@ -62,7 +61,7 @@ class ScheduledList(QTableWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setSelectionMode(QAbstractItemView.NoSelection)
         self.setup_layout()
         self.d = {}  # stores identification: corresponding widget
@@ -85,16 +84,16 @@ class ScheduledList(QTableWidget):
         self.verticalHeader().hide()
         self.setColumnCount(1)
         self.setShowGrid(False)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.MinimumExpanding)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
     # noinspection PyUnresolvedReferences
     def add(self, ident, name, duration):
         ident = int(ident)
         row_count = self.rowCount()
         self.setRowCount(row_count + 1)
-        widget = ScheduledWidget(self.reactor, parent=self.parent,
-                                 ident=ident, name=name, duration=duration)
+        widget = ScheduledWidget(
+            self.reactor, parent=self.parent, ident=ident, name=name, duration=duration
+        )
         self.mapper_cancel.setMapping(widget.cancel_button, ident)
         widget.cancel_button.pressed.connect(self.mapper_cancel.map)
         self.mapper_duration.setMapping(widget.scheduled_duration, ident)
@@ -142,7 +141,7 @@ class ScheduledCombined(QWidget):
         self.parent = parent
         self.font = font
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setup_layout()
         self.connect_layout()
 

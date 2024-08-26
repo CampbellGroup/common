@@ -15,14 +15,14 @@ HDF datasets are stored in the following fashion:
 
 Datasets have the following attributes:
 
-| Attribute             | Description                                          | Type                      |
-|-----------------------|------------------------------------------------------|---------------------------|
-| Title                 | Dataset Title                                        |                           |
-| Access Time           | Access time                                          | float64                   |
-| Modification Time     | Modification time                                    |                           |
-| Creation Time         | Creation time                                        |                           |
-| Comments              | 1-D array of comments (timestamp, username, comment) | (float64, vstr, vstr)     |
-| Parameters            | Parameter "Foo" is stored as Param.Foo               | urlencoded flattened data |
+| Attribute         | Description                                          | Type                      |
+|-------------------|------------------------------------------------------|---------------------------|
+| Title             | Dataset Title                                        |                           |
+| Access Time       | Access time                                          | float64                   |
+| Modification Time | Modification time                                    |                           |
+| Creation Time     | Creation time                                        |                           |
+| Comments          | 1-D array of comments (timestamp, username, comment) | (float64, vstr, vstr)     |
+| Parameters        | Parameter "Foo" is stored as Param.Foo               | urlencoded flattened data |
 
 Independent variables have the following object attributes:
 

@@ -27,7 +27,9 @@ class DACDevice(DeviceWrapper):
     @inlineCallbacks
     def connect(self, server, port):
         """Connect to a evPump device."""
-        print 'connecting to "%s" on port "%s"...' % (server.name, port),
+        print(
+            'connecting to "%s" on port "%s"...' % (server.name, port),
+        )
         self.server = server
         self.ctx = server.context()
         self.port = port
@@ -53,7 +55,7 @@ class DACDevice(DeviceWrapper):
 
     @inlineCallbacks
     def query(self, code):
-        """ Write, then read. """
+        """Write, then read."""
         p = self.packet()
         p.write_line(code)
         p.read_line()
@@ -62,22 +64,24 @@ class DACDevice(DeviceWrapper):
 
 
 class DAC8718(DeviceServer):
-    name = 'dac8718'
+    name = "dac8718"
     deviceWrapper = DACDevice
 
     @inlineCallbacks
     def initServer(self):
-        print 'loading config info...',
+        print(
+            "loading config info...",
+        )
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        print self.serialLinks
+        print(self.serialLinks)
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'dac8718', 'Links'], True)
+        yield reg.cd(["", "Servers", "dac8718", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -96,11 +100,11 @@ class DAC8718(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
+            devName = "%s - %s" % (serServer, port)
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    @setting(100, chan='i', value='i')
+    @setting(100, chan="i", value="i")
     def DACOutput(self, c, chan, value):
         """
         Output voltage value (in bits from 0 to 2^16) on chan.
@@ -121,18 +125,20 @@ class DAC8718(DeviceServer):
 
         if len(value) != 16:
             buff = 16 - len(value)
-            value = '0'*buff + value
+            value = "0" * buff + value
 
         value1 = value[0:8]
-        value1 = int('0b' + value1, 2)
+        value1 = int("0b" + value1, 2)
         value2 = value[8:]
-        value2 = int('0b' + value2, 2)
+        value2 = int("0b" + value2, 2)
         yield dev.write(chr(chan))
         yield dev.write(chr(value1))
         yield dev.write(chr(value2))
 
-TIMEOUT = Value(1, 's')
+
+TIMEOUT = Value(1, "s")
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(DAC8718())

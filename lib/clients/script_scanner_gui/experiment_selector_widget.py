@@ -1,12 +1,30 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction, QTabWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QPushButton,
+    QWidget,
+    QAction,
+    QTabWidget,
+    QVBoxLayout,
+    QLabel,
+)
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QThread, QObject, pyqtSignal
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QGroupBox, QDialog, QVBoxLayout, QGridLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QGroupBox,
+    QDialog,
+    QVBoxLayout,
+    QGridLayout,
+)
 from PyQt5 import uic
 
 from numpy import linspace
@@ -27,7 +45,7 @@ class scan_dialog(QDialog, dialog_ui):
     def __init__(self, selected, experiment_list, parameter_info, parent=None):
         QDialog.__init__(self)
         dialog_ui.__init__(self, parent)
-        self.setWindowTitle('Scan')
+        self.setWindowTitle("Scan")
         self.parameter_info = {}
         self.setup_layout(selected, experiment_list, parameter_info)
         self.connect_layout()
@@ -52,8 +70,9 @@ class scan_dialog(QDialog, dialog_ui):
 
     def process_parameter_info(self, info):
         for collection, parameter, minim, maxim, units in sorted(info):
-            self.parameter.addItem(collection + ' : ' + parameter,
-                                   userData=(collection, parameter))
+            self.parameter.addItem(
+                collection + " : " + parameter, userData=(collection, parameter)
+            )
             self.parameter_info[(collection, parameter)] = (minim, maxim, units)
 
     def connect_layout(self):
@@ -85,16 +104,30 @@ class scan_dialog(QDialog, dialog_ui):
         self.measure.setCurrentIndex(index)
 
     def on_new_decimals(self, decimals):
-        for widget in [self.uiMin, self.uiMax, self.uiStart, self.uiStop,
-                       self.uiCenter, self.uiSpan,
-                       self.uiSetResolution, self.uiActualResolution]:
+        for widget in [
+            self.uiMin,
+            self.uiMax,
+            self.uiStart,
+            self.uiStop,
+            self.uiCenter,
+            self.uiSpan,
+            self.uiSetResolution,
+            self.uiActualResolution,
+        ]:
             widget.setSingleStep(10**-decimals)
             widget.setDecimals(decimals)
 
     def set_suffix(self, suffix):
-        for widget in [self.uiMin, self.uiMax, self.uiStart, self.uiStop,
-                       self.uiCenter, self.uiSpan,
-                       self.uiSetResolution, self.uiActualResolution]:
+        for widget in [
+            self.uiMin,
+            self.uiMax,
+            self.uiStart,
+            self.uiStop,
+            self.uiCenter,
+            self.uiSpan,
+            self.uiSetResolution,
+            self.uiActualResolution,
+        ]:
             if suffix:
                 widget.setSuffix(suffix)
 
@@ -110,7 +143,7 @@ class scan_dialog(QDialog, dialog_ui):
         center = self.uiCenter.value()
         span = self.uiSpan.value()
         start = center - span / 2.0
-        stop = center + span/2.0
+        stop = center + span / 2.0
         self.uiStart.setValue(start)
         self.uiStop.setValue(stop)
         self.updateResolutionSteps()
@@ -118,13 +151,13 @@ class scan_dialog(QDialog, dialog_ui):
     def onNewStartStop(self):
         start = self.uiStart.value()
         stop = self.uiStop.value()
-        self.uiCenter.setValue((start + stop)/2.0)
+        self.uiCenter.setValue((start + stop) / 2.0)
         self.uiSpan.setValue(stop - start)
         self.updateResolutionSteps()
 
     def updateResolutionSteps(self):
         """calculate and update the resolution or the steps depending
-           on which is locked"""
+        on which is locked"""
         if self.uiLockSteps.isChecked():
             self.onNewSteps()
         else:
@@ -172,7 +205,7 @@ class scan_dialog(QDialog, dialog_ui):
 class repeat_dialog(QDialog):
     def __init__(self):
         super(repeat_dialog, self).__init__()
-        self.setWindowTitle('Repeat')
+        self.setWindowTitle("Repeat")
         self.setupLayout()
         self.connect_layout()
 
@@ -185,7 +218,7 @@ class repeat_dialog(QDialog):
         save_label = QLabel("Save Data")
         self.should_save = QCheckBox()
         self.should_save.setChecked(True)
-        self.okay_button = QPushButton('Okay')
+        self.okay_button = QPushButton("Okay")
         self.cancel_button = QPushButton("Cancel")
         layout.addWidget(rep_label)
         layout.addWidget(self.repeat)
@@ -203,21 +236,20 @@ class repeat_dialog(QDialog):
 class schedule_dialog(QDialog):
     def __init__(self):
         super(schedule_dialog, self).__init__()
-        self.setWindowTitle('Schedule')
+        self.setWindowTitle("Schedule")
         self.setupLayout()
         self.connect_layout()
 
     def setupLayout(self):
         layout = QHBoxLayout()
         self.duration = QSpinBox()
-        self.duration.setSuffix(' sec')
+        self.duration.setSuffix(" sec")
         self.duration.setKeyboardTracking(False)
         self.duration.setRange(1, 10000)
-        self.okay_button = QPushButton('Okay')
+        self.okay_button = QPushButton("Okay")
         self.cancel_button = QPushButton("Cancel")
         self.priority = QComboBox()
-        self.priority.addItems(['Normal', 'First in Queue',
-                                'Pause All Others'])
+        self.priority.addItems(["Normal", "First in Queue", "Pause All Others"])
         self.start_immediately = QCheckBox()
         self.start_immediately.setCheckable(True)
         self.start_immediately.setChecked(True)
@@ -255,7 +287,7 @@ class experiment_selector_widget(QWidget):
         self.experiments = []
         super(experiment_selector_widget, self).__init__()
         if self.font is None:
-            self.font = QFont('MS Shell Dlg 2', pointSize=12)
+            self.font = QFont("MS Shell Dlg 2", pointSize=12)
         self.setupLayout()
         self.connect_layout()
 
@@ -264,7 +296,7 @@ class experiment_selector_widget(QWidget):
         label = QLabel("Experiment", font=self.font)
         self.dropdown = QComboBox()
         self.dropdown.setMaxVisibleItems(30)
-        self.dropdown.addItem('')  # add empty item for no selection state
+        self.dropdown.addItem("")  # add empty item for no selection state
         # enable sorting
         sorting_model = QSortFilterProxyModel(self.dropdown)
         sorting_model.setSortCaseSensitivity(Qt.CaseInsensitive)
@@ -276,24 +308,23 @@ class experiment_selector_widget(QWidget):
         self.scan_button = QPushButton("Scan")
         self.schedule_button = QPushButton("Schedule")
         self.refresh_button = QPushButton()
-        self.refresh_button.setIcon(QIcon.fromTheme('view-refresh'))
+        self.refresh_button.setIcon(QIcon.fromTheme("view-refresh"))
 
-        layout.addWidget(label,                 0, 0, 1, 1)
-        layout.addWidget(self.dropdown,         0, 1, 1, 3)
-        layout.addWidget(self.refresh_button,   0, 4, 1, 1)
-        layout.addWidget(self.run_button,       1, 1, 1, 1)
-        layout.addWidget(self.repeat_button,    1, 2, 1, 1)
-        layout.addWidget(self.scan_button,      1, 3, 1, 1)
-        layout.addWidget(self.schedule_button,  1, 4, 1, 1)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addWidget(self.dropdown, 0, 1, 1, 3)
+        layout.addWidget(self.refresh_button, 0, 4, 1, 1)
+        layout.addWidget(self.run_button, 1, 1, 1, 1)
+        layout.addWidget(self.repeat_button, 1, 2, 1, 1)
+        layout.addWidget(self.scan_button, 1, 3, 1, 1)
+        layout.addWidget(self.schedule_button, 1, 4, 1, 1)
         self.setLayout(layout)
-        self.setSizePolicy(QSizePolicy.MinimumExpanding,
-                           QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         self.check_button_disable(self.dropdown.currentText())
 
     def clear_all(self):
         self.dropdown.clear()
         self.experiments = []
-        self.dropdown.addItem('')  # add empty item for no selection state
+        self.dropdown.addItem("")  # add empty item for no selection state
 
     def connect_layout(self):
         self.run_button.pressed.connect(self.run_emit_selected)
@@ -309,12 +340,20 @@ class experiment_selector_widget(QWidget):
         Disables gui interface if scriptscanner server is disconnected
         """
         if not selection:
-            for button in [self.run_button, self.repeat_button,
-                           self.schedule_button, self.scan_button]:
+            for button in [
+                self.run_button,
+                self.repeat_button,
+                self.schedule_button,
+                self.scan_button,
+            ]:
                 button.setDisabled(True)
         else:
-            for button in [self.run_button, self.repeat_button,
-                           self.schedule_button, self.scan_button]:
+            for button in [
+                self.run_button,
+                self.repeat_button,
+                self.schedule_button,
+                self.scan_button,
+            ]:
                 button.setDisabled(False)
 
     def on_schedule_button(self):
@@ -346,8 +385,7 @@ class experiment_selector_widget(QWidget):
             stop = dialog.uiStop.value()
             steps = dialog.uiSteps.value()
             units = dialog.uiStart.suffix()
-            self.on_scan.emit(scan, measure, parameter,
-                              start, stop, steps, units)
+            self.on_scan.emit(scan, measure, parameter, start, stop, steps, units)
 
     def on_refresh_button(self):
         self.on_refresh.emit(True)

@@ -15,6 +15,7 @@ class PriorityQueue:
     priority queue with a few levels of priority
     focus on ease of use, not speed
     """
+
     priorities = [0, 1]
 
     def __init__(self):
@@ -42,7 +43,9 @@ class PriorityQueue:
 
     def peek_next(self):
         try:
-            next_priority = [priority for priority in self.priorities if self.d[priority]][0]
+            next_priority = [
+                priority for priority in self.priorities if self.d[priority]
+            ][0]
             return self.d[next_priority][0]
         except ValueError:
             raise ValueError
@@ -66,8 +69,9 @@ class PriorityQueue:
 class RunningScript:
     """holds information about a script that is currently running"""
 
-    def __init__(self, scan, defer_on_done, status, priority=-1,
-                 externally_launched=False):
+    def __init__(
+        self, scan, defer_on_done, status, priority=-1, externally_launched=False
+    ):
         self.scan = scan
         self.name = scan.name
         self.status = status
@@ -88,10 +92,18 @@ class ScriptScheduler:
         self.scan_ID_counter = 0
 
     def running_deferred_list(self):
-        return [script.defer_on_done for script in self.running.values() if not script.externally_launched]
+        return [
+            script.defer_on_done
+            for script in self.running.values()
+            if not script.externally_launched
+        ]
 
     def get_running_external(self):
-        return [ident for (ident, script) in self.running.items() if script.externally_launched]
+        return [
+            ident
+            for (ident, script) in self.running.items()
+            if script.externally_launched
+        ]
 
     def get_running(self):
         running = []
@@ -126,9 +138,13 @@ class ScriptScheduler:
                 self.queue.remove_object((script_id, scan, priority))
                 self.signals.on_queued_removed(script_id)
         if not removed:
-            raise Exception("Tring to remove scirpt ID {0} from queue but it's not in the queue".format(script_id))
+            raise Exception(
+                "Tring to remove scirpt ID {0} from queue but it's not in the queue".format(
+                    script_id
+                )
+            )
 
-    def add_scan_to_queue(self, scan, priority='Normal'):
+    def add_scan_to_queue(self, scan, priority="Normal"):
         """
 
         This is called by scriptscanner.new_experiment.  self.scan_ID_counter
@@ -148,11 +164,11 @@ class ScriptScheduler:
         scan_id = self.scan_ID_counter
         self.scan_ID_counter += 1
         # add to queue
-        if priority == 'Normal':
+        if priority == "Normal":
             order = self.queue.put_last(1, (scan_id, scan, 1))
-        elif priority == 'First in Queue':
+        elif priority == "First in Queue":
             order = self.queue.put_first(1, (scan_id, scan, 1))
-        elif priority == 'Pause All Others':
+        elif priority == "Pause All Others":
             order = self.queue.put_last(0, (scan_id, scan, 0))
         else:
             raise Exception("Unrecognized priority type")
@@ -189,14 +205,19 @@ class ScriptScheduler:
         scan_id = self.scan_ID_counter
         self.scan_ID_counter += 1
         status = script_semaphore(scan_id, self.signals)
-        self.running[scan_id] = RunningScript(scan, Deferred(), status,
-                                              externally_launched=True)
+        self.running[scan_id] = RunningScript(
+            scan, Deferred(), status, externally_launched=True
+        )
 
         self.signals.on_running_new_script((scan_id, scan.name))
         return scan_id
 
     def remove_from_running(self, deferred_result, running_id):
-        print('removing from running now: {0} - {1}'.format(running_id, self.running[running_id].name))
+        print(
+            "removing from running now: {0} - {1}".format(
+                running_id, self.running[running_id].name
+            )
+        )
         del self.running[running_id]
 
     def remove_if_external(self, running_id):
@@ -219,7 +240,11 @@ class ScriptScheduler:
         try:
             name, lc = self.scheduled[scheduled_id]
         except KeyError:
-            raise Exception("Schedule Script {0} with {1} ID does not exist".format(name, scheduled_id))
+            raise Exception(
+                "Schedule Script {0} with {1} ID does not exist".format(
+                    name, scheduled_id
+                )
+            )
         else:
             lc.stop()
             lc.start(period, now=False)
@@ -229,7 +254,9 @@ class ScriptScheduler:
         try:
             name, lc = self.scheduled[scheduled_id]
         except KeyError:
-            raise Exception("Scheduled Script with ID {0} does not exist".format(scheduled_id))
+            raise Exception(
+                "Scheduled Script with ID {0} does not exist".format(scheduled_id)
+            )
         else:
             lc.stop()
             del self.scheduled[scheduled_id]
@@ -276,7 +303,10 @@ class ScriptScheduler:
         paused_deferred = []
         for ident, script in self.running.items():
             non_conf = Config.allowed_concurrent.get(script.name, [])
-            if scan.script_cls.name not in non_conf and not script.status.status == 'Paused':
+            if (
+                scan.script_cls.name not in non_conf
+                and not script.status.status == "Paused"
+            ):
                 # don't pause unless it's a conflicting experiment, and it's not already paused
                 if not ident == current_ident:
                     paused_idents.append(ident)
@@ -293,7 +323,7 @@ class ScriptScheduler:
                 # if the previously paused experiment is no longer running
                 self._paused_by_script.remove(ident)
                 break
-            if not self.running[ident].status.status == 'Running':
+            if not self.running[ident].status.status == "Running":
                 # if not already running, unpause
                 d = self.running[ident].status.set_pausing(False)
                 unpaused_defers.append(d)

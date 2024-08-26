@@ -22,7 +22,7 @@ from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(10.0, 's')
+TIMEOUT = Value(10.0, "s")
 
 
 class KeithleyWrapper(DeviceWrapper):
@@ -64,7 +64,7 @@ class KeithleyWrapper(DeviceWrapper):
 
     @inlineCallbacks
     def query(self, code):
-        """ Write, then read. """
+        """Write, then read."""
         p = self.packet()
         yield p.write_line(code)
         p.read_line()
@@ -80,11 +80,11 @@ class KeithleyWrapper(DeviceWrapper):
         str, channel name for commands with a leading space.
         """
         if channel == 1:
-            return ' CH1'
+            return " CH1"
         elif channel == 2:
-            return ' CH2'
+            return " CH2"
         elif channel == 3:
-            return ' CH3'
+            return " CH3"
         else:
             raise ValueError("Channel must be 1, 2, or 3")
 
@@ -101,7 +101,7 @@ class KeithleyWrapper(DeviceWrapper):
         yield self.set_channel(channel=channel)
         # Explicitly setting the important space in command.
         # noinspection SpellCheckingInspection
-        command = 'CHANnel:OUTPut' + ' ' + str(int(output))
+        command = "CHANnel:OUTPut" + " " + str(int(output))
         yield self.write(command)
 
     @inlineCallbacks
@@ -118,7 +118,7 @@ class KeithleyWrapper(DeviceWrapper):
         # First select the appropriate channel
         yield self.set_channel(channel=channel)
         # noinspection SpellCheckingInspection
-        command = 'CHANnel:OUTPut?'
+        command = "CHANnel:OUTPut?"
         yield self.write(command)
         state = yield self.read()
         state = self._convert_state_to_bool(state)
@@ -134,9 +134,9 @@ class KeithleyWrapper(DeviceWrapper):
         -------
         bool
         """
-        if state == '0':
+        if state == "0":
             output_state = False
-        elif state == '1':
+        elif state == "1":
             output_state = True
         else:
             output_state = None
@@ -152,12 +152,12 @@ class KeithleyWrapper(DeviceWrapper):
         channel: int, channel number
         """
         channel_str = self.parse_channel(channel=channel)
-        command = 'MEAS:VOLT:DC? ' + channel_str
+        command = "MEAS:VOLT:DC? " + channel_str
         yield self.write(command)
         voltage = yield self.read()
-        voltage = WithUnit(float(voltage), 'V')
+        voltage = WithUnit(float(voltage), "V")
         returnValue(voltage)
-        
+
     @inlineCallbacks
     def measure_current(self, channel=None):
         """
@@ -167,10 +167,10 @@ class KeithleyWrapper(DeviceWrapper):
         channel: int, channel number
         """
         channel_str = self.parse_channel(channel=channel)
-        command = 'MEAS:CURRent:DC? ' + channel_str
+        command = "MEAS:CURRent:DC? " + channel_str
         yield self.write(command)
         current = yield self.read()
-        current = WithUnit(float(current), 'A')
+        current = WithUnit(float(current), "A")
         returnValue(current)
 
     # Source commands.  These commands allow you to output various values.
@@ -180,12 +180,12 @@ class KeithleyWrapper(DeviceWrapper):
         Set channel's output voltage.
         """
         channel_str = self.parse_channel(channel)
-        voltage_in_volts = voltage['V']
+        voltage_in_volts = voltage["V"]
         voltage_in_volts = str(voltage_in_volts)
-        command = 'APPly' + channel_str + ',' + voltage_in_volts + 'V'
+        command = "APPly" + channel_str + "," + voltage_in_volts + "V"
         yield self.write(command)
         volts = yield self.measure_voltage(channel=channel)
-        units_volts = WithUnit(volts, 'V')
+        units_volts = WithUnit(volts, "V")
         returnValue(units_volts)
 
     @inlineCallbacks
@@ -197,7 +197,7 @@ class KeithleyWrapper(DeviceWrapper):
         """
         channel_str = self.parse_channel(channel)
         # noinspection SpellCheckingInspection
-        command = 'APPL?' + channel_str
+        command = "APPL?" + channel_str
         yield self.write(command)
         out = yield self.read()
         returnValue(out)
@@ -212,12 +212,12 @@ class KeithleyWrapper(DeviceWrapper):
         current: WithUnit Amps, default(None)
         """
         yield self.set_channel(channel=channel)
-        current_in_amps = current['A']
+        current_in_amps = current["A"]
         current_in_amps = str(current_in_amps)
-        command = 'CURRent' + ' ' + current_in_amps + 'A'
+        command = "CURRent" + " " + current_in_amps + "A"
         yield self.write(command)
         current = yield self.measure_current(channel=channel)
-        units_current = WithUnit(current, 'A')
+        units_current = WithUnit(current, "A")
         returnValue(units_current)
 
     # Instrument commands.
@@ -249,8 +249,8 @@ class KeithleyWrapper(DeviceWrapper):
 
 
 class Keithley_Server(DeviceServer):
-    name = 'Keithley_Server'
-    deviceName = 'Keithley_Server'
+    name = "Keithley_Server"
+    deviceName = "Keithley_Server"
     deviceWrapper = KeithleyWrapper
 
     @inlineCallbacks
@@ -263,7 +263,7 @@ class Keithley_Server(DeviceServer):
     def load_config_info(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'KeithleyBField', 'Links'], True)
+        yield reg.cd(["", "Servers", "KeithleyBField", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -282,11 +282,11 @@ class Keithley_Server(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            dev_name = '%s - %s' % (serServer, port)
+            dev_name = "%s - %s" % (serServer, port)
             devs += [(dev_name, (server, port))]
         returnValue(devs)
 
-    @setting(100, 'test_beep')
+    @setting(100, "test_beep")
     def test_beep(self, c):
         """
         Sends a command to the device, telling it to beep.
@@ -294,10 +294,10 @@ class Keithley_Server(DeviceServer):
         Takes no arguments.
         """
         dev = self.selectDevice(c)
-        output = 'SYSTem:BEEPer'
+        output = "SYSTem:BEEPer"
         yield dev.write(output)
 
-    @setting(101, 'remote_mode', state='i')
+    @setting(101, "remote_mode", state="i")
     def remote_mode(self, c, state):
         """
         Turn remote mode on or off.
@@ -308,12 +308,12 @@ class Keithley_Server(DeviceServer):
         """
         dev = self.selectDevice(c)
         if state == 0:
-            output = 'SYSTem:LOCal'
+            output = "SYSTem:LOCal"
         else:
-            output = 'SYSTem:REMote'
+            output = "SYSTem:REMote"
         yield dev.write(output)
 
-    @setting(102, channel='i', output='b')
+    @setting(102, channel="i", output="b")
     def output(self, c, channel, output=None):
         """
         Parameters
@@ -330,7 +330,7 @@ class Keithley_Server(DeviceServer):
             output_state = yield dev.measure_output(channel)
         returnValue(output_state)
 
-    @setting(103, channel='i', voltage='v[V]', returns='v[V]')
+    @setting(103, channel="i", voltage="v[V]", returns="v[V]")
     def voltage(self, c, channel, voltage=None):
         """
         Get or set the Keithley's channel voltage.
@@ -348,7 +348,7 @@ class Keithley_Server(DeviceServer):
         volts = yield dev.measure_voltage(channel=channel)
         returnValue(volts)
 
-    @setting(104, channel='i', current='v[A]', returns='v[A]')
+    @setting(104, channel="i", current="v[A]", returns="v[A]")
     def current(self, c, channel, current=None):
         """
         Get or set the Keithley's channel current.
@@ -366,7 +366,7 @@ class Keithley_Server(DeviceServer):
         current = yield dev.measure_current(channel=channel)
         returnValue(current)
 
-    @setting(105, channel='i', returns='?')
+    @setting(105, channel="i", returns="?")
     def channel(self, c, channel=None):
         """
         Enable channel or query enabled channel.
@@ -382,60 +382,58 @@ class Keithley_Server(DeviceServer):
         enabled_channel = yield dev.query_channel()
         returnValue(enabled_channel)
 
-    @setting(106, volt='*v[V]')
+    @setting(106, volt="*v[V]")
     def all_voltage(self, c, volt):
-        """
-        """
+        """ """
         dev = self.selectDevice(c)
-        command = 'APP:VOLT ' + str(volt[0]) + ',' + str(volt[1]) + ',' + str(volt[2])
+        command = "APP:VOLT " + str(volt[0]) + "," + str(volt[1]) + "," + str(volt[2])
         yield dev.write(command)
 
-    @setting(107, curr='*v[A]')
+    @setting(107, curr="*v[A]")
     def all_current(self, c, curr):
         """
         Change to take list of currents
         """
         dev = self.selectDevice(c)
-        command = 'APP:CURR ' + str(curr[0]) + ',' + str(curr[1]) + ',' + str(curr[2])
+        command = "APP:CURR " + str(curr[0]) + "," + str(curr[1]) + "," + str(curr[2])
         yield dev.write(command)
 
-    @setting(108, chan='i')
+    @setting(108, chan="i")
     def query_initial(self, c, chan):
-        """
-        """
+        """ """
         dev = self.selectDevice(c)
         # noinspection SpellCheckingInspection
         success = False
-        command = 'Stat:oper:inst:isum' + str(chan) + ':cond?'
+        command = "Stat:oper:inst:isum" + str(chan) + ":cond?"
         yield dev.write(command)
         out = yield dev.read()
         if out == "":
             returnValue(0)
 
         returnValue(int(out))
-        
-    @setting(109, out_set='i', returns='?')
+
+    @setting(109, out_set="i", returns="?")
     def get_applied_voltage_current(self, c, out_set=None):
         dev = self.selectDevice(c)
 
         out1 = yield dev.applied_voltage_current(1)
-        out1 = out1.split(', ')
+        out1 = out1.split(", ")
         out1 = out1 if len(out1) != 0 else ["0", "0"]
         out2 = yield dev.applied_voltage_current(2)
-        out2 = out2.split(', ')
+        out2 = out2.split(", ")
         out2 = out2 if len(out2) != 0 else ["0", "0"]
         out3 = yield dev.applied_voltage_current(3)
-        out3 = out3.split(', ')
+        out3 = out3.split(", ")
         out3 = out3 if len(out3) != 0 else ["0", "0"]
 
         if out_set == 1:
-            values1 = WithUnit(float(out1[0]), 'V')
-            values2 = WithUnit(float(out2[0]), 'V')
-            values3 = WithUnit(float(out3[0]), 'V')
+            values1 = WithUnit(float(out1[0]), "V")
+            values2 = WithUnit(float(out2[0]), "V")
+            values3 = WithUnit(float(out3[0]), "V")
         elif out_set == 2:
-            values1 = WithUnit(float(out1[1]), 'A')
-            values2 = WithUnit(float(out2[1]), 'A')
-            values3 = WithUnit(float(out3[1]), 'A')
+            values1 = WithUnit(float(out1[1]), "A")
+            values2 = WithUnit(float(out2[1]), "A")
+            values3 = WithUnit(float(out3[1]), "A")
         else:
             for i in (0, 1):
                 out1[i] = float(out1[i])
@@ -444,10 +442,11 @@ class Keithley_Server(DeviceServer):
             values1 = out1
             values2 = out2
             values3 = out3
-        
+
         returnValue([values1, values2, values3])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(Keithley_Server())

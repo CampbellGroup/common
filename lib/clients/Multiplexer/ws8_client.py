@@ -1,10 +1,10 @@
 from common.lib.clients.qtui.multiplexerchannel_no_pid import QCustomWavemeterChannel
-from common.lib.clients.qtui.q_custom_text_changing_button import \
-    TextChangingButton
+from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
 
 from pyqtgraph.Qt import QtGui
 
 from twisted.internet.defer import inlineCallbacks
+
 try:
     from config.multiplexerclient_config import multiplexer_config
 except:
@@ -27,29 +27,28 @@ class wavemeterclient(QtGui.QWidget):
 
     def __init__(self, reactor, parent=None):
         """initializes the GUI, creates the reactor
-            and empty dictionary for channel widgets to
-            be stored for iteration. also grabs chan info
-            from multiplexer_config
+        and empty dictionary for channel widgets to
+        be stored for iteration. also grabs chan info
+        from multiplexer_config
         """
         super(wavemeterclient, self).__init__()
-        self.password = os.environ['LABRADPASSWORD']
+        self.password = os.environ["LABRADPASSWORD"]
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
         self.reactor = reactor
-        self.name = socket.gethostname() + ' Wave Meter Client'
+        self.name = socket.gethostname() + " Wave Meter Client"
         self.d = {}
         self.wmChannels = {}
         self.connect()
         self._check_window_size()
 
-
     def _check_window_size(self):
-        """Checks screen size to make sure window fits in the screen. """
+        """Checks screen size to make sure window fits in the screen."""
         desktop = QtGui.QDesktopWidget()
         screensize = desktop.availableGeometry()
         width = screensize.width()
         height = screensize.height()
         min_pixel_size = 1080
-        if (width <= min_pixel_size or height <= min_pixel_size):
+        if width <= min_pixel_size or height <= min_pixel_size:
             self.showMaximized()
 
     @inlineCallbacks
@@ -61,9 +60,10 @@ class wavemeterclient(QtGui.QWidget):
         self.chaninfo = multiplexer_config.info
         self.wavemeterIP = multiplexer_config.ip
         from labrad.wrappers import connectAsync
-        self.cxn = yield connectAsync(self.wavemeterIP,
-                                      name=self.name,
-                                      password=self.password)
+
+        self.cxn = yield connectAsync(
+            self.wavemeterIP, name=self.name, password=self.password
+        )
         self.server = yield self.cxn.multiplexerserver
         yield self.server.signal__frequency_changed(SIGNALID1)
         yield self.server.signal__selected_channels_changed(SIGNALID2)
@@ -71,11 +71,21 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__output_changed(SIGNALID5)
         yield self.server.signal__amplitude_changed(SIGNALID8)
 
-        yield self.server.addListener(listener=self.updateFrequency, source=None, ID=SIGNALID1)
-        yield self.server.addListener(listener=self.toggleMeas, source=None, ID=SIGNALID2)
-        yield self.server.addListener(listener=self.updateexp, source=None, ID=SIGNALID3)
-        yield self.server.addListener(listener=self.updateWLMOutput, source=None, ID=SIGNALID5)
-        yield self.server.addListener(listener=self.updateAmplitude, source=None, ID=SIGNALID8)
+        yield self.server.addListener(
+            listener=self.updateFrequency, source=None, ID=SIGNALID1
+        )
+        yield self.server.addListener(
+            listener=self.toggleMeas, source=None, ID=SIGNALID2
+        )
+        yield self.server.addListener(
+            listener=self.updateexp, source=None, ID=SIGNALID3
+        )
+        yield self.server.addListener(
+            listener=self.updateWLMOutput, source=None, ID=SIGNALID5
+        )
+        yield self.server.addListener(
+            listener=self.updateAmplitude, source=None, ID=SIGNALID8
+        )
 
         # starts display of wavemeter data
         self.initializeGUI()
@@ -84,16 +94,16 @@ class wavemeterclient(QtGui.QWidget):
     def initializeGUI(self):
         layout = QtGui.QGridLayout()
 
-        self.setWindowTitle('Wavemeter')
+        self.setWindowTitle("Wavemeter")
 
         # this "group" contains all 8 channel outputs and settings
-        qBox = QtGui.QGroupBox('Wave Length and Lock settings')
+        qBox = QtGui.QGroupBox("Wave Length and Lock settings")
         subLayout = QtGui.QGridLayout()
         qBox.setLayout(subLayout)
         layout.addWidget(qBox, 0, 0)
 
         # button to start wavemeter measurement (turn wavemeter on)
-        self.startSwitch = TextChangingButton('Wavemeter')
+        self.startSwitch = TextChangingButton("Wavemeter")
         self.startSwitch.setMaximumHeight(50)
         initstartvalue = yield self.server.get_wlm_output()
         self.startSwitch.setChecked(initstartvalue)
@@ -110,19 +120,28 @@ class wavemeterclient(QtGui.QWidget):
             widget = QCustomWavemeterChannel(chan, wmChannel, hint, stretched)
 
             from common.lib.clients.qtui import RGBconverter as RGB
+
             RGB = RGB.RGBconverter()
-            color = int(2.998e8/(float(hint)*1e3))
+            color = int(2.998e8 / (float(hint) * 1e3))
             color = RGB.wav2RGB(color)
             color = tuple(color)
 
-            widget.currentfrequency.setStyleSheet('color: rgb' + str(color))
-            widget.spinExp.valueChanged.connect(lambda exp=widget.spinExp.value(), wmChannel=wmChannel : self.expChanged(exp, wmChannel))
+            widget.currentfrequency.setStyleSheet("color: rgb" + str(color))
+            widget.spinExp.valueChanged.connect(
+                lambda exp=widget.spinExp.value(), wmChannel=wmChannel: self.expChanged(
+                    exp, wmChannel
+                )
+            )
             initvalue = yield self.server.get_exposure(wmChannel)
             widget.spinExp.setValue(initvalue)
             initmeas = yield self.server.get_switcher_signal_state(wmChannel)
             initmeas = initmeas
             widget.measSwitch.setChecked(bool(initmeas))
-            widget.measSwitch.toggled.connect(lambda state=widget.measSwitch.isDown(), wmChannel=wmChannel  : self.changeState(state, wmChannel))
+            widget.measSwitch.toggled.connect(
+                lambda state=widget.measSwitch.isDown(), wmChannel=wmChannel: self.changeState(
+                    state, wmChannel
+                )
+            )
 
             self.d[wmChannel] = widget
             subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
@@ -143,13 +162,13 @@ class wavemeterclient(QtGui.QWidget):
             freq = signal[1]
 
             if not self.d[chan].measure_button.isChecked():
-                self.d[chan].current_frequency.setText('Not Measured')
+                self.d[chan].current_frequency.setText("Not Measured")
             elif freq == -3.0:
-                self.d[chan].current_frequency.setText('Under Exposed')
+                self.d[chan].current_frequency.setText("Under Exposed")
             elif freq == -4.0:
-                self.d[chan].current_frequency.setText('Over Exposed')
+                self.d[chan].current_frequency.setText("Over Exposed")
             elif freq == -17.0:
-                self.d[chan].current_frequency.setText('Data Error')
+                self.d[chan].current_frequency.setText("Data Error")
             else:
                 self.d[chan].current_frequency.setText(str(freq)[0:10])
 
@@ -192,8 +211,10 @@ class wavemeterclient(QtGui.QWidget):
 if __name__ == "__main__":
     a = QtGui.QApplication([])
     import qt4reactor
+
     qt4reactor.install()
     from twisted.internet import reactor
+
     wavemeterWidget = wavemeterclient(reactor)
     wavemeterWidget.show()
     reactor.run()

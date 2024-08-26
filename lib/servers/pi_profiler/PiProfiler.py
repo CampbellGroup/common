@@ -30,7 +30,8 @@ class PiCamera(LabradServer):
     This can take basic images, and later it should be able to get beam
     profiles.
     """
-    name = 'Pi Camera'
+
+    name = "Pi Camera"
     _image_data = None
 
     @setting(1)
@@ -41,52 +42,55 @@ class PiCamera(LabradServer):
         """
         with picamera.PiCamera() as camera:
             with picamera.array.PiRGBArray(camera) as output:
-                camera.capture(output, 'rgb')
-                print('Captured %dx%d image' % (
-                      output.array.shape[1], output.array.shape[0]))
+                camera.capture(output, "rgb")
+                print(
+                    "Captured %dx%d image"
+                    % (output.array.shape[1], output.array.shape[0])
+                )
                 self._image_data = output.array
 
     @setting(2)
-    def image_array(self, returns='?'):
+    def image_array(self, returns="?"):
         """
         Return the numpy array of capture image data.
         """
         image_array = self._image_data
-        image_array = _n.array(image_array, dtype='float')
+        image_array = _n.array(image_array, dtype="float")
         yield None
         returnValue(image_array)
 
     @setting(3)
-    def red_image_array(self, returns='?'):
+    def red_image_array(self, returns="?"):
         """
         Return the numpy array of R values of captured image data.
         """
         red_array = self._image_data[:, :, 0]
-        red_array = _n.array(red_array, dtype='float')
+        red_array = _n.array(red_array, dtype="float")
         yield None
         returnValue(red_array)
 
     @setting(4)
-    def green_image_array(self, returns='?'):
+    def green_image_array(self, returns="?"):
         """
         Return the numpy array of G values of captured image data.
         """
         green_array = self._image_data[:, :, 1]
-        green_array = _n.array(green_array, dtype='float')
+        green_array = _n.array(green_array, dtype="float")
         yield None
         returnValue(green_array)
 
     @setting(5)
-    def blue_image_array(self, returns='?'):
+    def blue_image_array(self, returns="?"):
         """
         Return the numpy array of B values of captured image data.
         """
         blue_array = self._image_data[:, :, 2]
-        blue_array = _n.array(blue_array, dtype='float')
+        blue_array = _n.array(blue_array, dtype="float")
         yield None
         returnValue(blue_array)
 
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(PiCamera())

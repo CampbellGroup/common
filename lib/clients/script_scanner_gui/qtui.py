@@ -20,11 +20,11 @@ class ProgressBar(QProgressBar):
         self.reactor = reactor
         self.setFont(QFont(self.font().family(), pointSize=10))
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
-        self.set_status('', 0.0)
+        self.set_status("", 0.0)
 
     def set_status(self, status_name, percentage):
         self.setValue(int(percentage))
-        self.setFormat('{0} %p%'.format(status_name))
+        self.setFormat("{0} %p%".format(status_name))
 
     def closeEvent(self, x):
         self.reactor.stop()

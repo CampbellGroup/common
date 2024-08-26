@@ -21,7 +21,7 @@ from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
 from twisted.internet.defer import inlineCallbacks, returnValue
 
-TIMEOUT = Value(1.0, 's')
+TIMEOUT = Value(1.0, "s")
 
 
 class UCLAPiezo_device(DeviceWrapper):
@@ -65,7 +65,7 @@ class UCLAPiezo_device(DeviceWrapper):
 
     @inlineCallbacks
     def query(self, code):
-        """ Write, then read. """
+        """Write, then read."""
         p = self.packet()
         p.write_line(code)
         p.read_line()
@@ -74,8 +74,8 @@ class UCLAPiezo_device(DeviceWrapper):
 
 
 class UCLAPiezo(DeviceServer):
-    name = 'UCLAPiezo'
-    deviceName = 'UCLAPiezo'
+    name = "UCLAPiezo"
+    deviceName = "UCLAPiezo"
     deviceWrapper = UCLAPiezo_device
 
     """
@@ -87,17 +87,17 @@ class UCLAPiezo(DeviceServer):
 
     @inlineCallbacks
     def initServer(self):
-        print('loading config info...')
+        print("loading config info...")
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
-        yield self.reg.cd(['', 'settings'], True)
+        yield self.reg.cd(["", "settings"], True)
         yield DeviceServer.initServer(self)
 
     @inlineCallbacks
     def loadConfigInfo(self):
         """Load configuration information from the registry."""
         reg = self.reg
-        yield reg.cd(['', 'Servers', 'UCLAPiezo', 'Links'], True)
+        yield reg.cd(["", "Servers", "UCLAPiezo", "Links"], True)
         dirs, keys = yield reg.dir()
         p = reg.packet()
         for k in keys:
@@ -116,14 +116,14 @@ class UCLAPiezo(DeviceServer):
             ports = yield server.list_serial_ports()
             if port not in ports:
                 continue
-            devName = '%s - %s' % (serServer, port)
+            devName = "%s - %s" % (serServer, port)
             devs += [(devName, (server, port))]
         returnValue(devs)
 
-    @setting(100, 'get_device_info')
+    @setting(100, "get_device_info")
     def get_device_info(self, c):
         dev = self.selectDevice(c)
-        output = 'id?'
+        output = "id?"
         yield dev.write(output)
         device_type = yield dev.read()
         device_id = yield dev.read()
@@ -131,30 +131,31 @@ class UCLAPiezo(DeviceServer):
         firmware = yield dev.read()
         returnValue([device_type, device_id, hardware_id, firmware])
 
-    @setting(101, 'set_voltage', chan='i', voltage='v[V]')
+    @setting(101, "set_voltage", chan="i", voltage="v[V]")
     def set_voltage(self, c, chan, voltage):
         dev = self.selectDevice(c)
-        output = 'vout.w ' + str(chan) + ' ' + str(voltage['V'])
+        output = "vout.w " + str(chan) + " " + str(voltage["V"])
         yield dev.write(output)
-        setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
+        setting = yield self.reg.get("ucla_piezo_chan_" + str(chan))
         state = setting[1]
         name = setting[2]
-        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
+        yield self.reg.set("ucla_piezo_chan_" + str(chan), (voltage, state, name))
 
-    @setting(102, 'piezo_output', chan='i', state='b')
+    @setting(102, "piezo_output", chan="i", state="b")
     def piezo_output(self, c, chan, state):
         dev = self.selectDevice(c)
         if state:
-            output = 'out.w ' + str(chan) + ' 1'
+            output = "out.w " + str(chan) + " 1"
         else:
-            output = 'out.w ' + str(chan) + ' 0'
+            output = "out.w " + str(chan) + " 0"
         yield dev.write(output)
-        setting = yield self.reg.get('ucla_piezo_chan_' + str(chan))
+        setting = yield self.reg.get("ucla_piezo_chan_" + str(chan))
         voltage = setting[0]
         name = setting[2]
-        yield self.reg.set('ucla_piezo_chan_' + str(chan), (voltage, state, name))
+        yield self.reg.set("ucla_piezo_chan_" + str(chan), (voltage, state, name))
 
 
 if __name__ == "__main__":
     from labrad import util
+
     util.runServer(UCLAPiezo())

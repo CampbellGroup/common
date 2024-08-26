@@ -14,7 +14,7 @@ The DDS Control GUI lets the user control the DDS channels of the Pulser
 
 class DDSChannel(QCustomFreqPower):
     def __init__(self, chan, reactor, cxn, context, parent=None):
-        super(DDSChannel, self).__init__('DDS: {}'.format(chan), True, parent)
+        super(DDSChannel, self).__init__("DDS: {}".format(chan), True, parent)
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed)
         self.reactor = reactor
         self.context = context
@@ -25,6 +25,7 @@ class DDSChannel(QCustomFreqPower):
     def import_labrad(self):
         from labrad import types as T
         from labrad.types import Error
+
         self.Error = Error
         self.T = T
         self.setup_widget()
@@ -32,9 +33,13 @@ class DDSChannel(QCustomFreqPower):
     @inlineCallbacks
     def setup_widget(self, connect=True):
         # get ranges
-        self.server = yield self.cxn.get_server('Pulser')
-        min_power, max_power = yield self.server.get_dds_amplitude_range(self.chan, context=self.context)
-        min_freq, max_freq = yield self.server.get_dds_frequency_range(self.chan, context=self.context)
+        self.server = yield self.cxn.get_server("Pulser")
+        min_power, max_power = yield self.server.get_dds_amplitude_range(
+            self.chan, context=self.context
+        )
+        min_freq, max_freq = yield self.server.get_dds_frequency_range(
+            self.chan, context=self.context
+        )
         self.set_power_range((min_power, max_power))
         self.set_freq_range((min_freq, max_freq))
         # get initial values
@@ -42,8 +47,8 @@ class DDSChannel(QCustomFreqPower):
         init_freq = yield self.server.frequency(self.chan, context=self.context)
         init_state = yield self.server.output(self.chan, context=self.context)
         self.set_state_no_signal(init_state)
-        self.set_power_no_signal(init_power['dBm'])
-        self.set_freq_no_signal(init_freq['MHz'])
+        self.set_power_no_signal(init_power["dBm"])
+        self.set_freq_no_signal(init_freq["MHz"])
         # connect functions
         if connect:
             self.power_spinbox.valueChanged.connect(self.power_changed)
@@ -51,16 +56,16 @@ class DDSChannel(QCustomFreqPower):
             self.switch_button.toggled.connect(self.switch_changed)
 
     def set_param_no_signal(self, param, value):
-        if param == 'amplitude':
+        if param == "amplitude":
             self.set_power_no_signal(value)
-        elif param == 'frequency':
+        elif param == "frequency":
             self.set_freq_no_signal(value)
-        elif param == 'state':
+        elif param == "state":
             self.set_state_no_signal(value)
 
     @inlineCallbacks
     def power_changed(self, pwr):
-        val = self.T.Value(pwr, 'dBm')
+        val = self.T.Value(pwr, "dBm")
         try:
             yield self.server.amplitude(self.chan, val, context=self.context)
         except self.Error as e:
@@ -70,7 +75,7 @@ class DDSChannel(QCustomFreqPower):
 
     @inlineCallbacks
     def freq_changed(self, freq):
-        val = self.T.Value(freq, 'MHz')
+        val = self.T.Value(freq, "MHz")
         try:
             yield self.server.frequency(self.chan, val, context=self.context)
         except self.Error as e:
@@ -114,29 +119,37 @@ class DDSControlWidget(QFrame):
     @inlineCallbacks
     def setup_dds(self):
         if self.cxn is None:
-            self.cxn = Connection(name='DDS Client')
+            self.cxn = Connection(name="DDS Client")
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:
             from labrad.types import Error
+
             self.Error = Error
             yield self.initialize()
         except Exception as e:
             logger.error(e)
-            logger.error('Pulser not available')
+            logger.error("Pulser not available")
             self.setDisabled(True)
-        self.cxn.add_on_connect('Pulser', self.reinitialize)
-        self.cxn.add_on_disconnect('Pulser', self.disable)
+        self.cxn.add_on_connect("Pulser", self.reinitialize)
+        self.cxn.add_on_disconnect("Pulser", self.disable)
 
     @inlineCallbacks
     def initialize(self):
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
 
         yield server.signal__new_dds_parameter(self.SIGNALID, context=self.context)
 
-        yield server.addListener(listener=self.follow_signal, source=None, ID=self.SIGNALID, context=self.context)
+        yield server.addListener(
+            listener=self.follow_signal,
+            source=None,
+            ID=self.SIGNALID,
+            context=self.context,
+        )
 
-        self.display_channels, self.widgets_per_row = yield self.get_displayed_channels()
+        self.display_channels, self.widgets_per_row = (
+            yield self.get_displayed_channels()
+        )
         self.widgets = {}.fromkeys(self.display_channels)
         self.do_layout()
         self.initialized = True
@@ -147,9 +160,11 @@ class DDSControlWidget(QFrame):
         get a list of all available channels from the pulser. only show the ones
         listed in the registry. If there is no listing, will display all channels.
         """
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
         all_channels = yield server.get_dds_channels(context=self.context)
-        channels_to_display, widgets_per_row = yield self.registry_load_displayed(all_channels, 1)
+        channels_to_display, widgets_per_row = yield self.registry_load_displayed(
+            all_channels, 1
+        )
         if channels_to_display is None:
             channels_to_display = all_channels
         if widgets_per_row is None:
@@ -159,23 +174,23 @@ class DDSControlWidget(QFrame):
 
     @inlineCallbacks
     def registry_load_displayed(self, all_names, default_widgets_per_row):
-        reg = yield self.cxn.get_server('Registry')
-        yield reg.cd(['Clients', 'DDS Control'], True, context=self.context)
+        reg = yield self.cxn.get_server("Registry")
+        yield reg.cd(["Clients", "DDS Control"], True, context=self.context)
         try:
-            displayed = yield reg.get('display_channels', context=self.context)
+            displayed = yield reg.get("display_channels", context=self.context)
         except self.Error as e:
             if e.code == 21:
                 # key error
-                yield reg.set('display_channels', all_names, context=self.context)
+                yield reg.set("display_channels", all_names, context=self.context)
                 displayed = None
             else:
                 raise
         try:
-            widgets_per_row = yield reg.get('widgets_per_row', context=self.context)
+            widgets_per_row = yield reg.get("widgets_per_row", context=self.context)
         except self.Error as e:
             if e.code == 21:
                 # key error
-                yield reg.set('widgets_per_row', 1, context=self.context)
+                yield reg.set("widgets_per_row", 1, context=self.context)
                 widgets_per_row = None
             else:
                 raise
@@ -184,10 +199,15 @@ class DDSControlWidget(QFrame):
     @inlineCallbacks
     def reinitialize(self):
         self.setDisabled(False)
-        server = yield self.cxn.get_server('Pulser')
+        server = yield self.cxn.get_server("Pulser")
         if not self.initialized:
             yield server.signal__new_dds_parameter(self.SIGNALID, context=self.context)
-            yield server.addListener(listener=self.follow_signal, source=None, ID=self.SIGNALID, context=self.context)
+            yield server.addListener(
+                listener=self.follow_signal,
+                source=None,
+                ID=self.SIGNALID,
+                context=self.context,
+            )
             self.do_layout()
             self.initialized = True
         else:
@@ -200,7 +220,7 @@ class DDSControlWidget(QFrame):
 
     def do_layout(self):
         layout = QGridLayout()
-        q_box = QGroupBox('Pulser DDS Control')
+        q_box = QGroupBox("Pulser DDS Control")
         sub_layout = QGridLayout()
         q_box.setLayout(sub_layout)
         layout.addWidget(q_box)
@@ -208,7 +228,9 @@ class DDSControlWidget(QFrame):
         for chan in self.display_channels:
             widget = DDSChannel(chan, self.reactor, self.cxn, self.context)
             self.widgets[chan] = widget
-            sub_layout.addWidget(widget, item // self.widgets_per_row, item % self.widgets_per_row)
+            sub_layout.addWidget(
+                widget, item // self.widgets_per_row, item % self.widgets_per_row
+            )
             item += 1
         self.setLayout(layout)
 

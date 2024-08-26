@@ -14,6 +14,7 @@ message = 987654321
 timeout = 5
 ### END NODE INFO
 """
+
 from labrad.server import setting
 import labrad.units as _units
 from labrad.gpib import GPIBManagedServer, GPIBDeviceWrapper
@@ -23,7 +24,7 @@ from twisted.internet.defer import inlineCallbacks, returnValue
 class KeithleyWrapper(GPIBDeviceWrapper):
 
     def initialize(self):
-        command = 'SYSTem:REMote'
+        command = "SYSTem:REMote"
         yield self.write(command)
 
     def parse_channel(self, channel=None):
@@ -35,14 +36,14 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         str, channel name for GPIB commands with a leading space.
         """
         if channel == 1:
-            channel_str = ' CH1'
+            channel_str = " CH1"
         elif channel == 2:
-            channel_str = ' CH2'
+            channel_str = " CH2"
         elif channel == 3:
-            channel_str = ' CH3'
+            channel_str = " CH3"
         # Why should this else exist?
         else:
-            channel_str = ''
+            channel_str = ""
         return channel_str
 
     @inlineCallbacks
@@ -57,7 +58,7 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         # First select the appropriate channel
         yield self.set_channel(channel=channel)
         # Explicitly setting the important space in command.
-        command = 'CHANnel:OUTPut' + ' ' + str(int(output))
+        command = "CHANnel:OUTPut" + " " + str(int(output))
         yield self.write(command)
 
     @inlineCallbacks
@@ -73,7 +74,7 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         """
         # First select the appropriate channel
         yield self.set_channel(channel=channel)
-        command = 'CHANnel:OUTPut?'
+        command = "CHANnel:OUTPut?"
         yield self.write(command)
         state = yield self.read()
         state = self._convert_state_to_bool(state)
@@ -89,9 +90,9 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         -------
         bool
         """
-        if state == '0':
+        if state == "0":
             output_state = False
-        elif state == '1':
+        elif state == "1":
             output_state = True
         else:
             output_state = None
@@ -107,10 +108,10 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         channel: int, channel number
         """
         channel_str = self.parse_channel(channel=channel)
-        command = 'MEAS:VOLT:DC? ' + channel_str
+        command = "MEAS:VOLT:DC? " + channel_str
         yield self.write(command)
         voltage = yield self.read()
-        voltage = _units.WithUnit(float(voltage), 'V')
+        voltage = _units.WithUnit(float(voltage), "V")
         returnValue(voltage)
 
     @inlineCallbacks
@@ -122,10 +123,10 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         channel: int, channel number
         """
         channel_str = self.parse_channel(channel=channel)
-        command = 'MEAS:CURRent:DC? ' + channel_str
+        command = "MEAS:CURRent:DC? " + channel_str
         yield self.write(command)
         current = yield self.read()
-        current = _units.WithUnit(float(current), 'A')
+        current = _units.WithUnit(float(current), "A")
         returnValue(current)
 
     # Source commands.  These commands allow you to output various values.
@@ -135,12 +136,12 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         Set channel's output voltage.
         """
         channel_str = self.parse_channel(channel)
-        voltage_in_volts = voltage['V']
+        voltage_in_volts = voltage["V"]
         voltage_in_volts = str(voltage_in_volts)
-        command = 'APPly' + channel_str + ',' + voltage_in_volts + 'V'
+        command = "APPly" + channel_str + "," + voltage_in_volts + "V"
         yield self.write(command)
         volts = yield self.measure_voltage(channel=channel)
-        units_volts = _units.WithUnit(volts, 'V')
+        units_volts = _units.WithUnit(volts, "V")
         returnValue(units_volts)
 
     @inlineCallbacks
@@ -153,12 +154,12 @@ class KeithleyWrapper(GPIBDeviceWrapper):
         current: WithUnit Amps, default(None)
         """
         yield self.set_channel(channel=channel)
-        current_in_amps = current['A']
+        current_in_amps = current["A"]
         current_in_amps = str(current_in_amps)
-        command = 'CURRent' + ' ' + current_in_amps + 'A'
+        command = "CURRent" + " " + current_in_amps + "A"
         yield self.write(command)
         current = yield self.measure_current(channel=channel)
-        units_current = _units.WithUnit(current, 'A')
+        units_current = _units.WithUnit(current, "A")
         returnValue(units_current)
 
     @inlineCallbacks
@@ -174,11 +175,13 @@ class KeithleyWrapper(GPIBDeviceWrapper):
             channel_str = " CH2CH3"
         elif channels == "123":
             channel_str = " CH1CH2CH3"
-        command_par = 'OUTPut:PARallel' + channel_str
+        command_par = "OUTPut:PARallel" + channel_str
         yield self.write(command_par)
-        command_comb = 'INSTrument:COMBine:' + ("PARallel " + channel_str if channel_str != "NONE" else "OFF")
+        command_comb = "INSTrument:COMBine:" + (
+            "PARallel " + channel_str if channel_str != "NONE" else "OFF"
+        )
         yield self.write(command_comb)
-        par = yield self.write('OUTPut:PARallel ?')
+        par = yield self.write("OUTPut:PARallel ?")
         returnValue(par)
 
     # Instrument commands.
@@ -208,12 +211,12 @@ class KeithleyWrapper(GPIBDeviceWrapper):
 
 
 class KeithleyServer(GPIBManagedServer):
-    name = 'Keithley 2230G Server'  # server name
-    deviceName = 'Keithley instruments 2230G-30-1'
+    name = "Keithley 2230G Server"  # server name
+    deviceName = "Keithley instruments 2230G-30-1"
     deviceWrapper = KeithleyWrapper
 
     # Note, settings 1 through 4 are already claimed by the parent class
-    @setting(5, channel='i', output='b')
+    @setting(5, channel="i", output="b")
     def output(self, c, channel, output=None):
         """
         Parameters
@@ -230,7 +233,7 @@ class KeithleyServer(GPIBManagedServer):
             output_state = yield dev.measure_output(channel)
         returnValue(output_state)
 
-    @setting(6, channel='i', voltage='v[V]', returns='v[V]')
+    @setting(6, channel="i", voltage="v[V]", returns="v[V]")
     def voltage(self, c, channel, voltage=None):
         """
         Get or set the Keithley's channel voltage.
@@ -248,7 +251,7 @@ class KeithleyServer(GPIBManagedServer):
         volts = yield dev.measure_voltage(channel=channel)
         returnValue(volts)
 
-    @setting(7, channel='i', current='v[A]', returns='v[A]')
+    @setting(7, channel="i", current="v[A]", returns="v[A]")
     def current(self, c, channel, current=None):
         """
         Get or set the Keithley's channel current.
@@ -266,7 +269,7 @@ class KeithleyServer(GPIBManagedServer):
         current = yield dev.measure_current(channel=channel)
         returnValue(current)
 
-    @setting(8, channel='i', returns='?')
+    @setting(8, channel="i", returns="?")
     def channel(self, c, channel=None):
         """
         Enable channel or query enabled channel.
@@ -282,7 +285,7 @@ class KeithleyServer(GPIBManagedServer):
         enabled_channel = yield dev.query_channel()
         returnValue(enabled_channel)
 
-    @setting(9, channels='s', returns='?')
+    @setting(9, channels="s", returns="?")
     def parallel(self, c, channels=""):
         """
         Set which channels should be in parallel.
@@ -300,6 +303,7 @@ class KeithleyServer(GPIBManagedServer):
 
 __server__ = KeithleyServer()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from labrad import util
+
     util.runServer(__server__)
