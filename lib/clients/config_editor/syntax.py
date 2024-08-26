@@ -2,8 +2,9 @@
 # code from https://wiki.python.org/moin/PyQt/Python%20syntax%20highlighting
 import sys
 
-from PyQt4.QtCore import QRegExp
-from PyQt4.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
+from PyQt5.QtCore import QRegExp
+from PyQt5.QtGui import QColor, QTextCharFormat, QFont, QSyntaxHighlighter
+
 
 def format(color, style=''):
     """Return a QTextCharFormat with the given attributes.
@@ -35,7 +36,7 @@ STYLES = {
 }
 
 
-class PythonHighlighter (QSyntaxHighlighter):
+class PythonHighlighter(QSyntaxHighlighter):
     """Syntax highlighter for the Python language.
     """
     # Python keywords
@@ -65,6 +66,7 @@ class PythonHighlighter (QSyntaxHighlighter):
     braces = [
         '\{', '\}', '\(', '\)', '\[', '\]',
     ]
+
     def __init__(self, document):
         QSyntaxHighlighter.__init__(self, document)
 
@@ -78,11 +80,11 @@ class PythonHighlighter (QSyntaxHighlighter):
 
         # Keyword, operator, and brace rules
         rules += [(r'\b%s\b' % w, 0, STYLES['keyword'])
-            for w in PythonHighlighter.keywords]
+                  for w in PythonHighlighter.keywords]
         rules += [(r'%s' % o, 0, STYLES['operator'])
-            for o in PythonHighlighter.operators]
+                  for o in PythonHighlighter.operators]
         rules += [(r'%s' % b, 0, STYLES['brace'])
-            for b in PythonHighlighter.braces]
+                  for b in PythonHighlighter.braces]
 
         # All other rules
         rules += [
@@ -110,8 +112,7 @@ class PythonHighlighter (QSyntaxHighlighter):
 
         # Build a QRegExp for each pattern
         self.rules = [(QRegExp(pat), index, fmt)
-            for (pat, index, fmt) in rules]
-
+                      for (pat, index, fmt) in rules]
 
     def highlightBlock(self, text):
         """Apply syntax highlighting to the given block of text.
@@ -123,7 +124,7 @@ class PythonHighlighter (QSyntaxHighlighter):
             while index >= 0:
                 # We actually want the index of the nth match
                 index = expression.pos(nth)
-                length = expression.cap(nth).length()
+                length = len(expression.cap(nth))
                 self.setFormat(index, length, format)
                 index = expression.indexIn(text, index + length)
 
@@ -133,7 +134,6 @@ class PythonHighlighter (QSyntaxHighlighter):
         in_multiline = self.match_multiline(text, *self.tri_single)
         if not in_multiline:
             in_multiline = self.match_multiline(text, *self.tri_double)
-
 
     def match_multiline(self, text, delimiter, in_state, style):
         """Do highlighting of multi-line strings. ``delimiter`` should be a
@@ -163,7 +163,7 @@ class PythonHighlighter (QSyntaxHighlighter):
             # No; multi-line string
             else:
                 self.setCurrentBlockState(in_state)
-                length = text.length() - start + add
+                length = len(text) - start + add
             # Apply formatting
             self.setFormat(start, length, style)
             # Look for the next match
@@ -174,4 +174,3 @@ class PythonHighlighter (QSyntaxHighlighter):
             return True
         else:
             return False
-        
