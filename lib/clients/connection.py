@@ -1,5 +1,6 @@
-from twisted.internet.defer import inlineCallbacks, returnValue
 import logging
+
+from twisted.internet.defer import inlineCallbacks, returnValue
 
 logger = logging.getLogger(__name__)
 
@@ -87,21 +88,19 @@ class Connection(object):
     def follow_server_connect(self, cntx, server_name):
         # print 'server connected'
         server_name = server_name[1]
+        logger.info("{} connected to {}".format(server_name, self.name))
         if server_name in self._servers.keys():
-            print("{} connected".format(server_name))
             yield self.cxn.refresh()
             self._servers[server_name] = yield self.cxn[server_name]
             actions = self._on_connect[server_name]
             for action in actions:
                 yield action()
-        else:
-            logger.info("{} connected".format(server_name))
 
     @inlineCallbacks
     def follow_server_disconnect(self, cntx, server_name):
         server_name = server_name[1]
         if server_name in self._servers.keys():
-            logger.info("{} Disconnected".format(server_name))
+            logger.info("{} Disconnected from {}".format(server_name, self.name))
             self._servers[server_name] = None
             actions = self._on_disconnect[server_name]
             for action in actions:
