@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import *
-
-from twisted.internet.defer import inlineCallbacks, returnValue
-from common.lib.clients.connection import Connection
 import logging
+
+from PyQt5.QtWidgets import *
+from twisted.internet.defer import inlineCallbacks, returnValue
+
+from common.lib.clients.connection import Connection
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class SwitchWidget(QFrame):
     @inlineCallbacks
     def connect(self):
         if self.cxn is None:
-            self.cxn = Connection()
+            self.cxn = Connection(name="Pulser TTL")
             yield self.cxn.connect()
             from labrad.types import Error
 
