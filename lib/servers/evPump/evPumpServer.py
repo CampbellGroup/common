@@ -15,13 +15,12 @@ message = 987654321
 timeout = 20
 ### END NODE INFO
 """
-import labrad.errors
-from labrad.types import Value
 from labrad.devices import DeviceServer, DeviceWrapper
 from labrad.server import setting, Signal
+from labrad.types import Value
+from labrad.units import WithUnit as U
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
-from labrad.units import WithUnit as U
 
 TIMEOUT = Value(5, "s")  # serial read timeout
 
@@ -107,14 +106,6 @@ class eVPump(DeviceServer):
         self.reg = self.client.registry()
         yield self.loadConfigInfo()
         yield DeviceServer.initServer(self)
-
-    @inlineCallbacks
-    def selectDevice(self, context, key=None):
-        try:
-            super().selectDevice(context, key=key)
-        except labrad.errors.NoDevicesAvailableError:
-            print("Keithley 3320G server has no available devices")
-            returnValue(None)
 
     @inlineCallbacks
     def loadConfigInfo(self):
