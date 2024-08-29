@@ -7,7 +7,7 @@ from lib.clients.Multiplexer.multiplexerPID import QCustomPID
 from lib.clients.Multiplexer.multiplexerchannel import QCustomWavemeterChannel
 
 try:
-    from config.multiplexerclient_config import multiplexer_config
+    from config.multiplexerclient_config import MultiplexerConfig
 except ImportError:
     from common.lib.config.multiplexerclient_config import multiplexer_config
 
@@ -72,8 +72,8 @@ class WavemeterClient(QWidget):
         Creates an Asynchronous connection to the wavemeter computer and
         connects incoming signals to relevant functions
         """
-        self.chaninfo = multiplexer_config.info
-        self.wavemeterIP = multiplexer_config.ip
+        self.chaninfo = MultiplexerConfig.channels
+        self.wavemeterIP = MultiplexerConfig.ip
         from labrad.wrappers import connectAsync
 
         self.cxn = yield connectAsync(
@@ -489,8 +489,8 @@ class MiniWavemeterClient(WavemeterClient):
         Creates an Asynchronous connection to the wavemeter computer and
         connects incoming signals to relevant functions
         """
-        self.chaninfo = multiplexer_config.info
-        self.wavemeterIP = multiplexer_config.ip
+        self.chaninfo = MultiplexerConfig.channels
+        self.wavemeterIP = MultiplexerConfig.ip
         from labrad.wrappers import connectAsync
 
         self.cxn = yield connectAsync(
