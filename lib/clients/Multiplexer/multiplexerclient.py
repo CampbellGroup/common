@@ -1,11 +1,10 @@
-from common.lib.clients.qtui.multiplexerchannel import QCustomWavemeterChannel
-from common.lib.clients.qtui.multiplexerPID import QCustomPID
-from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
-from twisted.internet.defer import inlineCallbacks, returnValue
 from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from twisted.internet.defer import inlineCallbacks, returnValue
+
+from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
+from lib.clients.Multiplexer.mini_multiplexer_channel import QMiniWavemeterChannel
+from lib.clients.Multiplexer.multiplexerPID import QCustomPID
+from lib.clients.Multiplexer.multiplexerchannel import QCustomWavemeterChannel
 
 try:
     from config.multiplexerclient_config import multiplexer_config
@@ -465,6 +464,103 @@ class WavemeterClient(QWidget):
         self.reactor.stop()
 
 
+class MiniWavemeterClient(WavemeterClient):
+
+    def __init__(self, reactor, parent=None):
+        """
+        initializes the GUI creates the reactor
+        and empty dictionary for channel widgets to
+        be stored for iteration. also grabs chan info
+        from multiplexer_config
+        """
+        super().__init__(reactor)
+        self.name = socket.gethostname() + "Mini Wavemeter Client"
+
+    def _check_window_size(self):
+        """Checks screen size to make sure window fits in the screen."""
+        desktop = QDesktopWidget()
+        screensize = desktop.availableGeometry()
+        width = screensize.width()
+        height = screensize.height()
+
+    @inlineCallbacks
+    def connect(self):
+        """
+        Creates an Asynchronous connection to the wavemeter computer and
+        connects incoming signals to relevant functions
+        """
+        self.chaninfo = multiplexer_config.info
+        self.wavemeterIP = multiplexer_config.ip
+        from labrad.wrappers import connectAsync
+
+        self.cxn = yield connectAsync(
+            self.wavemeterIP, name=self.name, password=self.password
+        )
+
+        self.server = yield self.cxn.multiplexerserver
+        yield self.server.signal__frequency_changed(SIGNALID1)
+        yield self.server.signal__amplitude_changed(SIGNALID8)
+        # yield self.server.signal__pattern_changed(SIGNALID9)
+
+        yield self.server.addListener(
+            listener=self.update_frequency, source=None, ID=SIGNALID1
+        )
+        yield self.server.addListener(
+            listener=self.update_amplitude, source=None, ID=SIGNALID8
+        )
+
+        self.initialize_gui()
+
+    @inlineCallbacks
+    def initialize_gui(self):
+
+        layout = QGridLayout()
+
+        self.setWindowTitle("Mini Wavemeter")
+
+        init_start_value = yield self.server.get_wlm_output()
+        init_lock_value = yield self.server.get_lock_state()
+
+        for chan in self.chaninfo:
+            wm_channel = self.chaninfo[chan][0]
+            hint = self.chaninfo[chan][1]
+            position = self.chaninfo[chan][2]
+            stretched = self.chaninfo[chan][3]
+            display_pid = self.chaninfo[chan][4]
+            dac_port = self.chaninfo[chan][5]
+            widget = QMiniWavemeterChannel(
+                chan, wm_channel, dac_port, hint, stretched, display_pid
+            )
+
+            from common.lib.clients.qtui import RGBconverter as RGB
+
+            RGB = RGB.RGBconverter()
+            color = int(2.998e8 / (float(hint) * 1e3))
+            color = RGB.wav2RGB(color)
+            color = tuple(color)
+
+            widget.current_frequency.setStyleSheet("color: rgb" + str(color))
+
+            self.d[wm_channel] = widget
+            layout.addWidget(self.d[wm_channel], position[1], position[0], 1, 3)
+
+        self.setLayout(layout)
+
+    def update_frequency(self, c, signal):
+        chan = signal[0]
+        if chan in self.d:
+            freq = signal[1]
+
+            if freq == -3.0:
+                self.d[chan].current_frequency.setText("Under Exposed")
+            elif freq == -4.0:
+                self.d[chan].current_frequency.setText("Over Exposed")
+            elif freq == -17.0:
+                self.d[chan].current_frequency.setText("Data Error")
+            else:
+                self.d[chan].current_frequency.setText(str(freq)[0:10])
+
+
 if __name__ == "__main__":
     a = QApplication([])
     import qt5reactor
@@ -472,6 +568,6 @@ if __name__ == "__main__":
     qt5reactor.install()
     from twisted.internet import reactor
 
-    wavemeterWidget = WavemeterClient(reactor)
+    wavemeterWidget = MiniWavemeterClient(reactor)
     wavemeterWidget.show()
     reactor.run()

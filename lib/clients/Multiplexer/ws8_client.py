@@ -1,9 +1,8 @@
-from common.lib.clients.qtui.multiplexerchannel_no_pid import QCustomWavemeterChannel
-from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
-
-from pyqtgraph.Qt import QtGui
-
+from PyQt5.QtWidgets import *
 from twisted.internet.defer import inlineCallbacks
+
+from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
+from lib.clients.Multiplexer.multiplexerchannel import QCustomWavemeterChannelNoPID
 
 try:
     from config.multiplexerclient_config import multiplexer_config
@@ -23,7 +22,7 @@ SIGNALID7 = 148323
 SIGNALID8 = 238883
 
 
-class wavemeterclient(QtGui.QWidget):
+class WavemeterClient(QWidget):
 
     def __init__(self, reactor, parent=None):
         """initializes the GUI, creates the reactor
@@ -31,9 +30,9 @@ class wavemeterclient(QtGui.QWidget):
         be stored for iteration. also grabs chan info
         from multiplexer_config
         """
-        super(wavemeterclient, self).__init__()
+        super(WavemeterClient, self).__init__()
         self.password = os.environ["LABRADPASSWORD"]
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.reactor = reactor
         self.name = socket.gethostname() + " Wave Meter Client"
         self.d = {}
@@ -43,7 +42,7 @@ class wavemeterclient(QtGui.QWidget):
 
     def _check_window_size(self):
         """Checks screen size to make sure window fits in the screen."""
-        desktop = QtGui.QDesktopWidget()
+        desktop = QDesktopWidget()
         screensize = desktop.availableGeometry()
         width = screensize.width()
         height = screensize.height()
@@ -72,52 +71,52 @@ class wavemeterclient(QtGui.QWidget):
         yield self.server.signal__amplitude_changed(SIGNALID8)
 
         yield self.server.addListener(
-            listener=self.updateFrequency, source=None, ID=SIGNALID1
+            listener=self.update_frequency, source=None, ID=SIGNALID1
         )
         yield self.server.addListener(
-            listener=self.toggleMeas, source=None, ID=SIGNALID2
+            listener=self.toggle_meas, source=None, ID=SIGNALID2
         )
         yield self.server.addListener(
-            listener=self.updateexp, source=None, ID=SIGNALID3
+            listener=self.update_exp, source=None, ID=SIGNALID3
         )
         yield self.server.addListener(
-            listener=self.updateWLMOutput, source=None, ID=SIGNALID5
+            listener=self.update_wlm_output, source=None, ID=SIGNALID5
         )
         yield self.server.addListener(
-            listener=self.updateAmplitude, source=None, ID=SIGNALID8
+            listener=self.update_amplitude, source=None, ID=SIGNALID8
         )
 
         # starts display of wavemeter data
-        self.initializeGUI()
+        self.initialize_gui()
 
     @inlineCallbacks
-    def initializeGUI(self):
-        layout = QtGui.QGridLayout()
+    def initialize_gui(self):
+        layout = QGridLayout()
 
         self.setWindowTitle("Wavemeter")
 
         # this "group" contains all 8 channel outputs and settings
-        qBox = QtGui.QGroupBox("Wave Length and Lock settings")
-        subLayout = QtGui.QGridLayout()
-        qBox.setLayout(subLayout)
-        layout.addWidget(qBox, 0, 0)
+        q_box = QGroupBox("Wave Length and Lock settings")
+        sub_layout = QGridLayout()
+        q_box.setLayout(sub_layout)
+        layout.addWidget(q_box, 0, 0)
 
         # button to start wavemeter measurement (turn wavemeter on)
         self.startSwitch = TextChangingButton("Wavemeter")
         self.startSwitch.setMaximumHeight(50)
         initstartvalue = yield self.server.get_wlm_output()
         self.startSwitch.setChecked(initstartvalue)
-        self.startSwitch.toggled.connect(self.setOutput)
-        subLayout.addWidget(self.startSwitch, 0, 0)
+        self.startSwitch.toggled.connect(self.set_output)
+        sub_layout.addWidget(self.startSwitch, 0, 0)
 
         # create display box for each channel
         # need to modify QCustomWavemeterChannel to get rid of PID button
         for chan in self.chaninfo:
-            wmChannel = self.chaninfo[chan][0]
+            wm_channel = self.chaninfo[chan][0]
             hint = self.chaninfo[chan][1]
             position = self.chaninfo[chan][2]
             stretched = self.chaninfo[chan][3]
-            widget = QCustomWavemeterChannel(chan, wmChannel, hint, stretched)
+            widget = QCustomWavemeterChannelNoPID(chan, wm_channel, hint, stretched)
 
             from common.lib.clients.qtui import RGBconverter as RGB
 
@@ -126,37 +125,37 @@ class wavemeterclient(QtGui.QWidget):
             color = RGB.wav2RGB(color)
             color = tuple(color)
 
-            widget.currentfrequency.setStyleSheet("color: rgb" + str(color))
-            widget.spinExp.valueChanged.connect(
-                lambda exp=widget.spinExp.value(), wmChannel=wmChannel: self.expChanged(
-                    exp, wmChannel
+            widget.current_frequency.setStyleSheet("color: rgb" + str(color))
+            widget.exposure_spinbox.valueChanged.connect(
+                lambda exp=widget.exposure_spinbox.value(), chan=wm_channel: self.exp_changed(
+                    exp, chan
                 )
             )
-            initvalue = yield self.server.get_exposure(wmChannel)
-            widget.spinExp.setValue(initvalue)
-            initmeas = yield self.server.get_switcher_signal_state(wmChannel)
+            initvalue = yield self.server.get_exposure(wm_channel)
+            widget.exposure_spinbox.setValue(initvalue)
+            initmeas = yield self.server.get_switcher_signal_state(wm_channel)
             initmeas = initmeas
-            widget.measSwitch.setChecked(bool(initmeas))
-            widget.measSwitch.toggled.connect(
-                lambda state=widget.measSwitch.isDown(), wmChannel=wmChannel: self.changeState(
-                    state, wmChannel
+            widget.measure_button.setChecked(bool(initmeas))
+            widget.measure_button.toggled.connect(
+                lambda state=widget.measure_button.isDown(), chan=wm_channel: self.change_state(
+                    state, chan
                 )
             )
 
-            self.d[wmChannel] = widget
-            subLayout.addWidget(self.d[wmChannel], position[1], position[0], 1, 3)
+            self.d[wm_channel] = widget
+            sub_layout.addWidget(self.d[wm_channel], position[1], position[0], 1, 3)
 
         self.setLayout(layout)
 
     # updates exposure time from GUI?
     @inlineCallbacks
-    def expChanged(self, exp, chan):
+    def exp_changed(self, exp, chan):
         # these are switched, dont know why
         exp = int(exp)
         yield self.server.set_exposure_time(chan, exp)
 
     # sets display of update frequency and light exposure level
-    def updateFrequency(self, c, signal):
+    def update_frequency(self, c, signal):
         chan = signal[0]
         if chan in self.d:
             freq = signal[1]
@@ -172,36 +171,36 @@ class wavemeterclient(QtGui.QWidget):
             else:
                 self.d[chan].current_frequency.setText(str(freq)[0:10])
 
-    def toggleMeas(self, c, signal):
+    def toggle_meas(self, c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
             self.d[chan].measure_button.setChecked(value)
 
-    def updateexp(self, c, signal):
+    def update_exp(self, c, signal):
         chan = signal[0]
         value = signal[1]
         if chan in self.d:
             self.d[chan].exposure_spinbox.setValue(value)
 
-    def updateWLMOutput(self, c, signal):
+    def update_wlm_output(self, c, signal):
         self.startSwitch.setChecked(signal)
 
-    def updateAmplitude(self, c, signal):
+    def update_amplitude(self, c, signal):
         wmChannel = signal[0]
         value = signal[1]
         if wmChannel in self.d:
-            self.d[wmChannel].power_meter.setValue(value)
+            self.d[wmChannel].power_meter.setValue(int(value))
 
-    def setButtonOff(self, wmChannel):
+    def set_button_off(self, wmChannel):
         self.d[wmChannel].lock_channel_button.setChecked(False)
 
     @inlineCallbacks
-    def changeState(self, state, chan):
+    def change_state(self, state, chan):
         yield self.server.set_switcher_signal_state(chan, state)
 
     @inlineCallbacks
-    def setOutput(self, state):
+    def set_output(self, state):
         yield self.server.set_wlm_output(state)
 
     def closeEvent(self, x):
@@ -209,12 +208,12 @@ class wavemeterclient(QtGui.QWidget):
 
 
 if __name__ == "__main__":
-    a = QtGui.QApplication([])
-    import qt4reactor
+    a = QApplication([])
+    import qt5reactor
 
-    qt4reactor.install()
+    qt5reactor.install()
     from twisted.internet import reactor
 
-    wavemeterWidget = wavemeterclient(reactor)
+    wavemeterWidget = WavemeterClient(reactor)
     wavemeterWidget.show()
     reactor.run()
