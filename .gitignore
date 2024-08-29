@@ -1,5 +1,6 @@
 *.pyc
 LabRAD.ini
+desktop.ini
 Errors.log
 .project
 .pydevproject
