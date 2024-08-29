@@ -4,16 +4,16 @@ Created on Mar 25, 2016
 @author: Anthony Ransford
 """
 
+import logging
+
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtWidgets import *
 from twisted.internet.defer import inlineCallbacks
+
 from common.lib.clients.connection import Connection
+from common.lib.clients.qtui.switch import QCustomSwitchChannel
 
 # from labrad import errors
-
-from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
-
-from common.lib.clients.qtui.switch import QCustomSwitchChannel
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ class eVPumpClient(QFrame):
         self._max_current = 24.0  # maximum laser diode current in Amps
         self._max_power = 15.2  # maximum laser output power in Watts
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.cxn = cxn
         self.reactor = reactor
         from labrad.units import WithUnit as U
@@ -220,12 +221,12 @@ class eVPumpClient(QFrame):
 
     def update_current(self, c, current):
         current_percentage = 100.0 * current["A"] / self._max_current
-        self.current_progress_bar.setValue(current_percentage)
+        self.current_progress_bar.setValue(int(current_percentage))
         self.current_progress_bar.setFormat(str(current["A"]) + "A")
 
     def update_power(self, c, power):
         power_percentage = 100.0 * power["W"] / self._max_power
-        self.power_progress_bar.setValue(power_percentage)
+        self.power_progress_bar.setValue(int(power_percentage))
         self.power_progress_bar.setFormat(str(power["W"]) + "W")
 
     def update_temperature(self, c, temperature):
