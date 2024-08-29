@@ -108,12 +108,6 @@ class QMiniWavemeterChannel(QFrame):
 
         self.setLayout(layout)
 
-    def set_exposure_range(self, exp_range):
-        self.exposure_spinbox.setRange(exp_range)
-
-    def set_freq_range(self, freq_range):
-        self.freq_spinbox.setRange(freq_range)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

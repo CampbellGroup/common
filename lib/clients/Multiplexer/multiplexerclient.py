@@ -2,14 +2,14 @@ from PyQt5.QtWidgets import *
 from twisted.internet.defer import inlineCallbacks, returnValue
 
 from common.lib.clients.qtui.q_custom_text_changing_button import TextChangingButton
-from lib.clients.Multiplexer.mini_multiplexer_channel import QMiniWavemeterChannel
-from lib.clients.Multiplexer.multiplexerPID import QCustomPID
-from lib.clients.Multiplexer.multiplexerchannel import QCustomWavemeterChannel
+from common.lib.clients.Multiplexer.mini_multiplexer_channel import QMiniWavemeterChannel
+from common.lib.clients.Multiplexer.multiplexerPID import QCustomPID
+from common.lib.clients.Multiplexer.multiplexerchannel import QCustomWavemeterChannel
 
 try:
     from config.multiplexerclient_config import MultiplexerConfig
 except ImportError:
-    from common.lib.config.multiplexerclient_config import multiplexer_config
+    from common.lib.config.multiplexerclient_config import MultiplexerConfig
 
 import socket
 import os
