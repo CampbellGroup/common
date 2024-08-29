@@ -44,13 +44,16 @@ submitting issues
 New code should...
 
 * Be Python 2 & 3 compatible, using
-   ```python
-   print(str)
-   ````
+    ```python
+    print(str)
+    ```
   and
-   ```python
-   except Exception as e:
-   ```
+    ```python
+    try:
+        ...
+    except Exception as e:
+        ...
+    ```
 * Follow pep8
 * Write code that obviates the need for configuration files.
 * If necessary, have default configuration files in the config directory, with local users specifying configuration
