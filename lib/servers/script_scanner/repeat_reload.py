@@ -1,9 +1,9 @@
 from time import localtime, strftime
 
-from common.lib.servers.script_scanner.experiment import experiment
+from common.lib.servers.script_scanner.experiment import Experiment
 
 
-class repeat_reload(experiment):
+class repeat_reload(Experiment):
     """
     Used to repeat an experiment multiple times, while reloading the parameters every repeatition
     """

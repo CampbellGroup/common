@@ -1,8 +1,9 @@
 import labrad
-from common.lib.servers.script_scanner.experiment import experiment
+
+from common.lib.servers.script_scanner.experiment import Experiment
 
 
-class fft_spectrum(experiment):
+class fft_spectrum(Experiment):
 
     name = "FFT Spectrum"
     required_parameters = []

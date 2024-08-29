@@ -1,8 +1,9 @@
 import traceback
+
 import labrad
 
 
-class experiment_info(object):
+class ExperimentInfo(object):
     """
     holds informaton about the experiment
 
@@ -24,7 +25,7 @@ class experiment_info(object):
         self.parameters = dict()
 
 
-class experiment(experiment_info):
+class Experiment(ExperimentInfo):
 
     def __init__(
         self,
@@ -35,7 +36,7 @@ class experiment(experiment_info):
         max_progress=100.0,
     ):
         required_parameters = self.all_required_parameters()
-        super(experiment, self).__init__(name, required_parameters)
+        super(Experiment, self).__init__(name, required_parameters)
         self.cxn = cxn
         self.pv = None
         self.sc = None

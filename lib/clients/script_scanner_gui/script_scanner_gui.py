@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-from PyQt5.QtWidgets import *
-from PyQt5 import QtCore, QtGui
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-import sys
-from twisted.internet.defer import inlineCallbacks, returnValue
-
-from common.lib.clients.script_scanner_gui.scripting_widget import ScriptingWidget
-from common.lib.clients.connection import Connection
-from common.lib.clients.script_scanner_gui.tree_view.Controllers import ParametersEditor
 import logging
+import sys
+
+from PyQt5.QtWidgets import *
+from twisted.internet.defer import inlineCallbacks
+
+from common.lib.clients.connection import Connection
+from common.lib.clients.script_scanner_gui.scripting_widget import ScriptingWidget
+from common.lib.clients.script_scanner_gui.tree_view.Controllers import ParametersEditor
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +34,7 @@ class ScriptScannerGui(QWidget):
         self.subscribedScriptScanner = False
         self.subscribedParametersVault = False
         if self.cxn is None:
-            self.cxn = Connection()
+            self.cxn = Connection(name="Script Scanner GUI")
             yield self.cxn.connect()
         self.context = yield self.cxn.context()
         try:

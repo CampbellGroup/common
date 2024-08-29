@@ -1,7 +1,7 @@
-from common.lib.servers.script_scanner.experiment import experiment
+from common.lib.servers.script_scanner.experiment import Experiment
 
 
-class single(experiment):
+class single(Experiment):
     """
     runs a single epxeriment
     """

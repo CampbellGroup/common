@@ -1,10 +1,12 @@
-import numpy as np
 from time import localtime, strftime
+
+import numpy as np
 from labrad.units import WithUnit
-from common.lib.servers.script_scanner.experiment import experiment
+
+from common.lib.servers.script_scanner.experiment import Experiment
 
 
-class scan_experiment_1D_measure(experiment):
+class scan_experiment_1D_measure(Experiment):
     """
     Used to repeat an experiment multiple times
     """

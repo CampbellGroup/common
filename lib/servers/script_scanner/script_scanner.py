@@ -19,6 +19,7 @@ timeout = 20
 from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
+
 from script_signals_server import ScriptSignalsServer
 
 try:
@@ -29,6 +30,7 @@ import scan_methods
 from scriptscheduler import ScriptScheduler
 import sys
 from importlib import reload, import_module
+import traceback
 
 
 class ScriptInfo:
@@ -92,6 +94,7 @@ class ScriptScanner(ScriptSignalsServer):
                 )
             except SyntaxError as e:
                 print("Incorrect syntax in file {0}".format(import_path, class_name))
+                print(traceback.format_exc())
             except Exception as e:
                 print("There was an error in {0} : {1}".format(class_name, e))
             else:
