@@ -33,7 +33,7 @@ SIGNALID9 = 462917
 # this is the signal for the updated frequencies
 
 
-class WavemeterClient(QWidget):
+class WavemeterClient(QFrame):
 
     def __init__(self, reactor, parent=None):
         """
@@ -474,6 +474,7 @@ class MiniWavemeterClient(WavemeterClient):
         from multiplexer_config
         """
         super().__init__(reactor)
+        self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
         self.name = socket.gethostname() + "Mini Wavemeter Client"
 
     def _check_window_size(self):
