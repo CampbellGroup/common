@@ -1,9 +1,9 @@
 import labrad
 
-from common.lib.servers.script_scanner.experiment import Experiment
+from lib.servers.script_scanner.scan_methods import Experiment, ScanSingle
 
 
-class fft_spectrum(Experiment):
+class FFTSpectrum(Experiment):
 
     name = "FFT Spectrum"
     required_parameters = []
@@ -18,23 +18,23 @@ class fft_spectrum(Experiment):
         print("finalize")
 
 
-class conflicting_experiment(fft_spectrum):
+class ConflictingExperiment(FFTSpectrum):
 
     name = "conflicting_experiment"
     required_parameters = [("TrapFrequencies", "axial_frequency")]
 
 
-class non_conflicting_experiment(fft_spectrum):
+class NonConflictingExperiment(FFTSpectrum):
 
     name = "non_conflicting_experiment"
 
 
-class crashing_example(fft_spectrum):
+class CrashingExample(FFTSpectrum):
 
     name = "crashing_example"
 
     def initialize(self, cxn, context, ident):
-        print("in initialize", self.name(), ident)
+        print("in initialize", self.name, ident)
         raise Exception("In a case of a crash, real message would follow")
 
 
@@ -42,32 +42,31 @@ if __name__ == "__main__":
     # normal way to launch
     cxn = labrad.connect()
     scanner = cxn.scriptscanner
-    exprt = fft_spectrum(cxn=cxn)
+    exprt = FFTSpectrum(cxn=cxn)
     ident = scanner.register_external_launch(exprt.name)
     exprt.execute(ident)
     # testing single launch
     cxn = labrad.connect()
     scanner = cxn.scriptscanner
-    from scan_methods import single
 
-    exprt = single(fft_spectrum)
+    exprt = ScanSingle(FFTSpectrum)
     ident = scanner.register_external_launch(exprt.name)
     exprt.execute(ident)
     # testing repeat launch
     cxn = labrad.connect()
     scanner = cxn.scriptscanner
-    from scan_methods import repeat_reload
+    from scan_methods import ScanRepeatReload
 
-    exprt = repeat_reload(fft_spectrum, 10)
+    exprt = ScanRepeatReload(FFTSpectrum, 10)
     ident = scanner.register_external_launch(exprt.name)
     exprt.execute(ident)
     # testing scan
     cxn = labrad.connect()
     scanner = cxn.scriptscanner
-    from scan_methods import scan_experiment_1D
+    from scan_methods import ScanExperiment1D
 
-    exprt = scan_experiment_1D(
-        fft_spectrum, ("TrapFrequencies", "rf_drive_frequency"), 10.0, 20.0, 10, "MHZ"
+    exprt = ScanExperiment1D(
+        FFTSpectrum, ("TrapFrequencies", "rf_drive_frequency"), 10.0, 20.0, 10, "MHZ"
     )
     ident = scanner.register_external_launch(exprt.name)
     exprt.execute(ident)
