@@ -60,7 +60,7 @@ class EventEditor(base, form):
     def on_new_decimals(self, decimals):
         for widget in [self.uiTime]:
             widget.setSingleStep(10**-decimals)
-            widget.setDecimals(decimals)
+            widget.set_decimals(decimals)
 
     def set_suffix(self, suffix):
         for widget in [self.uiTime]:

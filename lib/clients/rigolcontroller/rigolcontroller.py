@@ -41,12 +41,12 @@ class rigolclient(QtGui.QWidget):
         self.deviceselect = QtGui.QComboBox(self)
         self.updatedevices()
 
-        self.offsetwidget1 = QCustomSpinBox("Offset", (-5, 5))
-        self.offsetwidget2 = QCustomSpinBox("Offset", (-5, 5))
-        self.volt1widget = QCustomSpinBox("Amplitude (Vpp)", (-10, 10))
-        self.freq1widget = QCustomSpinBox("Frequency (Hz)", (0, 40e6))
-        self.volt2widget = QCustomSpinBox("Amplitude (Vpp)", (-10, 10))
-        self.freq2widget = QCustomSpinBox("Frequency (Hz)", (0, 40e6))
+        self.offsetwidget1 = QCustomSpinBox((-5, 5), title="Offset", suffix="V")
+        self.offsetwidget2 = QCustomSpinBox((-5, 5), title="Offset", suffix="V")
+        self.volt1widget = QCustomSpinBox((-10, 10), title="Amplitude (Vpp)")
+        self.freq1widget = QCustomSpinBox((0, 40e6), title="Frequency (Hz)")
+        self.volt2widget = QCustomSpinBox((-10, 10), title="Amplitude (Vpp)")
+        self.freq2widget = QCustomSpinBox((0, 40e6), title="Frequency (Hz)")
         self.waveselect1 = QtGui.QComboBox(self)
         self.waveselect2 = QtGui.QComboBox(self)
         self.output1 = TextChangingButton(("On", "Off"))
@@ -74,33 +74,33 @@ class rigolclient(QtGui.QWidget):
         self.output2.toggled.connect(
             lambda state=self.output1.isDown(), chan=2,: self.setoutput(chan, state)
         )
-        self.volt1widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt1widget.spinLevel.value(), chan=1: self.voltchanged(
+        self.volt1widget.spin_level.valueChanged.connect(
+            lambda value=self.volt1widget.spin_level.value(), chan=1: self.voltchanged(
                 chan, value
             )
         )
-        self.volt2widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt2widget.spinLevel.value(), chan=2: self.voltchanged(
+        self.volt2widget.spin_level.valueChanged.connect(
+            lambda value=self.volt2widget.spin_level.value(), chan=2: self.voltchanged(
                 chan, value
             )
         )
-        self.freq1widget.spinLevel.valueChanged.connect(
-            lambda value=self.freq1widget.spinLevel.value(), chan=1: self.freqchanged(
+        self.freq1widget.spin_level.valueChanged.connect(
+            lambda value=self.freq1widget.spin_level.value(), chan=1: self.freqchanged(
                 chan, value
             )
         )
-        self.freq2widget.spinLevel.valueChanged.connect(
-            lambda value=self.freq2widget.spinLevel.value(), chan=2: self.freqchanged(
+        self.freq2widget.spin_level.valueChanged.connect(
+            lambda value=self.freq2widget.spin_level.value(), chan=2: self.freqchanged(
                 chan, value
             )
         )
-        self.offsetwidget1.spinLevel.valueChanged.connect(
-            lambda value=self.offsetwidget1.spinLevel.value(), chan=1: self.offsetchanged(
+        self.offsetwidget1.spin_level.valueChanged.connect(
+            lambda value=self.offsetwidget1.spin_level.value(), chan=1: self.offsetchanged(
                 chan, value
             )
         )
-        self.offsetwidget2.spinLevel.valueChanged.connect(
-            lambda value=self.offsetwidget2.spinLevel.value(), chan=2: self.offsetchanged(
+        self.offsetwidget2.spin_level.valueChanged.connect(
+            lambda value=self.offsetwidget2.spin_level.value(), chan=2: self.offsetchanged(
                 chan, value
             )
         )

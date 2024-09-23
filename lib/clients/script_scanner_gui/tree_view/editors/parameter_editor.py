@@ -97,7 +97,7 @@ class ParameterEditor(paramBase, paramForm):
     def on_new_decimals(self, decimals):
         for widget in [self.uiMin, self.uiMax, self.uiValue]:
             widget.setSingleStep(10**-decimals)
-            widget.setDecimals(decimals)
+            widget.set_decimals(decimals)
 
     def setModel(self, proxyModel):
         self._proxyModel = proxyModel

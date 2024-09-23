@@ -29,14 +29,14 @@ class StepperControl(QtGui.QWidget):
         layout = QtGui.QGridLayout()
 
         zerowidget = QtGui.QPushButton("Zero")
-        self.degreewidget = QCustomSpinBox("Angle", (-10000, 10000.0))
+        self.degreewidget = QCustomSpinBox((-10000, 10000.0), title="Angle")
         self.angle_label = QtGui.QLabel("0.0")
-        self.degreewidget.setStepSize(1.8)
-        self.degreewidget.spinLevel.setDecimals(3)
+        self.degreewidget.set_step_size(1.8)
+        self.degreewidget.spin_level.set_decimals(3)
 
-        self.degreewidget.spinLevel.setValue(self.angle)
+        self.degreewidget.spin_level.setValue(self.angle)
 
-        self.degreewidget.spinLevel.valueChanged.connect(self.change_angle)
+        self.degreewidget.spin_level.valueChanged.connect(self.change_angle)
         zerowidget.clicked.connect(self.zero_scale)
 
         layout.addWidget(zerowidget, 0, 0)
@@ -47,7 +47,7 @@ class StepperControl(QtGui.QWidget):
 
     def zero_scale(self, state):
         self.angle = 0.0
-        self.degreewidget.spinLevel.setValue(0.0)
+        self.degreewidget.spin_level.setValue(0.0)
 
     @inlineCallbacks
     def change_angle(self, angle):
@@ -56,7 +56,7 @@ class StepperControl(QtGui.QWidget):
         steps = int(steps)
         self.angle = self.angle + self.degree_per_step * steps
         self.angle_label.setText(str(self.angle))
-        self.degreewidget.spinLevel.setValue(angle)
+        self.degreewidget.spin_level.setValue(angle)
         yield self.server.move_steps(steps)
 
     def closeEvent(self, x):

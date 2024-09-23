@@ -60,12 +60,12 @@ class PiezoClient(QFrame):
                     0
                 ]: self.on_chan_toggled(chan, state)
             )
-            voltage_spin_box = QCustomSpinBox("Voltage", (0.0, 150.0))
-            voltage_spin_box.setStepSize(0.01)
-            voltage_spin_box.setValues(initial_voltage)
-            voltage_spin_box.spinLevel.setKeyboardTracking(False)
-            voltage_spin_box.spinLevel.valueChanged.connect(
-                lambda volt=voltage_spin_box.spinLevel.value(), chan=channel_info[key][
+            voltage_spin_box = QCustomSpinBox((0.0, 150.0), suffix="V")
+            voltage_spin_box.set_step_size(0.01)
+            voltage_spin_box.set_value(initial_voltage)
+            voltage_spin_box.spin_level.setKeyboardTracking(False)
+            voltage_spin_box.spin_level.valueChanged.connect(
+                lambda volt=voltage_spin_box.spin_level.value(), chan=channel_info[key][
                     0
                 ]: self.voltage_changed(chan, volt)
             )

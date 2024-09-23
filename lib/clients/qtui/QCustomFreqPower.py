@@ -25,26 +25,26 @@ class QCustomFreqPower(QFrame):
             layout.addWidget(title, 0, 0, 1, 3)
         else:
             layout.addWidget(title, 0, 0, 1, 2)
-        layout.addWidget(freq_label, 1, 0, 1, 1)
-        layout.addWidget(power_label, 1, 1, 1, 1)
         # editable fields
         self.freq_spinbox = QDoubleSpinBox()
         self.freq_spinbox.setFont(QtGui.QFont("MS Shell Dlg 2", pointSize=14))
+        self.freq_spinbox.setSuffix(" MHz")
         self.freq_spinbox.setDecimals(3)
         self.freq_spinbox.setSingleStep(0.1)
         self.freq_spinbox.setRange(10.0, 250.0)
         self.freq_spinbox.setKeyboardTracking(False)
         self.power_spinbox = QDoubleSpinBox()
         self.power_spinbox.setFont(QtGui.QFont("MS Shell Dlg 2", pointSize=14))
+        self.power_spinbox.setSuffix(" dBm")
         self.power_spinbox.setDecimals(3)
         self.power_spinbox.setSingleStep(0.1)
         self.power_spinbox.setRange(-145.0, 30.0)
         self.power_spinbox.setKeyboardTracking(False)
-        layout.addWidget(self.freq_spinbox, 2, 0)
-        layout.addWidget(self.power_spinbox, 2, 1)
+        layout.addWidget(self.freq_spinbox, 1, 0)
+        layout.addWidget(self.power_spinbox, 1, 1)
         if switchable:
             self.switch_button = TextChangingButton(("I", "O"))
-            layout.addWidget(self.switch_button, 2, 2)
+            layout.addWidget(self.switch_button, 1, 2)
         self.setLayout(layout)
 
     def set_power_range(self, powerrange):

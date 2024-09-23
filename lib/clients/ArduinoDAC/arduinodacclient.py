@@ -64,19 +64,19 @@ class dacclient(QtGui.QWidget):
             name = self.dacinfo[dac][0]
             dacchan = self.dacinfo[dac][1]
 
-            widget = QCustomSpinBox(name, (0, 255))
+            widget = QCustomSpinBox((0, 255), title=name)
             widget.title.setFixedWidth(120)
             label = QtGui.QLabel("0 V")
             if name + " dac" in self.settings:
                 value = yield self.reg.get(name + " dac")
-                widget.spinLevel.setValue(value)
+                widget.spin_level.setValue(value)
                 self.setvalue(value, [name, dacchan])
             else:
-                widget.spinLevel.setValue(0.0)
-            widget.setStepSize(1)
-            widget.spinLevel.setDecimals(0)
-            widget.spinLevel.valueChanged.connect(
-                lambda value=widget.spinLevel.value(), ident=[
+                widget.spin_level.setValue(0.0)
+            widget.set_step_size(1)
+            widget.spin_level.set_decimals(0)
+            widget.spin_level.valueChanged.connect(
+                lambda value=widget.spin_level.value(), ident=[
                     name,
                     dacchan,
                 ]: self.setvalue(value, ident)
@@ -116,7 +116,7 @@ class dacclient(QtGui.QWidget):
             if currentvalue >= 255:
                 break
             self.setvalue(currentvalue + 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue + 1)
+            self.d[dacchan].spin_level.setValue(currentvalue + 1)
 
     @inlineCallbacks
     def ezdown(self, isheld):
@@ -125,7 +125,7 @@ class dacclient(QtGui.QWidget):
             if currentvalue <= 0:
                 break
             self.setvalue(currentvalue - 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue - 1)
+            self.d[dacchan].spin_level.setValue(currentvalue - 1)
 
     @inlineCallbacks
     def exup(self, isheld):
@@ -134,13 +134,13 @@ class dacclient(QtGui.QWidget):
             if currentvalue <= 0:
                 break
             self.setvalue(currentvalue - 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue - 1)
+            self.d[dacchan].spin_level.setValue(currentvalue - 1)
         for name, dacchan in self.xminuselectrodes.items():
             currentvalue = yield self.reg.get(name + " dac")
             if currentvalue >= 255:
                 break
             self.setvalue(currentvalue + 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue + 1)
+            self.d[dacchan].spin_level.setValue(currentvalue + 1)
 
     @inlineCallbacks
     def exdown(self, isheld):
@@ -149,13 +149,13 @@ class dacclient(QtGui.QWidget):
             if currentvalue <= 0:
                 break
             self.setvalue(currentvalue - 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue - 1)
+            self.d[dacchan].spin_level.setValue(currentvalue - 1)
         for name, dacchan in self.xpluselectrodes.items():
             currentvalue = yield self.reg.get(name + " dac")
             if currentvalue >= 255:
                 break
             self.setvalue(currentvalue + 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue + 1)
+            self.d[dacchan].spin_level.setValue(currentvalue + 1)
 
     @inlineCallbacks
     def eyup(self, isheld):
@@ -164,13 +164,13 @@ class dacclient(QtGui.QWidget):
             if currentvalue <= 0:
                 break
             self.setvalue(currentvalue - 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue - 1)
+            self.d[dacchan].spin_level.setValue(currentvalue - 1)
         for name, dacchan in self.yminuselectrodes.items():
             currentvalue = yield self.reg.get(name + " dac")
             if currentvalue >= 255:
                 break
             self.setvalue(currentvalue + 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue + 1)
+            self.d[dacchan].spin_level.setValue(currentvalue + 1)
 
     @inlineCallbacks
     def eydown(self, isheld):
@@ -179,13 +179,13 @@ class dacclient(QtGui.QWidget):
             if currentvalue <= 0:
                 break
             self.setvalue(currentvalue - 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue - 1)
+            self.d[dacchan].spin_level.setValue(currentvalue - 1)
         for name, dacchan in self.ypluselectrodes.items():
             currentvalue = yield self.reg.get(name + " dac")
             if currentvalue >= 255:
                 break
             self.setvalue(currentvalue + 1, [name, dacchan])
-            self.d[dacchan].spinLevel.setValue(currentvalue + 1)
+            self.d[dacchan].spin_level.setValue(currentvalue + 1)
 
     @inlineCallbacks
     def setvalue(self, value, ident):

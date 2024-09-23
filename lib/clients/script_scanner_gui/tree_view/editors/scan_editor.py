@@ -114,7 +114,7 @@ class ScanWidget(scanBase, scanForm):
             self.uiActualResolution,
         ]:
             widget.setSingleStep(10**-decimals)
-            widget.setDecimals(decimals)
+            widget.set_decimals(decimals)
 
     def set_suffix(self, suffix):
         for widget in [

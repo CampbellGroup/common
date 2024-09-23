@@ -70,21 +70,21 @@ class KeithleyClient(QFrame):
 
         # Makes widgets for voltage in each channel
         # Sets initial values as found above
-        self.volt1widget = QCustomSpinBox("Voltage", (0, 30))
-        self.volt1widget.setValues(initial_vals[0][0])
-        self.volt2widget = QCustomSpinBox("Voltage", (0, 30))
-        self.volt2widget.setValues(initial_vals[1][0])
-        self.volt3widget = QCustomSpinBox("Voltage", (0, 5))
-        self.volt3widget.setValues(initial_vals[2][0])
+        self.volt1widget = QCustomSpinBox((0, 30), suffix="V")
+        self.volt1widget.set_value(initial_vals[0][0])
+        self.volt2widget = QCustomSpinBox((0, 30), suffix="V")
+        self.volt2widget.set_value(initial_vals[1][0])
+        self.volt3widget = QCustomSpinBox((0, 5), suffix="V")
+        self.volt3widget.set_value(initial_vals[2][0])
 
         # Makes widgets for current in each channel
         # Sets initial values as found above
-        self.amp1widget = QCustomSpinBox("Current", (0, 3))
-        self.amp1widget.setValues(initial_vals[0][1])
-        self.amp2widget = QCustomSpinBox("Current", (0, 3))
-        self.amp2widget.setValues(initial_vals[1][1])
-        self.amp3widget = QCustomSpinBox("Current", (0, 3))
-        self.amp3widget.setValues(initial_vals[2][1])
+        self.amp1widget = QCustomSpinBox((0, 3), suffix="A")
+        self.amp1widget.set_value(initial_vals[0][1])
+        self.amp2widget = QCustomSpinBox((0, 3), suffix="A")
+        self.amp2widget.set_value(initial_vals[1][1])
+        self.amp3widget = QCustomSpinBox((0, 3), suffix="A")
+        self.amp3widget.set_value(initial_vals[2][1])
 
         # Makes widget for the output of each channel
         self.output1widget = QCustomSwitchChannel("Output Channel 1", ("On", "Off"))
@@ -98,34 +98,34 @@ class KeithleyClient(QFrame):
         self.output3widget.setFrameStyle(QFrame.NoFrame)
 
         # Updates widgets when values are changed through the gui
-        self.volt1widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt1widget.spinLevel.value(), chan=1: self.volt_changed(
+        self.volt1widget.spin_level.valueChanged.connect(
+            lambda value=self.volt1widget.spin_level.value(), chan=1: self.volt_changed(
                 chan, value
             )
         )
-        self.volt2widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt2widget.spinLevel.value(), chan=2: self.volt_changed(
+        self.volt2widget.spin_level.valueChanged.connect(
+            lambda value=self.volt2widget.spin_level.value(), chan=2: self.volt_changed(
                 chan, value
             )
         )
-        self.volt3widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt3widget.spinLevel.value(), chan=3: self.volt_changed(
+        self.volt3widget.spin_level.valueChanged.connect(
+            lambda value=self.volt3widget.spin_level.value(), chan=3: self.volt_changed(
                 chan, value
             )
         )
 
-        self.amp1widget.spinLevel.valueChanged.connect(
-            lambda value=self.amp1widget.spinLevel.value(), chan=1: self.amp_changed(
+        self.amp1widget.spin_level.valueChanged.connect(
+            lambda value=self.amp1widget.spin_level.value(), chan=1: self.amp_changed(
                 chan, value
             )
         )
-        self.amp2widget.spinLevel.valueChanged.connect(
-            lambda value=self.amp2widget.spinLevel.value(), chan=2: self.amp_changed(
+        self.amp2widget.spin_level.valueChanged.connect(
+            lambda value=self.amp2widget.spin_level.value(), chan=2: self.amp_changed(
                 chan, value
             )
         )
-        self.amp3widget.spinLevel.valueChanged.connect(
-            lambda value=self.amp3widget.spinLevel.value(), chan=3: self.amp_changed(
+        self.amp3widget.spin_level.valueChanged.connect(
+            lambda value=self.amp3widget.spin_level.value(), chan=3: self.amp_changed(
                 chan, value
             )
         )
@@ -180,12 +180,12 @@ class KeithleyClient(QFrame):
             # Applied votlage/current can change when remote mode is toggled on,
             # since users can change them at the box
             initial_vals = yield self.server.get_applied_voltage_current()
-            self.volt1widget.setValues(initial_vals[0][0])
-            self.volt2widget.setValues(initial_vals[1][0])
-            self.volt3widget.setValues(initial_vals[2][0])
-            self.amp1widget.setValues(initial_vals[0][1])
-            self.amp2widget.setValues(initial_vals[1][1])
-            self.amp3widget.setValues(initial_vals[2][1])
+            self.volt1widget.set_value(initial_vals[0][0])
+            self.volt2widget.set_value(initial_vals[1][0])
+            self.volt3widget.set_value(initial_vals[2][0])
+            self.amp1widget.set_value(initial_vals[0][1])
+            self.amp2widget.set_value(initial_vals[1][1])
+            self.amp3widget.set_value(initial_vals[2][1])
 
     def closeEvent(self, x):
         self.reactor.stop()

@@ -74,33 +74,33 @@ class rigolclient(QtGui.QWidget):
         self.output2.toggled.connect(
             lambda state=self.output1.isDown(), chan=2,: self.setoutput(chan, state)
         )
-        self.volt1widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt1widget.spinLevel.value(), chan=1: self.voltchanged(
+        self.volt1widget.spin_level.valueChanged.connect(
+            lambda value=self.volt1widget.spin_level.value(), chan=1: self.voltchanged(
                 chan, value
             )
         )
-        self.volt2widget.spinLevel.valueChanged.connect(
-            lambda value=self.volt2widget.spinLevel.value(), chan=2: self.voltchanged(
+        self.volt2widget.spin_level.valueChanged.connect(
+            lambda value=self.volt2widget.spin_level.value(), chan=2: self.voltchanged(
                 chan, value
             )
         )
-        self.freq1widget.spinLevel.valueChanged.connect(
-            lambda value=self.freq1widget.spinLevel.value(), chan=1: self.freqchanged(
+        self.freq1widget.spin_level.valueChanged.connect(
+            lambda value=self.freq1widget.spin_level.value(), chan=1: self.freqchanged(
                 chan, value
             )
         )
-        self.freq2widget.spinLevel.valueChanged.connect(
-            lambda value=self.freq2widget.spinLevel.value(), chan=2: self.freqchanged(
+        self.freq2widget.spin_level.valueChanged.connect(
+            lambda value=self.freq2widget.spin_level.value(), chan=2: self.freqchanged(
                 chan, value
             )
         )
-        self.offsetwidget1.spinLevel.valueChanged.connect(
-            lambda value=self.offsetwidget1.spinLevel.value(), chan=1: self.offsetchanged(
+        self.offsetwidget1.spin_level.valueChanged.connect(
+            lambda value=self.offsetwidget1.spin_level.value(), chan=1: self.offsetchanged(
                 chan, value
             )
         )
-        self.offsetwidget2.spinLevel.valueChanged.connect(
-            lambda value=self.offsetwidget2.spinLevel.value(), chan=2: self.offsetchanged(
+        self.offsetwidget2.spin_level.valueChanged.connect(
+            lambda value=self.offsetwidget2.spin_level.value(), chan=2: self.offsetchanged(
                 chan, value
             )
         )

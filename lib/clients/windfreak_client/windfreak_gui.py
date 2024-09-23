@@ -42,11 +42,11 @@ class QCustomWindfreakSubGui(QFrame):
         qwidget = QWidget()
         grid_layout = QGridLayout()
 
-        self.freq_input = QCustomSpinBox("Freq (MHz)", (53.0, 14800.0), parent=self)
-        self.power_input = QCustomSpinBox("Power (dBm)", (-80.0, 17.0), parent=self)
+        self.freq_input = QCustomSpinBox((53.0, 14800.0), title="Freq", suffix="MHz", parent=self)
+        self.power_input = QCustomSpinBox((-80.0, 17.0), title="Power", suffix="dBm", parent=self)
         self.onoff_button = TextChangingButton("RF output", parent=self)
         #
-        self.phase_input = QCustomSpinBox("Phase (deg)", (0.0, 360.0), parent=self)
+        self.phase_input = QCustomSpinBox((0.0, 360.0), title="Phase", parent=self)
 
         grid_layout.addWidget(self.freq_input, 0, 0, 1, 1)
         grid_layout.addWidget(self.power_input, 0, 1, 1, 1)
@@ -62,27 +62,27 @@ class QCustomWindfreakSubGui(QFrame):
         grid_layout = QGridLayout()
 
         self.sweep_low_freq_input = QCustomSpinBox(
-            "Sweep Low Freq (MHz)", (53.0, 14800.0), parent=self
+            (53.0, 14800.0), title="Sweep Low Freq", suffix="MHz", parent=self
         )
         self.sweep_high_freq_input = QCustomSpinBox(
-            "Sweep High Freq (MHz)", (53.0, 14800.0), parent=self
+            (53.0, 14800.0), title="Sweep High Freq", suffix="MHz", parent=self
         )
 
         self.sweep_freq_step_input = QCustomSpinBox(
-            "Sweep Freq Step (MHz)", (0.001, 50.0), parent=self
+            (0.001, 50.0), title="Sweep Freq Step", suffix="MHz", parent=self
         )
         self.sweep_time_step_input = QCustomSpinBox(
-            "Sweep Time Step (ms)", (4.0, 10000.0), parent=self
+            (4.0, 10000.0), title="Sweep Time Step", suffix="ms", parent=self
         )
 
         self.sweep_low_power_input = QCustomSpinBox(
-            "Sweep Low Power (dBm)", (-80.0, 17.0), parent=self
+            (-80.0, 17.0), title="Sweep Low Power", suffix="dBm", parent=self
         )
-        self.sweep_low_power_input.setDecimals(1)
+        self.sweep_low_power_input.set_decimals(1)
         self.sweep_high_power_input = QCustomSpinBox(
-            "Sweep High Power (dBm)", (-80.0, 17.0), parent=self
+            (-80.0, 17.0), title="Sweep High Power", suffix="dBm", parent=self
         )
-        self.sweep_high_power_input.setDecimals(1)
+        self.sweep_high_power_input.set_decimals(1)
 
         self.sweep_onoff_button = TextChangingButton("Sweep", parent=self)
         self.sweep_single_onoff_button = TextChangingButton("Sweep Single", parent=self)
