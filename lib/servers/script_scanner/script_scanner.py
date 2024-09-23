@@ -20,6 +20,7 @@ from labrad.server import setting
 from labrad.units import WithUnit
 from twisted.internet.defer import inlineCallbacks, DeferredList, returnValue
 
+import common.lib.servers.script_scanner.scan_methods
 from script_signals_server import ScriptSignalsServer
 
 try:
@@ -192,7 +193,7 @@ class ScriptScanner(ScriptSignalsServer):
         # required parameters for the experiment.
         script = self.scripts[script_name]
         # single_launch is an experiment instance.
-        single_launch = scan_methods.single(script.cls)
+        single_launch = scan_methods.ScanSingle(script.cls)
         scan_id = self.scheduler.add_scan_to_queue(single_launch)
         return scan_id
 
@@ -201,7 +202,7 @@ class ScriptScanner(ScriptSignalsServer):
         if script_name not in self.scripts.keys():
             raise Exception("Script {} Not Found".format(script_name))
         script = self.scripts[script_name]
-        repeat_launch = scan_methods.repeat_reload(script.cls, repeat, save_data)
+        repeat_launch = scan_methods.ScanRepeatReload(script.cls, repeat, save_data)
 
         scan_id = self.scheduler.add_scan_to_queue(repeat_launch)
         return scan_id
@@ -239,11 +240,11 @@ class ScriptScanner(ScriptSignalsServer):
         measure_script = self.scripts[measure_script_name]
         parameter = (collection, parameter_name)
         if scan_script == measure_script:
-            scan_launch = scan_methods.scan_experiment_1D(
+            scan_launch = scan_methods.ScanExperiment1D(
                 scan_script.cls, parameter, minim, maxim, steps, units
             )
         else:
-            scan_launch = scan_methods.scan_experiment_1D_measure(
+            scan_launch = scan_methods.ScanExperiment1DMeasure(
                 scan_script.cls,
                 measure_script.cls,
                 parameter,
@@ -276,7 +277,7 @@ class ScriptScanner(ScriptSignalsServer):
         if priority not in ["Normal", "First in Queue", "Pause All Others"]:
             raise Exception("Priority not recognized")
         script = self.scripts[script_name]
-        single_launch = scan_methods.single(script.cls)
+        single_launch = scan_methods.ScanSingle(script.cls)
         schedule_id = self.scheduler.new_scheduled_scan(
             single_launch, duration["s"], priority, start_now
         )
@@ -322,7 +323,7 @@ class ScriptScanner(ScriptSignalsServer):
         through this server. The external script can then update its status, be
         paused or stopped.
         """
-        external_scan = scan_methods.experiment_info(name)
+        external_scan = scan_methods.ExperimentInfo(name)
         ident = self.scheduler.add_external_scan(external_scan)
         return ident
 
