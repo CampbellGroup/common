@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StatusBar</class>
+ <widget class="QWidget" name="StatusBar">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>787</width>
+    <height>68</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="vbox_layout">
+   <item>
+    <layout class="QHBoxLayout" name="hbox_layout0">
+     <item>
+      <widget class="QComboBox" name="c00"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c01"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c02"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c03"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c04"/>
+     </item>
+     <item>
+      <spacer name="hspace0">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="hbox_layout1">
+     <item>
+      <widget class="QComboBox" name="c10"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c11"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c12"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c13"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="c14"/>
+     </item>
+     <item>
+      <spacer name="hspace1">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

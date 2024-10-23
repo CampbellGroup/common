@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
+from config.signal_config import signal_config
 from twisted.internet.defer import inlineCallbacks
 from common.lib.clients.connection import Connection
 import os
@@ -8,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-SIGNALID = 874193
+# SIGNALID = 874193
 
 
 # noinspection PyUnresolvedReferences
@@ -41,13 +42,13 @@ class PMTWidget(QWidget):
 
     @inlineCallbacks
     def setup_listeners(self):
-        yield self.server.signal__new_count(SIGNALID)
-        yield self.server.signal__new_setting(SIGNALID + 1)
+        yield self.server.signal__new_count(signal_config.get_id('normalpmtflow__new_count'))
+        yield self.server.signal__new_setting(signal_config.get_id('normalpmtflow__new_setting'))
         yield self.server.addListener(
-            listener=self.follow_signal, source=None, ID=SIGNALID
+            listener=self.follow_signal, source=None, ID=signal_config.get_id('normalpmtflow__new_count')
         )
         yield self.server.addListener(
-            listener=self.follow_setting, source=None, ID=SIGNALID + 1
+            listener=self.follow_setting, source=None, ID=signal_config.get_id('normalpmtflow__new_setting')
         )
 
     @inlineCallbacks
